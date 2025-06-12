@@ -1,0 +1,10 @@
+#TODO: Replace the configuration
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s # Timeout for scraping targets
+
+scrape_configs:
+  - job_name: 'nestjs-microservice'
+    static_configs:
+      - targets: ['localhost:3000']

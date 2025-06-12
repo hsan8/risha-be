@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+
+# yarn format
+# yarn lint
+
+# Get the current branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Check if the current branch is 'master'
+if [ "$CURRENT_BRANCH" = "master" ]; then
+  echo "You cannot commit directly to the master branch."
+  echo "Please create a new branch and commit your changes there."
+  exit 1
+fi
+
+# Continue with the commit process if not on 'master'
+exit 0
+
+yarn notify --message "Pre-commit checks passed!"
