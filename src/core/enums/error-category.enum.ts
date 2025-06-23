@@ -1,0 +1,12 @@
+import { ObjectValues } from '../types';
+
+export const ErrorCategory = {
+  UNAUTHORIZED_ERROR: 'UNAUTHORIZED_ERROR',
+  FORBIDDEN_ERROR: 'FORBIDDEN_ERROR',
+  NOT_FOUND_ERROR: 'NOT_FOUND_ERROR',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  BUSINESS_ERROR: 'BUSINESS_ERROR',
+  UNHANDLED_ERROR: 'UNHANDLED_ERROR',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+} as const;
+export type ErrorCategory = ObjectValues<typeof ErrorCategory>;

@@ -1,0 +1,12 @@
+{
+  "PROPERTY_MAPPINGS": {
+    "paginationPage": "رقم الصفحة",
+    "paginationSize": "حجم الصفحة"
+  },
+  "UNAUTHORIZED_ERROR": "يجب تسجيل الدخول مره اخرى",
+  "FORBIDDEN_ERROR": "ليس لديك الصلاحيات الكافية لتنفيذ هذا الطلب",
+  "NOT_FOUND_ERROR": "غير موجود",
+  "INTERNAL_SERVER_ERROR": "يرجى التواصل بمدير العلاقات للمساعدة",
+  "TOO_MANY_REQUESTS": "تم تجاوز الحد المسموح به من المحاولات في وقت قصير",
+  "INVALID_UUID": "صيغة الرقم التعريفي خاطئة"
+}

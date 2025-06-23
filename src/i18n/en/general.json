@@ -1,0 +1,12 @@
+{
+  "PROPERTY_MAPPINGS": {
+    "paginationPage": "page",
+    "paginationSize": "page size"
+  },
+  "UNAUTHORIZED_ERROR": "You have to login again",
+  "FORBIDDEN_ERROR": "You don't have the required permissions to perform this action",
+  "NOT_FOUND_ERROR": "Not found",
+  "INTERNAL_SERVER_ERROR": "Please contact your relationship manager for further assistance",
+  "TOO_MANY_REQUESTS": "Too many requests in short period",
+  "INVALID_UUID": "Invalid UUID format"
+}
