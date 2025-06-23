@@ -1,5 +1,0 @@
-{
-  "internalServerException": "خطأ داخلي في الخادم",
-  "throttleException": "طلبات كثيرة جدًا",
-  "serviceUnavailableException": "الخدمة غير متوفرة"
-}

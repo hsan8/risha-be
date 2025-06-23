@@ -1,69 +1,43 @@
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
-import { I18nModule } from './core/i18n';
-import { cacheOptions, jwtModuleOption, ThrottlerConfigService, typeOrmModuleOption } from './core/module-options';
+import { I18nModule } from 'nestjs-i18n';
+import { LoggerModule } from 'nestjs-pino';
+import { AllExceptionsFilter, buildI18nValidationExceptionFilter } from './core/filters';
+import { buildConfigOptions, buildI18nOptions, buildPinoOptions } from './core/module-options';
+import { MiddlewaresModule } from './core/modules';
+import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
-import { PaymentLoggerModule } from './payment-logs/payment-logger.module';
-import { PaymentModule } from './payment/payment.module';
+
+const APP_NAME = 'RISHA_BACKEND';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      envFilePath: ['.env'],
-      isGlobal: true,
-      cache: true,
-    }),
-
-    CacheModule.registerAsync({
-      useFactory: cacheOptions,
-      imports: [ConfigModule],
+    // Core modules: Order matters
+    ConfigModule.forRoot(buildConfigOptions()),
+    I18nModule.forRoot(buildI18nOptions()),
+    LoggerModule.forRootAsync({
       inject: [ConfigService],
+      useFactory: (config: ConfigService) => buildPinoOptions(config),
     }),
+    MiddlewaresModule, // LoggerModule must be registered first before this module
 
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: typeOrmModuleOption,
-      inject: [ConfigService],
-    }),
-
-    PrometheusModule.register({
-      defaultMetrics: {
-        enabled: true,
-        config: {},
-      },
-    }),
-
-    ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => new ThrottlerConfigService(configService).createThrottlerOptions(),
-    }),
-
-    JwtModule.registerAsync({
-      global: true,
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: jwtModuleOption,
-    }),
-
-    I18nModule,
+    // Service modules
     HealthModule,
-    // MS modules
-    // keep order
-    PaymentLoggerModule,
-    PaymentModule,
-    // KnetModule,
   ],
-  controllers: [],
   providers: [
-    // {
-    // provide: APP_INTERCEPTOR,
-    // useClass: CacheInterceptor,
-    // },
+    // Global Pipes (order matters)
+    {
+      inject: [ConfigService],
+      provide: APP_PIPE,
+      useFactory: (config: ConfigService) => buildValidationPipe(config),
+    },
+
+    // Global Filters (order matters)
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    { provide: APP_FILTER, useValue: buildI18nValidationExceptionFilter() },
   ],
 })
 export class AppModule {}

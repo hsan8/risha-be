@@ -10,8 +10,6 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "strict": true,
-    "noImplicitOverride": true,
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -19,14 +17,9 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true,
     "paths": {
-      "@app/*": ["src/*"]
+      "@/*": ["src/*"]
     }
-  },
-  "include": [
-    "src",
-    "webpack.config.js",
-    ".eslintrc.cjs" // path of  eslintrc file
-  ],
-  "exclude": ["codelab.js"]
+  }
 }

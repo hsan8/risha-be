@@ -1,0 +1,6 @@
+{
+  "IsNumber": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a number",
+  "IsInt": "$t({path}.PROPERTY_MAPPINGS.{property}) must be an integer",
+  "Min": "$t({path}.PROPERTY_MAPPINGS.{property}) must not be less than {constraints.0}",
+  "Max": "$t({path}.PROPERTY_MAPPINGS.{property}) must not be greater than {constraints.0}"
+}

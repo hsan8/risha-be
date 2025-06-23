@@ -1,4 +1,3 @@
-export * from './cache.module-option';
-export * from './jwt.module-option';
-export * from './throttler.module-option';
-export * from './type-orm.module-option';
+export * from './config.options';
+export * from './i18n.options';
+export * from './logger.options';

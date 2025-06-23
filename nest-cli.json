@@ -4,22 +4,13 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
+    "watchAssets": true,
     "assets": [
-      { "include": "i18n/**/*", "watchAssets": true },
       {
-        "include": "payment-methods/apple-pay/services/*.pem",
-        "outDir": "dist/payment-methods/apple-pay/services",
-        "watchAssets": true
-      }
-    ],
-    "plugins": [
-      {
-        "name": "@nestjs/swagger",
-        "options": {
-          "classValidatorShim": false,
-          "introspectComments": true
-        }
-      }
+        "include": "config",
+        "exclude": "**/*.md"
+      },
+      "i18n"
     ]
   }
 }

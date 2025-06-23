@@ -1,95 +1,47 @@
-const prettierConfig = require('./.prettierrc.js');
-
+/** @type {import('eslint').Linter.Config} */
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: ['./tsconfig.json'],
+    project: 'tsconfig.json',
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint', 'prettier'],
-  extends: [
-    'airbnb-base',
-    'airbnb-typescript/base',
-    'eslint:recommended',
-    'prettier',
-    'plugin:prettier/recommended',
-    'plugin:@typescript-eslint/recommended',
-  ],
+  plugins: ['@typescript-eslint/eslint-plugin'],
+  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'plugin:security/recommended'],
   root: true,
   env: {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['dist', '.eslintrc.js', 'postcss.config.js', '*spec.ts'],
+  ignorePatterns: ['.eslintrc.js', 'node_modules', 'dist', 'coverage', 'jest*\\.ts', 'typeorm*\\.ts'],
   rules: {
-    'import/no-cycle': 'off',
-    'import/no-extraneous-dependencies': 'off',
-    'class-methods-use-this': 'off',
-    '@typescript-eslint/naming-convention': [
-      'error',
-      {
-        selector: ['variable', 'parameter'],
-        format: ['camelCase'],
-        leadingUnderscore: 'allow',
-        trailingUnderscore: 'allow',
-      },
-      {
-        selector: 'variable',
-        modifiers: ['const'],
-        format: ['UPPER_CASE', 'camelCase', 'PascalCase'],
-        leadingUnderscore: 'allow',
-        trailingUnderscore: 'allow',
-      },
-      {
-        selector: 'enum',
-        format: ['PascalCase'],
-        leadingUnderscore: 'allow',
-        trailingUnderscore: 'allow',
-      },
-      {
-        selector: 'import',
-        format: ['camelCase', 'PascalCase'],
-        leadingUnderscore: 'allow',
-        trailingUnderscore: 'allow',
-      },
-      {
-        selector: ['enum', 'class', 'interface'],
-        format: ['PascalCase'],
-      },
-      {
-        selector: 'typeLike',
-        format: ['PascalCase'],
-      },
-    ],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    'import/prefer-default-export': 'off',
-    '@typescript-eslint/lines-between-class-members': 'off',
-    '@typescript-eslint/no-throw-literal': 'off',
-    'prettier/prettier': [
-      'error',
-      {
-        endOfLine: 'auto', // Fix line-ending issues
-      },
-    ],
     '@typescript-eslint/no-unused-vars': [
-      'error',
-      {
-        vars: 'all',
-        args: 'after-used',
-        caughtErrors: 'all',
-        ignoreRestSiblings: false,
-        reportUsedIgnorePattern: false,
-      },
+      'warn',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
     ],
-    '@typescript-eslint/no-use-before-define': 'off',
-    '@typescript-eslint/object-curly-spacing': 'off',
-    '@typescript-eslint/no-redeclare': 'off',
-    '@typescript-eslint/parser': 'off',
-    'import/no-useless-path-segments': 'off',
-    'no-console': ['error', { allow: ['warn', 'error'] }],
+    '@typescript-eslint/no-inferrable-types': 'off',
+    'func-names': ['error', 'as-needed'],
+    'no-underscore-dangle': ['error'],
+    'require-await': ['error'],
+    'no-console': ['error'],
+    'no-multi-assign': ['error'],
+    'no-magic-numbers': ['error', { ignoreArrayIndexes: true }],
+    'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1, maxBOF: 0 }],
+    'max-len': [
+      'error',
+      { code: 120, tabWidth: 2, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true },
+    ],
   },
+  overrides: [
+    {
+      files: ['*spec.ts'],
+      rules: {
+        'no-magic-numbers': ['off'],
+      },
+    },
+  ],
 };
