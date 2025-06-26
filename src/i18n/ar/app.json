@@ -1,1 +1,43 @@
-{}
+{
+  "pigeon": {
+    "name": "الاسم",
+    "gender": "الجنس",
+    "status": "الحالة",
+    "ownerId": "رمز المالك",
+    "documentationNo": "رقم التوثيق",
+    "ringNo": "رقم الحجل",
+    "caseNumber": "رقم الخانة",
+    "fatherName": "اسم الأب",
+    "motherName": "اسم الأم",
+    "yearOfBirth": "سنة الميلاد",
+    "deadAt": "تاريخ الوفاة",
+    "fatherId": "رقم الأب",
+    "success": {
+      "created": "تم إنشاء الحمامة بنجاح",
+      "updated": "تم تحديث الحمامة بنجاح",
+      "deleted": "تم حذف الحمامة بنجاح"
+    },
+    "error": {
+      "notFound": "الحمامة غير موجودة",
+      "alreadyExists": "الحمامة موجودة بالفعل",
+      "invalidParent": "الحمامة الأب/الأم غير صالحة",
+      "invalidStatusTransition": "تغيير الحالة غير صالح",
+      "invalidDocumentationNumber": "صيغة رقم التوثيق غير صالحة",
+      "invalidYearOfBirth": "صيغة سنة الميلاد غير صالحة",
+      "parentNotAlive": "الحمامة الأب/الأم غير حية",
+      "parentWrongGender": "جنس الحمامة الأب/الأم غير صحيح",
+      "deadPigeonCannotChangeStatus": "لا يمكن تغيير حالة الحمامة الميتة",
+      "soldPigeonCannotBeAlive": "لا يمكن تغيير حالة الحمامة المباعة إلى حية",
+      "deadAtRequired": "تاريخ الوفاة مطلوب عند تغيير الحالة إلى ميتة",
+      "duplicateRingNumber": "يوجد حمامة برقم الحلقة {ringNo}",
+      "duplicateDocumentationNumber": "يوجد حمامة برقم التوثيق {docNo}",
+      "fatherNotFound": "الحمامة الأب برقم {id} غير موجودة",
+      "notMalePigeon": "الحمامة برقم {id} ليست ذكر",
+      "fatherNotAlive": "الحمامة الأب برقم {id} غير حية",
+      "motherNotFound": "الحمامة الأم برقم {id} غير موجودة",
+      "notFemalePigeon": "الحمامة برقم {id} ليست أنثى",
+      "motherNotAlive": "الحمامة الأم برقم {id} غير حية",
+      "invalidDocumentationNumberFormat": "يجب أن يتبع رقم التوثيق النمط: ####-#-### (مثال: 2025-A-123)"
+    }
+  }
+}

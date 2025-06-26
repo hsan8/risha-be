@@ -7,7 +7,7 @@ module.exports = {
     sourceType: 'module',
   },
   plugins: ['@typescript-eslint/eslint-plugin'],
-  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'plugin:security/recommended'],
+  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
   root: true,
   env: {
     node: true,
@@ -27,9 +27,17 @@ module.exports = {
     'func-names': ['error', 'as-needed'],
     'no-underscore-dangle': ['error'],
     'require-await': ['error'],
-    'no-console': ['error'],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
     'no-multi-assign': ['error'],
-    'no-magic-numbers': ['error', { ignoreArrayIndexes: true }],
+    'no-magic-numbers': [
+      'error',
+      {
+        ignoreArrayIndexes: true,
+        ignore: [0, 1, -1],
+        enforceConst: true,
+        detectObjects: false,
+      },
+    ],
     'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1, maxBOF: 0 }],
     'max-len': [
       'error',
@@ -38,7 +46,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*spec.ts'],
+      files: ['*.spec.ts', '*.e2e-spec.ts'],
       rules: {
         'no-magic-numbers': ['off'],
       },

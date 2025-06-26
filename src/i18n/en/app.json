@@ -1,1 +1,43 @@
-{}
+{
+  "pigeon": {
+    "name": "Name",
+    "gender": "Gender",
+    "status": "Status",
+    "ownerId": "Owner ID",
+    "documentationNo": "Documentation No",
+    "ringNo": "Ring No",
+    "caseNumber": "Case Number",
+    "fatherName": "Father Name",
+    "motherName": "Mother Name",
+    "yearOfBirth": "Year of Birth",
+    "deadAt": "Dead At",
+    "fatherId": "Father ID",
+    "success": {
+      "created": "Pigeon created successfully",
+      "updated": "Pigeon updated successfully",
+      "deleted": "Pigeon deleted successfully"
+    },
+    "error": {
+      "notFound": "Pigeon not found",
+      "alreadyExists": "Pigeon already exists",
+      "invalidParent": "Invalid parent pigeon",
+      "invalidStatusTransition": "Invalid status transition",
+      "invalidDocumentationNumber": "Invalid documentation number format",
+      "invalidYearOfBirth": "Invalid year of birth format",
+      "parentNotAlive": "Parent pigeon is not alive",
+      "parentWrongGender": "Parent pigeon has wrong gender",
+      "deadPigeonCannotChangeStatus": "Dead pigeon cannot change status",
+      "soldPigeonCannotBeAlive": "Sold pigeon cannot be changed to alive",
+      "deadAtRequired": "Dead date is required when changing status to DEAD",
+      "duplicateRingNumber": "Pigeon with ring number {ringNo} already exists",
+      "duplicateDocumentationNumber": "Pigeon with documentation number {docNo} already exists",
+      "fatherNotFound": "Father pigeon with ID {id} not found",
+      "notMalePigeon": "Pigeon with ID {id} is not a male pigeon",
+      "fatherNotAlive": "Father pigeon with ID {id} is not alive",
+      "motherNotFound": "Mother pigeon with ID {id} not found",
+      "notFemalePigeon": "Pigeon with ID {id} is not a female pigeon",
+      "motherNotAlive": "Mother pigeon with ID {id} is not alive",
+      "invalidDocumentationNumberFormat": "Documentation number must follow the pattern: ####-#-### (e.g., 2025-A-123)"
+    }
+  }
+}
