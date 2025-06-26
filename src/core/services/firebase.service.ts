@@ -4,6 +4,8 @@ import * as admin from 'firebase-admin';
 import { App } from 'firebase-admin/app';
 import { Database } from 'firebase-admin/database';
 import { FIREBASE_CONSTANTS } from '../constants/firebase.constant';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class FirebaseService {
@@ -17,12 +19,30 @@ export class FirebaseService {
 
   private initializeApp(): void {
     try {
-      const serviceAccount = this.configService.get('FIREBASE_SERVICE_ACCOUNT');
+      // Check if Firebase is already initialized
+      try {
+        this.app = admin.app();
+        this.database = admin.database();
+        this.logger.log('Using existing Firebase app');
+        return;
+      } catch (e) {
+        // App doesn't exist, continue with initialization
+      }
+
+      const serviceAccountPath = this.configService.get('FIREBASE_SERVICE_ACCOUNT');
       const databaseURL = this.configService.get('FIREBASE_DATABASE_URL');
 
-      if (!serviceAccount || !databaseURL) {
+      if (!serviceAccountPath || !databaseURL) {
         throw new Error('Firebase configuration is missing');
       }
+
+      // Load service account from file
+      const serviceAccountFile = path.resolve(process.cwd(), serviceAccountPath);
+      if (!fs.existsSync(serviceAccountFile)) {
+        throw new Error(`Firebase service account file not found at: ${serviceAccountFile}`);
+      }
+
+      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountFile, 'utf8'));
 
       this.app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
@@ -32,7 +52,12 @@ export class FirebaseService {
       this.logger.log('Firebase app initialized successfully');
 
       this.database = admin.database(this.app);
-      this.database.useEmulator(FIREBASE_CONSTANTS.EMULATOR.HOST, FIREBASE_CONSTANTS.EMULATOR.PORT);
+
+      // Only use emulator in development
+      if (process.env.NODE_ENV === 'dev') {
+        this.database.useEmulator(FIREBASE_CONSTANTS.EMULATOR.HOST, FIREBASE_CONSTANTS.EMULATOR.PORT);
+        this.logger.log('Using Firebase emulator');
+      }
 
       this.logger.log('Firebase database initialized successfully');
     } catch (error) {

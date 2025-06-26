@@ -1,0 +1,21 @@
+import { ObjectValues } from '@/core/types';
+
+export const FormulaStatus = {
+  INITIATED: 'INITIATED',
+  TERMINATED: 'TERMINATED',
+  HAS_ONE_EGG: 'HAS_ONE_EGG',
+  HAS_TWO_EGG: 'HAS_TWO_EGG',
+  HAS_ONE_PIGEON: 'HAS_ONE_PIGEON',
+  HAS_TWO_PIGEON: 'HAS_TWO_PIGEON',
+} as const;
+export type FormulaStatus = ObjectValues<typeof FormulaStatus>;
+
+export const FormulaActions = {
+  FORMULA_INITIATED: 'FORMULA_INITIATED',
+  FIRST_EGG_DELIVERED: 'FIRST_EGG_DELIVERED',
+  SECOND_EGG_DELIVERED: 'SECOND_EGG_DELIVERED',
+  FIRST_EGG_TRANSFORMED_TO_FRESH_PIGEON: 'FIRST_EGG_TRANSFORMED_TO_FRESH_PIGEON',
+  SECOND_EGG_TRANSFORMED_TO_FRESH_PIGEON: 'SECOND_EGG_TRANSFORMED_TO_FRESH_PIGEON',
+  FORMULA_GOT_TERMINATED: 'FORMULA_GOT_TERMINATED',
+} as const;
+export type FormulaActions = ObjectValues<typeof FormulaActions>;

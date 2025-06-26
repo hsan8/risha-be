@@ -9,6 +9,7 @@ import { MiddlewaresModule, ServicesModule } from './core/modules';
 import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
 import { PigeonModule } from './pigeon/pigeon.module';
+import { FormulaModule } from './formula/formula.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PigeonModule } from './pigeon/pigeon.module';
     // Service modules
     HealthModule,
     PigeonModule,
+    FormulaModule,
   ],
   providers: [
     // Global Pipes (order matters)

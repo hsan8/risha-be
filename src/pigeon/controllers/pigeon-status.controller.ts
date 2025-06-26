@@ -7,6 +7,7 @@ import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto, DataPageResponseDto } from '@/core/dtos';
 import { PigeonStatus } from '../enums';
 import { PageOptionsRequestDto } from '@/core/dtos';
+import { UpdatePigeonRequestDto } from '../dto/requests';
 
 @ApiTags('Pigeon Status')
 @Controller('pigeons/status')
@@ -59,9 +60,9 @@ export class PigeonStatusController {
   @ApiDataResponse(PigeonResponseDto)
   async updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: PigeonStatus; deadAt?: string },
+    @Body() body: UpdatePigeonRequestDto,
   ): Promise<DataResponseDto<PigeonResponseDto>> {
-    const pigeon = await this.pigeonService.update(id, { status: body.status, deadAt: body.deadAt });
+    const pigeon = await this.pigeonService.update(id, body);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 }
