@@ -1,21 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { I18nModule } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
 import { AllExceptionsFilter, buildI18nValidationExceptionFilter } from './core/filters';
 import { buildConfigOptions, buildI18nOptions, buildPinoOptions } from './core/module-options';
-import { MiddlewaresModule } from './core/modules';
+import { MiddlewaresModule, ServicesModule } from './core/modules';
 import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
-
-const APP_NAME = 'RISHA_BACKEND';
+import { PigeonModule } from './pigeon/pigeon.module';
 
 @Module({
   imports: [
-    // Core modules: Order matters
     ConfigModule.forRoot(buildConfigOptions()),
     I18nModule.forRoot(buildI18nOptions()),
     LoggerModule.forRootAsync({
@@ -23,9 +19,11 @@ const APP_NAME = 'RISHA_BACKEND';
       useFactory: (config: ConfigService) => buildPinoOptions(config),
     }),
     MiddlewaresModule, // LoggerModule must be registered first before this module
+    ServicesModule, // Register ServicesModule before other modules that depend on it
 
     // Service modules
     HealthModule,
+    PigeonModule,
   ],
   providers: [
     // Global Pipes (order matters)

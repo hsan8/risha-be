@@ -1,11 +1,11 @@
 /* eslint-disable no-magic-numbers */
 
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { createApp, createSwaggerDocument, bootstrap } from './bootstrap';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  await app.listen(3000);
+async function main() {
+  const app = await createApp();
+  const swaggerDocument = createSwaggerDocument(app);
+  await bootstrap(app, swaggerDocument);
 }
-bootstrap();
+
+main();

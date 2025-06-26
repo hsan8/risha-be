@@ -1,0 +1,219 @@
+{
+  "info": {
+    "name": "Risha-BE",
+    "description": "Risha Backend API Collection - Pigeon Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Pigeons",
+      "description": "Pigeon Management Endpoints",
+      "item": [
+        {
+          "name": "Create Pigeon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": {
+                "name": "Test Pigeon",
+                "gender": "MALE",
+                "status": "ALIVE",
+                "documentationNo": "2025-A-001",
+                "ringNo": "123456",
+                "ringColor": "Blue",
+                "fatherName": "Father Pigeon",
+                "motherName": "Mother Pigeon",
+                "yearOfBirth": "2025"
+              }
+            },
+            "description": "Create a new pigeon"
+          }
+        },
+        {
+          "name": "Get All Pigeons",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all pigeons with optional pagination"
+          }
+        },
+        {
+          "name": "Get Pigeon by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Pigeon ID"
+                }
+              ]
+            },
+            "description": "Get a specific pigeon by ID"
+          }
+        },
+        {
+          "name": "Update Pigeon",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Pigeon ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": {
+                "name": "Updated Pigeon Name",
+                "status": "SOLD"
+              }
+            },
+            "description": "Update a pigeon's information"
+          }
+        },
+        {
+          "name": "Delete Pigeon",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Pigeon ID"
+                }
+              ]
+            },
+            "description": "Delete a pigeon"
+          }
+        },
+        {
+          "name": "Find by Ring Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/ring/:ringNo",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "ring", ":ringNo"],
+              "variable": [
+                {
+                  "key": "ringNo",
+                  "value": "123456",
+                  "description": "Ring Number"
+                }
+              ]
+            },
+            "description": "Find a pigeon by ring number"
+          }
+        },
+        {
+          "name": "Find by Documentation Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/doc/:documentationNo",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "doc", ":documentationNo"],
+              "variable": [
+                {
+                  "key": "documentationNo",
+                  "value": "2025-A-001",
+                  "description": "Documentation Number"
+                }
+              ]
+            },
+            "description": "Find a pigeon by documentation number"
+          }
+        },
+        {
+          "name": "Get Alive Pigeons",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/status/alive",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "status", "alive"]
+            },
+            "description": "Get all alive pigeons"
+          }
+        },
+        {
+          "name": "Get Alive Parents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/parents/alive",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "parents", "alive"]
+            },
+            "description": "Get all alive parent pigeons"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
