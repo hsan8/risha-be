@@ -6,6 +6,310 @@
   },
   "item": [
     {
+      "name": "Formulas",
+      "description": "Formula Management Endpoints",
+      "item": [
+        {
+          "name": "Create Formula",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": {
+                "father": {
+                  "id": "uuid-of-father",
+                  "name": "Father Pigeon"
+                },
+                "mother": {
+                  "id": "uuid-of-mother",
+                  "name": "Mother Pigeon"
+                },
+                "caseNumber": "CASE-2024-001",
+                "yearOfFormula": "2024"
+              }
+            },
+            "description": "Create a new formula"
+          }
+        },
+        {
+          "name": "Get All Formulas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get all formulas with pagination"
+          }
+        },
+        {
+          "name": "Get Formula by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Formula ID"
+                }
+              ]
+            },
+            "description": "Get a specific formula by ID"
+          }
+        },
+        {
+          "name": "Add Egg to Formula",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id/egg",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id", "egg"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Formula ID"
+                }
+              ]
+            },
+            "description": "Add an egg to the formula"
+          }
+        },
+        {
+          "name": "Transform Egg to Pigeon",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id/egg/:eggId/transform",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id", "egg", ":eggId", "transform"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Formula ID"
+                },
+                {
+                  "key": "eggId",
+                  "value": "",
+                  "description": "Egg ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": {
+                "pigeonId": "uuid-of-new-pigeon"
+              }
+            },
+            "description": "Transform an egg into a pigeon"
+          }
+        },
+        {
+          "name": "Terminate Formula",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id/terminate",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id", "terminate"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Formula ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": {
+                "reason": "Termination reason"
+              }
+            },
+            "description": "Terminate a formula"
+          }
+        },
+        {
+          "name": "Search Formulas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "search-term",
+                  "description": "Search query"
+                }
+              ]
+            },
+            "description": "Search formulas by query"
+          }
+        },
+        {
+          "name": "Get Formula by Case Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/case/:caseNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "case", ":caseNumber"],
+              "variable": [
+                {
+                  "key": "caseNumber",
+                  "value": "CASE-2024-001",
+                  "description": "Case Number"
+                }
+              ]
+            },
+            "description": "Get formula by case number"
+          }
+        },
+        {
+          "name": "Get Formulas by Year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/year/:yearOfFormula",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "year", ":yearOfFormula"],
+              "variable": [
+                {
+                  "key": "yearOfFormula",
+                  "value": "2024",
+                  "description": "Year of Formula"
+                }
+              ]
+            },
+            "description": "Get formulas by year"
+          }
+        },
+        {
+          "name": "Get Formulas by Parent ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/parent/:parentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "parent", ":parentId"],
+              "variable": [
+                {
+                  "key": "parentId",
+                  "value": "",
+                  "description": "Parent ID"
+                }
+              ]
+            },
+            "description": "Get formulas by parent ID"
+          }
+        },
+        {
+          "name": "Get Formulas by Parent Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/parent/name/:parentName",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "parent", "name", ":parentName"],
+              "variable": [
+                {
+                  "key": "parentName",
+                  "value": "Parent Name",
+                  "description": "Parent Name"
+                }
+              ]
+            },
+            "description": "Get formulas by parent name"
+          }
+        },
+        {
+          "name": "Get Formula Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/count",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "count"]
+            },
+            "description": "Get total count of formulas"
+          }
+        },
+        {
+          "name": "Get Formula Count by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/count/:status",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "count", ":status"],
+              "variable": [
+                {
+                  "key": "status",
+                  "value": "INITIATED",
+                  "description": "Formula Status (INITIATED, TERMINATED, HAS_ONE_EGG, HAS_TWO_EGG, HAS_ONE_PIGEON, HAS_TWO_PIGEON)"
+                }
+              ]
+            },
+            "description": "Get count of formulas by status"
+          }
+        }
+      ]
+    },
+    {
       "name": "Pigeons",
       "description": "Pigeon Management Endpoints",
       "item": [

@@ -8,10 +8,25 @@
   },
   "emulators": {
     "functions": {
-      "port": 5003
+      "port": 5001
     },
     "database": {
-      "port": 9000
+      "port": 9001
+    },
+    "ui": {
+      "port": 4002
+    },
+    "hub": {
+      "port": 4402
+    },
+    "logging": {
+      "port": 4502
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "**",
+      "function": "api"
+    }
+  ]
 }

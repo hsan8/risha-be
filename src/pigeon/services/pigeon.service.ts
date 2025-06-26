@@ -269,8 +269,8 @@ export class PigeonService {
     }
 
     // Validate mother if provided
-    if (pigeonDto.mother) {
-      const mother = await this.pigeonRepository.findById(pigeonDto.mother.id);
+    if (pigeonDto.motherId) {
+      const mother = await this.pigeonRepository.findById(pigeonDto.motherId);
       if (!mother) {
         throw new BadRequestException(I18nMessage.error('motherNotFound', { id: pigeonDto.motherId }));
       }
@@ -283,7 +283,7 @@ export class PigeonService {
     }
   }
 
-  private handleStatusChange(existingPigeon: Pigeon, newStatus: PigeonStatus, deadAt?: string): Promise<void> {
+  private handleStatusChange(existingPigeon: Pigeon, newStatus: PigeonStatus, deadAt?: string): void {
     // If changing to DEAD status, set deadAt date
     if (newStatus === PigeonStatus.DEAD && existingPigeon.status !== PigeonStatus.DEAD) {
       if (!deadAt) {
