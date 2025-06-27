@@ -1,7 +1,9 @@
 {
   "functions": {
     "source": ".",
-    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+    "predeploy": ["npm run build"],
+    "runtime": "nodejs20",
+    "timeoutSeconds": 300
   },
   "database": {
     "rules": "database.rules.json"
@@ -11,22 +13,15 @@
       "port": 5001
     },
     "database": {
-      "port": 9001
+      "port": 9000
+    },
+    "auth": {
+      "port": 9099
     },
     "ui": {
-      "port": 4002
+      "enabled": true,
+      "port": 4000
     },
-    "hub": {
-      "port": 4402
-    },
-    "logging": {
-      "port": 4502
-    }
-  },
-  "rewrites": [
-    {
-      "source": "**",
-      "function": "api"
-    }
-  ]
+    "singleProjectMode": true
+  }
 }

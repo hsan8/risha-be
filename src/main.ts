@@ -1,5 +1,3 @@
-/* eslint-disable no-magic-numbers */
-
 import { createApp, createSwaggerDocument, bootstrap } from './bootstrap';
 
 async function main() {
@@ -8,4 +6,7 @@ async function main() {
   await bootstrap(app, swaggerDocument);
 }
 
-main();
+main().catch((err) => {
+  console.error('Error starting application:', err);
+  process.exit(1);
+});

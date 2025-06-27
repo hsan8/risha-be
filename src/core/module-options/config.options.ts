@@ -2,8 +2,6 @@ import { ConfigModuleOptions } from '@nestjs/config';
 import * as path from 'path';
 import { Environment } from '../enums';
 
-const baseConfigDir = path.join(__dirname, '..', '..', '..', 'config');
-
 export function buildConfigOptions(): ConfigModuleOptions {
   return {
     isGlobal: true,
@@ -13,8 +11,8 @@ export function buildConfigOptions(): ConfigModuleOptions {
       '.env',
 
       // Dev/Non-Dev (non-sensitive default env vars)
-      path.join(baseConfigDir, `${process.env.NODE_ENV}.env`),
-      path.join(baseConfigDir, 'app.env'),
+      path.join('src', 'config', `${process.env.NODE_ENV || 'dev'}.env`),
+      path.join('src', 'config', 'app.env'),
     ],
   };
 }

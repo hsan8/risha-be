@@ -5,7 +5,7 @@ import { I18nModule } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
 import { AllExceptionsFilter, buildI18nValidationExceptionFilter } from './core/filters';
 import { buildConfigOptions, buildI18nOptions, buildPinoOptions } from './core/module-options';
-import { MiddlewaresModule, ServicesModule } from './core/modules';
+import { MiddlewaresModule } from './core/modules';
 import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
 import { PigeonModule } from './pigeon/pigeon.module';
@@ -20,12 +20,11 @@ import { FormulaModule } from './formula/formula.module';
       useFactory: (config: ConfigService) => buildPinoOptions(config),
     }),
     MiddlewaresModule, // LoggerModule must be registered first before this module
-    ServicesModule, // Register ServicesModule before other modules that depend on it
 
     // Service modules
-    HealthModule,
     PigeonModule,
     FormulaModule,
+    HealthModule,
   ],
   providers: [
     // Global Pipes (order matters)
