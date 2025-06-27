@@ -1,16 +1,18 @@
-import type { Config } from 'jest';
+import type { Config } from '@jest/types';
 import { buildJestConfig } from './jest.base.config';
 
-const config: Config = buildJestConfig({
-  jestProjectConfigs: {
-    testRegex: '.*\\.spec\\.ts$',
-    coveragePathIgnorePatterns: ['__testing__', 'entities', '<rootDir>/src/db', 'index.ts'],
-  },
-  jestConfigs: {
-    coverageDirectory: 'coverage',
-    collectCoverageFrom: ['<rootDir>/src/**/*.(t|j)s'],
-    coverageReporters: ['clover', 'json', 'lcov', 'text', 'text-summary', 'cobertura'],
-  },
-});
+const config: Config.InitialOptions = {
+  ...buildJestConfig('<rootDir>/src'),
+  // Add any additional configuration specific to unit tests
+  coverageDirectory: './coverage',
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.e2e-spec.ts',
+    '!src/**/*.d.ts',
+    '!src/main.ts',
+    '!src/bootstrap.ts',
+  ],
+};
 
 export default config;

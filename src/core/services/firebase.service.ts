@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import { App } from 'firebase-admin/app';
 import { Database } from 'firebase-admin/database';
-import { FIREBASE_CONSTANTS } from '../constants/firebase.constant';
+import { getFunctions } from 'firebase-admin/functions';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -31,22 +31,44 @@ export class FirebaseService {
 
       const serviceAccountPath = this.configService.get('FIREBASE_SERVICE_ACCOUNT');
       const databaseURL = this.configService.get('FIREBASE_DATABASE_URL');
+      const projectId = this.configService.get('FIREBASE_PROJECT_ID');
+      const isDevEnv = this.configService.get('NODE_ENV') === 'dev';
 
-      if (!serviceAccountPath || !databaseURL) {
+      this.logger.debug('Firebase configuration:', {
+        serviceAccountPath,
+        databaseURL,
+        projectId,
+        isDevEnv,
+      });
+
+      if (!serviceAccountPath || !databaseURL || !projectId) {
         throw new Error('Firebase configuration is missing');
       }
 
       // Load service account from file
       const serviceAccountFile = path.resolve(process.cwd(), serviceAccountPath);
+      this.logger.debug('Attempting to load service account from:', serviceAccountFile);
+
       if (!fs.existsSync(serviceAccountFile)) {
         throw new Error(`Firebase service account file not found at: ${serviceAccountFile}`);
       }
 
       const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountFile, 'utf8'));
+      this.logger.debug('Service account loaded successfully');
+
+      // Initialize the app with emulator settings in dev mode
+      if (isDevEnv) {
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = this.configService.get('FIREBASE_AUTH_EMULATOR_HOST');
+        process.env.FIREBASE_DATABASE_EMULATOR_HOST = this.configService.get('FIREBASE_DATABASE_EMULATOR_HOST');
+        process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST = this.configService.get('FIREBASE_FUNCTIONS_EMULATOR_HOST');
+
+        this.logger.log('Using Firebase emulators');
+      }
 
       this.app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         databaseURL,
+        projectId,
       });
 
       this.logger.log('Firebase app initialized successfully');
@@ -54,9 +76,10 @@ export class FirebaseService {
       this.database = admin.database(this.app);
 
       // Only use emulator in development
-      if (process.env.NODE_ENV === 'dev') {
-        this.database.useEmulator(FIREBASE_CONSTANTS.EMULATOR.HOST, FIREBASE_CONSTANTS.EMULATOR.PORT);
-        this.logger.log('Using Firebase emulator');
+      if (isDevEnv) {
+        const [host, port] = this.configService.get('FIREBASE_DATABASE_EMULATOR_HOST').split(':');
+        this.database.useEmulator(host, parseInt(port, 10));
+        this.logger.log(`Using Firebase database emulator at ${host}:${port}`);
       }
 
       this.logger.log('Firebase database initialized successfully');
@@ -77,11 +100,7 @@ export class FirebaseService {
     return this.database;
   }
 
-  getAuth(): admin.auth.Auth {
-    return admin.auth();
-  }
-
-  getFirestore(): admin.firestore.Firestore {
-    return admin.firestore();
+  getFunctions() {
+    return getFunctions(this.app);
   }
 }

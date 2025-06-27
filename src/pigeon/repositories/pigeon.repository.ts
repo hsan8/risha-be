@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
-import { Pigeon } from '../entities/pigeon.entity';
-import { CreatePigeonRequestDto } from '../dto/requests/create-pigeon.request.dto';
-import { UpdatePigeonRequestDto } from '../dto/requests/update-pigeon.request.dto';
-import { FirebaseService } from '../../core/services/firebase.service';
-import { PIGEON_CONSTANTS } from '../constants/pigeon.constants';
+import { Pigeon } from '../entities';
+import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
+import { FirebaseService } from '@/core/services/firebase.service';
+import { PigeonStatus, PigeonGender } from '../enums';
+import { PIGEON_CONSTANTS } from '../constants';
 import { PageOptionsRequestDto } from '@/core/dtos';
-import { PigeonStatus, PigeonGender } from '../enums/pigeon.enum';
 
 @Injectable()
 export class PigeonRepository {
@@ -43,8 +42,6 @@ export class PigeonRepository {
     };
 
     await pigeonRef.set(pigeon);
-    this.logger.log(`Created pigeon with ID: ${id}`);
-
     return pigeon;
   }
 
@@ -64,10 +61,6 @@ export class PigeonRepository {
     const startIndex = (pageOptions.page - 1) * pageOptions.size;
     const endIndex = startIndex + pageOptions.size;
     const paginatedPigeons = pigeons.slice(startIndex, endIndex);
-
-    this.logger.log(
-      `Retrieved ${paginatedPigeons.length} pigeons (page ${pageOptions.page}, size ${pageOptions.size})`,
-    );
 
     return {
       items: paginatedPigeons,
@@ -113,8 +106,6 @@ export class PigeonRepository {
     };
 
     await pigeonRef.update(updatedPigeon);
-    this.logger.log(`Updated pigeon with ID: ${id}`);
-
     return updatedPigeon;
   }
 
@@ -128,7 +119,6 @@ export class PigeonRepository {
     }
 
     await pigeonRef.remove();
-    this.logger.log(`Deleted pigeon with ID: ${id}`);
   }
 
   async search(query: string): Promise<Pigeon[]> {
@@ -156,7 +146,6 @@ export class PigeonRepository {
       }
     });
 
-    this.logger.log(`Search for "${query}" returned ${pigeons.length} results`);
     return pigeons;
   }
 
@@ -168,7 +157,7 @@ export class PigeonRepository {
       const pigeon = childSnapshot.val() as Pigeon;
       if (pigeon && pigeon.ringNo === ringNo) {
         foundPigeon = pigeon;
-        return true; // Stop iteration
+        return true;
       }
     });
 
@@ -183,7 +172,7 @@ export class PigeonRepository {
       const pigeon = childSnapshot.val() as Pigeon;
       if (pigeon && pigeon.documentationNo === documentationNo) {
         foundPigeon = pigeon;
-        return true; // Stop iteration
+        return true;
       }
     });
 
