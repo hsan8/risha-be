@@ -1,6 +1,20 @@
 {
   "rules": {
     ".read": true,
-    ".write": true
+    ".write": true,
+    "pigeons": {
+      ".read": true,
+      ".write": true
+    },
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || auth != null",
+        ".write": "$uid === auth.uid || auth != null"
+      }
+    },
+    "public": {
+      ".read": true,
+      ".write": true
+    }
   }
 }

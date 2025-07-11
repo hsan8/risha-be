@@ -4,15 +4,28 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { AbstractHttpAdapter } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Request, Response } from 'express';
 
 const DEFAULT_PORT = 3000;
 
+function loadFirebaseConfig() {
+  // In Firebase Functions v2, environment variables are loaded automatically
+  // No need to use functions.config() - just rely on process.env
+  // Firebase Functions v2 - using environment variables directly
+}
+
 export async function createApp(httpAdapter?: AbstractHttpAdapter) {
+  // Load Firebase config before creating the app
+  loadFirebaseConfig();
+
   const app = httpAdapter
     ? await NestFactory.create(AppModule, httpAdapter, { bufferLogs: true })
     : await NestFactory.create(AppModule, { bufferLogs: true });
 
-  app.enableCors();
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   return app;
 }
@@ -36,7 +49,7 @@ export async function bootstrap(app: INestApplication, swaggerDocument: OpenAPIO
   const config = app.get(ConfigService);
 
   // Set up Swagger JSON endpoint
-  app.use('/api-docs-json', (req, res) => {
+  app.use('/api-docs-json', (_req: Request, res: Response) => {
     res.json(swaggerDocument);
   });
 

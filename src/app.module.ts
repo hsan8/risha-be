@@ -10,6 +10,8 @@ import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
 import { PigeonModule } from './pigeon/pigeon.module';
 import { FormulaModule } from './formula/formula.module';
+import { AuthModule } from './auth/auth.module';
+import { Environment } from './core/enums';
 
 @Module({
   imports: [
@@ -17,11 +19,19 @@ import { FormulaModule } from './formula/formula.module';
     I18nModule.forRoot(buildI18nOptions()),
     LoggerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => buildPinoOptions(config),
+      useFactory: (config: ConfigService) => {
+        const env = config.get('NODE_ENV');
+        if (env === Environment.DEV) {
+          return buildPinoOptions(config);
+        }
+        // In production, return empty options to use default console logging
+        return {};
+      },
     }),
     MiddlewaresModule, // LoggerModule must be registered first before this module
 
     // Service modules
+    AuthModule,
     PigeonModule,
     FormulaModule,
     HealthModule,

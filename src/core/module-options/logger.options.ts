@@ -5,64 +5,43 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { Params as PinoParams } from 'nestjs-pino';
 import { Options as PinoHttpOptions } from 'pino-http';
 import URL from 'url';
-import { Environment } from '../enums';
 import { isTrue } from '../utils';
 
 const MASK = '**********';
 const REQ_ID_RANDOM_PREFIX_LENGTH = 5;
 
 export function buildPinoOptions(config: ConfigService): PinoParams {
-  const environment = config.getOrThrow('NODE_ENV');
   const level = config.getOrThrow('LOG_LEVEL', 'info');
-  const logTimestamp = isTrue(config.getOrThrow('LOG_TIMESTAMP', true));
   const logRequestBody = isTrue(config.getOrThrow('LOG_REQUEST_BODY', false));
   const logRequestHeaders = isTrue(config.getOrThrow('LOG_REQUEST_HEADERS', true));
   const maskLoggedSensitiveData = isTrue(config.getOrThrow('MASK_LOGGED_SENSITIVE_DATA', true));
-  const quietReqLogger = isTrue(config.getOrThrow('QUIET_REQ_LOGGER', true));
 
-  // @see https://github.com/pinojs/pino-http#pinohttpopts-stream
+  // Base configuration without transport
   const pinoHttp: PinoHttpOptions = {
     level,
-    safe: true,
-    timestamp: getTimestamp(logTimestamp, 'time'),
-    quietReqLogger,
-    transport: getTransport(environment),
+    enabled: true,
+    timestamp: true,
+    messageKey: 'message',
+    formatters: {
+      level: (label) => ({ level: label.toUpperCase() }),
+    },
+  };
+
+  // Add common configuration for all environments
+  Object.assign(pinoHttp, {
     serializers: {
       req: getRequestSerializer(logRequestBody),
-    },
-    formatters: {
-      level: formatLevel,
     },
     redact: getRedactOptions(logRequestHeaders, maskLoggedSensitiveData),
     autoLogging: getAutoLoggingOptions(['/health', '/health/details', '/metrics']),
     customProps,
     customLogLevel,
     genReqId,
-  };
+  });
+
+  // Note: pino-pretty transport removed completely to avoid Firebase Functions issues
 
   return { pinoHttp };
-}
-
-/**
- * Get formatted time if it's needed
- */
-function getTimestamp(logTimestamp: boolean, key: string): PinoHttpOptions['timestamp'] {
-  return () => (logTimestamp ? `,"${key}":"${new Date().toISOString()}"` : '');
-}
-
-/**
- * In development environment, we use pino-pretty to format the logs.
- * In non-development environment, we should use the default pino format (JSON) to help monitoring tools parse the logs.
- */
-function getTransport(environment: any): PinoHttpOptions['transport'] {
-  if (environment === Environment.DEV) {
-    return {
-      target: 'pino-pretty',
-      options: { singleLine: true },
-    };
-  }
-
-  return undefined;
 }
 
 /**
@@ -155,17 +134,10 @@ function getLoggedFieldPaths(keys: string[]) {
 }
 
 /**
- * Format the log level to use its label instead of it's numeric value
- */
-function formatLevel(label: string) {
-  return { level: label.toLocaleUpperCase() };
-}
-
-/**
  * Add custom properties to the logs.
  */
 const customProps: PinoHttpOptions['customProps'] = (_req: IncomingMessage, _res: ServerResponse<IncomingMessage>) => {
-  return { context: 'HTTP' };
+  return { context: 'HTTP', timestamp: new Date().toISOString() };
 };
 
 /**
@@ -179,7 +151,7 @@ const customProps: PinoHttpOptions['customProps'] = (_req: IncomingMessage, _res
  * - 0: silent
  */
 const customLogLevel: PinoHttpOptions['customLogLevel'] = (
-  req: IncomingMessage,
+  _req: IncomingMessage,
   res: ServerResponse<IncomingMessage>,
   error?: Error,
 ) => {

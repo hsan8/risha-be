@@ -68,6 +68,9 @@ node_modules/
 # dotenv environment variables file
 .env
 
+# Configuration files with sensitive data
+src/config/app.env
+
 # dataconnect generated files
 .dataconnect
 

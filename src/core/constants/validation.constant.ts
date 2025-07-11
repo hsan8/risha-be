@@ -1,4 +1,7 @@
 export const VALIDATION_CONSTANTS = {
+  // Server defaults
+  DEFAULT_PORT: 3000,
+
   // Common validation lengths
   MIN_NAME_LENGTH: 2,
   MAX_NAME_LENGTH: 100,
@@ -24,4 +27,9 @@ export const VALIDATION_CONSTANTS = {
 
   // Registration number
   SEQUENCE_PADDING: 3,
+
+  // Auth validation constants
+  MIN_PASSWORD_LENGTH: 4,
+  MAX_PASSWORD_LENGTH: 128,
+  OTP_LENGTH: 5,
 } as const;

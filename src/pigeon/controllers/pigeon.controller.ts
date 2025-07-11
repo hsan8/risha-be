@@ -26,15 +26,28 @@ export class PigeonController {
   @ApiOperation({ summary: 'Get all pigeons' })
   @ApiDataPageResponse(PigeonResponseDto)
   async findAll(@Query() pageOptions: PageOptionsRequestDto): Promise<DataPageResponseDto<PigeonResponseDto>> {
-    const { items, total } = await this.pigeonService.findAll(pageOptions);
-    return ResponseFactory.dataPage(
-      items.map((pigeon) => new PigeonResponseDto(pigeon)),
-      {
-        page: pageOptions.page,
-        size: pageOptions.size,
-        itemCount: total,
-      },
-    );
+    this.logger.log('🐦 PigeonController.findAll - Starting');
+    this.logger.log('🐦 Page options:', pageOptions);
+
+    try {
+      this.logger.log('🐦 Calling pigeonService.findAll...');
+      const { items, total } = await this.pigeonService.findAll(pageOptions);
+      this.logger.log('🐦 Service returned:', { itemsCount: items.length, total });
+
+      const response = ResponseFactory.dataPage(
+        items.map((pigeon) => new PigeonResponseDto(pigeon)),
+        {
+          page: pageOptions.page,
+          size: pageOptions.size,
+          itemCount: total,
+        },
+      );
+      this.logger.log('🐦 Returning response');
+      return response;
+    } catch (error) {
+      this.logger.error('🐦 Error in findAll:', error);
+      throw error;
+    }
   }
 
   @Get('alive')

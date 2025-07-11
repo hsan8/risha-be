@@ -46,26 +46,39 @@ export class PigeonRepository {
   }
 
   async findAll(pageOptions: PageOptionsRequestDto): Promise<{ items: Pigeon[]; total: number }> {
-    const snapshot = await this.collectionRef.once('value');
-    const pigeons: Pigeon[] = [];
+    this.logger.log('🐦 PigeonRepository.findAll - Starting database query...');
+    this.logger.log('🐦 Database reference path:', this.collectionRef.toString());
 
-    snapshot.forEach((childSnapshot) => {
-      const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon) {
-        pigeons.push(pigeon);
-      }
-    });
+    try {
+      this.logger.log('🐦 Calling this.collectionRef.once("value")...');
+      const snapshot = await this.collectionRef.once('value');
+      this.logger.log('🐦 Database query completed. Snapshot exists:', snapshot.exists());
 
-    pigeons.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const pigeons: Pigeon[] = [];
 
-    const startIndex = (pageOptions.page - 1) * pageOptions.size;
-    const endIndex = startIndex + pageOptions.size;
-    const paginatedPigeons = pigeons.slice(startIndex, endIndex);
+      snapshot.forEach((childSnapshot) => {
+        const pigeon = childSnapshot.val() as Pigeon;
+        if (pigeon) {
+          pigeons.push(pigeon);
+        }
+      });
 
-    return {
-      items: paginatedPigeons,
-      total: pigeons.length,
-    };
+      this.logger.log('🐦 Processing complete. Found', pigeons.length, 'pigeons');
+
+      pigeons.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      const startIndex = (pageOptions.page - 1) * pageOptions.size;
+      const endIndex = startIndex + pageOptions.size;
+      const paginatedPigeons = pigeons.slice(startIndex, endIndex);
+
+      return {
+        items: paginatedPigeons,
+        total: pigeons.length,
+      };
+    } catch (error) {
+      console.error('🐦 PigeonRepository.findAll - Database error:', error);
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<Pigeon | null> {

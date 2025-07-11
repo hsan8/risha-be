@@ -4,8 +4,6 @@ import * as admin from 'firebase-admin';
 import { App } from 'firebase-admin/app';
 import { Database } from 'firebase-admin/database';
 import { getFunctions } from 'firebase-admin/functions';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class FirebaseService {
@@ -19,6 +17,15 @@ export class FirebaseService {
 
   private initializeApp(): void {
     try {
+      // Force clear any emulator environment variables
+      delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+      delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+      delete process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+      delete process.env.FIREBASE_FIRESTORE_EMULATOR_HOST;
+      delete process.env.GCLOUD_PROJECT;
+
+      this.logger.log('Cleared emulator environment variables');
+
       // Check if Firebase is already initialized
       try {
         this.app = admin.app();
@@ -29,59 +36,40 @@ export class FirebaseService {
         // App doesn't exist, continue with initialization
       }
 
-      const serviceAccountPath = this.configService.get('FIREBASE_SERVICE_ACCOUNT');
-      const databaseURL = this.configService.get('FIREBASE_DATABASE_URL');
-      const projectId = this.configService.get('FIREBASE_PROJECT_ID');
-      const isDevEnv = this.configService.get('NODE_ENV') === 'dev';
+      const databaseURL = 'https://risha-ef11e-default-rtdb.europe-west1.firebasedatabase.app/';
+      const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
 
-      this.logger.debug('Firebase configuration:', {
-        serviceAccountPath,
+      // Load service account from environment variables
+      const serviceAccount = {
+        type: 'service_account',
+        project_id: projectId,
+        private_key_id: this.configService.get<string>('FIREBASE_PRIVATE_KEY_ID'),
+        private_key: this.configService.get<string>('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+        client_email: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
+        client_id: this.configService.get<string>('FIREBASE_CLIENT_ID'),
+        auth_uri: this.configService.get<string>('FIREBASE_AUTH_URI'),
+        token_uri: this.configService.get<string>('FIREBASE_TOKEN_URI'),
+        auth_provider_x509_cert_url: this.configService.get<string>('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+        client_x509_cert_url: this.configService.get<string>('FIREBASE_CLIENT_X509_CERT_URL'),
+        universe_domain: this.configService.get<string>('FIREBASE_UNIVERSE_DOMAIN'),
+      };
+
+      this.logger.log('Firebase configuration:', {
         databaseURL,
         projectId,
-        isDevEnv,
       });
 
-      if (!serviceAccountPath || !databaseURL || !projectId) {
-        throw new Error('Firebase configuration is missing');
-      }
-
-      // Load service account from file
-      const serviceAccountFile = path.resolve(process.cwd(), serviceAccountPath);
-      this.logger.debug('Attempting to load service account from:', serviceAccountFile);
-
-      if (!fs.existsSync(serviceAccountFile)) {
-        throw new Error(`Firebase service account file not found at: ${serviceAccountFile}`);
-      }
-
-      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountFile, 'utf8'));
-      this.logger.debug('Service account loaded successfully');
-
-      // Initialize the app with emulator settings in dev mode
-      if (isDevEnv) {
-        process.env.FIREBASE_AUTH_EMULATOR_HOST = this.configService.get('FIREBASE_AUTH_EMULATOR_HOST');
-        process.env.FIREBASE_DATABASE_EMULATOR_HOST = this.configService.get('FIREBASE_DATABASE_EMULATOR_HOST');
-        process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST = this.configService.get('FIREBASE_FUNCTIONS_EMULATOR_HOST');
-
-        this.logger.log('Using Firebase emulators');
-      }
-
+      // Initialize with service account credentials
       this.app = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
+        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
         databaseURL,
         projectId,
       });
 
       this.logger.log('Firebase app initialized successfully');
 
+      // Initialize database
       this.database = admin.database(this.app);
-
-      // Only use emulator in development
-      if (isDevEnv) {
-        const [host, port] = this.configService.get('FIREBASE_DATABASE_EMULATOR_HOST').split(':');
-        this.database.useEmulator(host, parseInt(port, 10));
-        this.logger.log(`Using Firebase database emulator at ${host}:${port}`);
-      }
-
       this.logger.log('Firebase database initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Firebase app', {

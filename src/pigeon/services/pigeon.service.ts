@@ -72,8 +72,15 @@ export class PigeonService {
 
   async findAll(pageOptions: PageOptionsRequestDto): Promise<{ items: Pigeon[]; total: number }> {
     try {
-      return await this.pigeonRepository.findAll(pageOptions);
+      this.logger.log('🐦 PigeonService.findAll - Starting with options:', pageOptions);
+      const result = await this.pigeonRepository.findAll(pageOptions);
+      this.logger.log('🐦 PigeonService.findAll - Repository returned:', {
+        itemsCount: result.items.length,
+        total: result.total,
+      });
+      return result;
     } catch (error) {
+      this.logger.error('🐦 PigeonService.findAll - Error:', error);
       this.logger.error('Error retrieving pigeons:', error);
       throw error;
     }
