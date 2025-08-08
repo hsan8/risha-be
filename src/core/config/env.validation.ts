@@ -1,14 +1,7 @@
 import * as Joi from 'joi';
 import { Environment } from '../enums';
-import { VALIDATION_CONSTANTS } from '../constants/validation.constant';
 
 export const validationSchema = Joi.object({
-  // Environment
-  NODE_ENV: Joi.string().valid(Environment.DEV, Environment.PROD, Environment.TEST).default(Environment.DEV),
-
-  // Server
-  PORT: Joi.number().default(VALIDATION_CONSTANTS.DEFAULT_PORT),
-
   // Firebase
   FB_PROJECT_ID: Joi.string().required(),
   FB_DATABASE_URL: Joi.string().required(),

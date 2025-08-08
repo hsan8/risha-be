@@ -2,5 +2,13 @@
   "IsNumber": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a number",
   "IsInt": "$t({path}.PROPERTY_MAPPINGS.{property}) must be an integer",
   "Min": "$t({path}.PROPERTY_MAPPINGS.{property}) must not be less than {constraints.0}",
-  "Max": "$t({path}.PROPERTY_MAPPINGS.{property}) must not be greater than {constraints.0}"
+  "Max": "$t({path}.PROPERTY_MAPPINGS.{property}) must not be greater than {constraints.0}",
+  "IsString": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a string",
+  "IsEmail": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a valid email address",
+  "IsNotEmpty": "$t({path}.PROPERTY_MAPPINGS.{property}) should not be empty",
+  "Length": "$t({path}.PROPERTY_MAPPINGS.{property}) must be between {constraints.0} and {constraints.1} characters",
+  "NumbersOnly": "$t({path}.PROPERTY_MAPPINGS.{property}) must contain only numbers",
+  "PhoneFormat": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a valid phone number",
+  "KuwaitPhoneFormat": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a valid Kuwait phone number (+965XXXXXXXX)",
+  "IsFirebaseId": "$t({path}.PROPERTY_MAPPINGS.{property}) must be a valid Firebase ID"
 }

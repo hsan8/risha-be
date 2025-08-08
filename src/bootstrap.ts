@@ -6,8 +6,6 @@ import { AbstractHttpAdapter } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Request, Response } from 'express';
 
-const DEFAULT_PORT = 3000;
-
 function loadFirebaseConfig() {
   // In Firebase Functions v2, environment variables are loaded automatically
   // No need to use functions.config() - just rely on process.env
@@ -56,5 +54,6 @@ export async function bootstrap(app: INestApplication, swaggerDocument: OpenAPIO
   SwaggerModule.setup(config.getOrThrow<string>('SWAGGER_API_DOCS_PATH'), app, swaggerDocument);
 
   await app.startAllMicroservices();
-  await app.listen(config.get<number>('PORT', DEFAULT_PORT));
+  const FIREBASE_FUNCTIONS_PORT = 5001;
+  await app.listen(FIREBASE_FUNCTIONS_PORT);
 }

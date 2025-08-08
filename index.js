@@ -55,36 +55,25 @@ async function createNestApp() {
 /**
  * Firebase Functions v2 HTTP function
  */
-exports.api = onRequest(
-  {
-    // Function configuration
-    timeoutSeconds: 300, // 5 minutes
-    memory: '512MiB', // Increased memory for better performance
-    minInstances: 1, // Keep one instance warm
-    maxInstances: 3,
-    region: 'us-central1',
-    cors: true,
-  },
-  async (req, res) => {
-    try {
-      console.log(`🚀 Request: ${req.method} ${req.url}`);
+exports.api = onRequest(async (req, res) => {
+  try {
+    console.log(`🚀 Request: ${req.method} ${req.url}`);
 
-      // Initialize NestJS app if not already done
-      await createNestApp();
+    // Initialize NestJS app if not already done
+    await createNestApp();
 
-      // Handle the request
-      server(req, res);
-    } catch (error) {
-      console.error('❌ Error in Firebase function:', error);
-      console.error('❌ Stack trace:', error.stack);
+    // Handle the request
+    server(req, res);
+  } catch (error) {
+    console.error('❌ Error in Firebase function:', error);
+    console.error('❌ Stack trace:', error.stack);
 
-      if (!res.headersSent) {
-        res.status(500).json({
-          error: 'Internal Server Error',
-          message: error.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message,
+        timestamp: new Date().toISOString(),
+      });
     }
-  },
-);
+  }
+});

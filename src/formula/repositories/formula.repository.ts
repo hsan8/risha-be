@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
-import { Formula } from '../entities';
-import { CreateFormulaRequestDto } from '../dto';
-import { FirebaseService } from '@/core/services/firebase.service';
-import { FORMULA_CONSTANTS } from '../constants';
+import { Formula } from '@/formula/entities';
+import { CreateFormulaRequestDto } from '@/formula/dto/requests';
+import { FirebaseService } from '@/core/services';
+import { FORMULA_CONSTANTS } from '@/formula/constants';
 import { PageOptionsRequestDto } from '@/core/dtos';
-import { FormulaStatus, FormulaActions } from '../enums';
+import { FormulaStatus, FormulaActions } from '@/formula/enums';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -19,16 +19,22 @@ export class FormulaRepository {
     this.collectionRef = this.db.ref(FORMULA_CONSTANTS.COLLECTION_NAME);
   }
 
-  async create(createFormulaDto: CreateFormulaRequestDto): Promise<Formula> {
+  private getUserFormulasRef(userId: string): Reference {
+    return this.db.ref(`users/${userId}/formulas`);
+  }
+
+  async create(createFormulaDto: CreateFormulaRequestDto, userId: string): Promise<Formula> {
     const formula = this.dtoToEntity(createFormulaDto);
-    const formulaRef = this.collectionRef.child(formula.id);
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    const formulaRef = userFormulasRef.child(formula.id);
     await formulaRef.set(formula);
     this.logger.log(`Created formula with ID: ${formula.id}`);
     return formula;
   }
 
-  async findAll(pageOptions: PageOptionsRequestDto): Promise<{ items: Formula[]; total: number }> {
-    const snapshot = await this.collectionRef.once('value');
+  async findAll(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Formula[]; total: number }> {
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    const snapshot = await userFormulasRef.once('value');
     const formulas: Formula[] = [];
 
     snapshot.forEach((childSnapshot) => {
@@ -54,20 +60,23 @@ export class FormulaRepository {
     };
   }
 
-  async findById(id: string): Promise<Formula | null> {
-    const snapshot = await this.collectionRef.child(id).once('value');
+  async findById(id: string, userId: string): Promise<Formula | null> {
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    const snapshot = await userFormulasRef.child(id).once('value');
     return snapshot.val() as Formula;
   }
 
-  async update(id: string, formula: Formula): Promise<Formula> {
+  async update(id: string, formula: Formula, userId: string): Promise<Formula> {
     formula.updatedAt = new Date();
-    await this.collectionRef.child(id).update(formula);
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    await userFormulasRef.child(id).update(formula);
     this.logger.log(`Updated formula with ID: ${id}`);
     return formula;
   }
 
-  async search(query: string): Promise<Formula[]> {
-    const snapshot = await this.collectionRef.once('value');
+  async search(query: string, userId: string): Promise<Formula[]> {
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    const snapshot = await userFormulasRef.once('value');
     const formulas: Formula[] = [];
 
     snapshot.forEach((childSnapshot) => {
@@ -88,13 +97,15 @@ export class FormulaRepository {
     return formulas;
   }
 
-  async count(): Promise<number> {
-    const snapshot = await this.collectionRef.once('value');
+  async count(userId: string): Promise<number> {
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    const snapshot = await userFormulasRef.once('value');
     return snapshot.numChildren();
   }
 
-  async countByStatus(status: FormulaStatus): Promise<number> {
-    const snapshot = await this.collectionRef.once('value');
+  async countByStatus(status: FormulaStatus, userId: string): Promise<number> {
+    const userFormulasRef = this.getUserFormulasRef(userId);
+    const snapshot = await userFormulasRef.once('value');
     let count = 0;
 
     snapshot.forEach((childSnapshot) => {

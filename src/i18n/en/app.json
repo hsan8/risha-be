@@ -37,7 +37,11 @@
       "motherNotFound": "Mother pigeon with ID {id} not found",
       "notFemalePigeon": "Pigeon with ID {id} is not a female pigeon",
       "motherNotAlive": "Mother pigeon with ID {id} is not alive",
-      "invalidDocumentationNumberFormat": "Documentation number must follow the pattern: ####-#-### (e.g., 2025-A-123)"
+      "invalidDocumentationNumberFormat": "Documentation number must follow the pattern: ####-#-### (e.g., 2025-A-123)",
+      "fatherMustBeAlive": "Father pigeon with ID {id} must be alive",
+      "fatherMustBeMale": "Pigeon with ID {id} must be male",
+      "motherMustBeFemale": "Pigeon with ID {id} must be female",
+      "motherMustBeAlive": "Mother pigeon with ID {id} must be alive"
     }
   }
 }

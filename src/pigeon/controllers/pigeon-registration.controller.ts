@@ -1,10 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { PigeonService } from '../services';
 import { ApiDataResponse } from '@/core/decorators/api';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto } from '@/core/dtos';
+import { JwtAuthGuard } from '@/auth/guards';
+import { UserId } from '@/user/decorators';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @ApiTags('Pigeon Registration')
 @Controller('pigeons/registration')
 export class PigeonRegistrationController {
@@ -18,8 +22,11 @@ export class PigeonRegistrationController {
     type: String,
   })
   @ApiDataResponse('string')
-  async generateRegistrationNumber(@Param('yearOfBirth') yearOfBirth: string): Promise<DataResponseDto<string>> {
-    const registrationNumber = await this.pigeonService.generateRegistrationNumber(yearOfBirth);
+  async generateRegistrationNumber(
+    @Param('yearOfBirth') yearOfBirth: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<string>> {
+    const registrationNumber = await this.pigeonService.generateRegistrationNumber(yearOfBirth, userId);
     return ResponseFactory.data(registrationNumber);
   }
 }

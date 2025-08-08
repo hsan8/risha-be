@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEmail, IsEnum, IsDate, IsBoolean } from 'class-validator';
-import { OTPType } from '../enums/auth.enum';
+import { OTPType } from '@/auth/enums';
 
 export class OTP {
   @ApiProperty({ description: 'Unique identifier for the OTP' })

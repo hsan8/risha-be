@@ -1,5 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpStatus, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
+  Logger,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { PigeonService } from '../services';
 import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
 import { PigeonResponseDto, PigeonDetailsResponseDto } from '../dto/responses';
@@ -8,30 +21,42 @@ import { PigeonStatus } from '../enums';
 import { ApiDataResponse, ApiDataArrayResponse, ApiDataPageResponse } from '@/core/decorators/api';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto, DataArrayResponseDto, DataPageResponseDto } from '@/core/dtos';
+import { JwtAuthGuard } from '@/auth/guards';
+import { UserId } from '@/user/decorators';
 
 @ApiTags('Pigeons')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('pigeons')
 export class PigeonController {
+  private readonly logger = new Logger(PigeonController.name);
+
   constructor(private readonly pigeonService: PigeonService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new pigeon' })
   @ApiDataResponse(PigeonResponseDto, HttpStatus.CREATED)
-  async create(@Body() createPigeonDto: CreatePigeonRequestDto): Promise<DataResponseDto<PigeonResponseDto>> {
-    const pigeon = await this.pigeonService.create(createPigeonDto);
+  async create(
+    @Body() createPigeonDto: CreatePigeonRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<PigeonResponseDto>> {
+    const pigeon = await this.pigeonService.create(createPigeonDto, userId);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all pigeons' })
   @ApiDataPageResponse(PigeonResponseDto)
-  async findAll(@Query() pageOptions: PageOptionsRequestDto): Promise<DataPageResponseDto<PigeonResponseDto>> {
+  async findAll(
+    @Query() pageOptions: PageOptionsRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataPageResponseDto<PigeonResponseDto>> {
     this.logger.log('🐦 PigeonController.findAll - Starting');
     this.logger.log('🐦 Page options:', pageOptions);
 
     try {
       this.logger.log('🐦 Calling pigeonService.findAll...');
-      const { items, total } = await this.pigeonService.findAll(pageOptions);
+      const { items, total } = await this.pigeonService.findAll(pageOptions, userId);
       this.logger.log('🐦 Service returned:', { itemsCount: items.length, total });
 
       const response = ResponseFactory.dataPage(
@@ -53,8 +78,11 @@ export class PigeonController {
   @Get('alive')
   @ApiOperation({ summary: 'Get all alive pigeons' })
   @ApiDataArrayResponse(PigeonResponseDto)
-  async findAlivePigeons(@Query() pageOptions: PageOptionsRequestDto): Promise<DataPageResponseDto<PigeonResponseDto>> {
-    const pigeons = await this.pigeonService.findAlivePigeons();
+  async findAlivePigeons(
+    @Query() pageOptions: PageOptionsRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataPageResponseDto<PigeonResponseDto>> {
+    const pigeons = await this.pigeonService.findAlivePigeons(userId);
     return ResponseFactory.dataPage(
       pigeons.map((pigeon) => new PigeonResponseDto(pigeon)),
       {
@@ -68,8 +96,11 @@ export class PigeonController {
   @Get('parents')
   @ApiOperation({ summary: 'Get all alive parent pigeons' })
   @ApiDataResponse(Object)
-  async findAliveParents(@Query() pageOptions: PageOptionsRequestDto): Promise<DataPageResponseDto<PigeonResponseDto>> {
-    const result = await this.pigeonService.findAliveParents();
+  async findAliveParents(
+    @Query() pageOptions: PageOptionsRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataPageResponseDto<PigeonResponseDto>> {
+    const result = await this.pigeonService.findAliveParents(userId);
     return ResponseFactory.dataPage(
       [
         ...result.fathers.map((pigeon) => new PigeonResponseDto(pigeon)),
@@ -86,8 +117,8 @@ export class PigeonController {
   @Get('count')
   @ApiOperation({ summary: 'Get total count of pigeons' })
   @ApiDataResponse('number')
-  async count(): Promise<DataResponseDto<number>> {
-    const count = await this.pigeonService.count();
+  async count(@UserId() userId: string): Promise<DataResponseDto<number>> {
+    const count = await this.pigeonService.count(userId);
     return ResponseFactory.data(count);
   }
 
@@ -99,8 +130,11 @@ export class PigeonController {
     enum: PigeonStatus,
   })
   @ApiDataResponse('number')
-  async countByStatus(@Param('status') status: PigeonStatus): Promise<DataResponseDto<number>> {
-    const count = await this.pigeonService.countByStatus(status);
+  async countByStatus(
+    @Param('status') status: PigeonStatus,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<number>> {
+    const count = await this.pigeonService.countByStatus(status, userId);
     return ResponseFactory.data(count);
   }
 
@@ -112,8 +146,8 @@ export class PigeonController {
     type: String,
   })
   @ApiDataArrayResponse(PigeonResponseDto)
-  async search(@Query('q') query: string): Promise<DataArrayResponseDto<PigeonResponseDto>> {
-    const pigeons = await this.pigeonService.search(query);
+  async search(@Query('q') query: string, @UserId() userId: string): Promise<DataArrayResponseDto<PigeonResponseDto>> {
+    const pigeons = await this.pigeonService.search(query, userId);
     return ResponseFactory.dataArray(pigeons.map((pigeon) => new PigeonResponseDto(pigeon)));
   }
 
@@ -125,8 +159,11 @@ export class PigeonController {
     type: String,
   })
   @ApiDataResponse(PigeonResponseDto)
-  async findByRingNo(@Param('ringNo') ringNo: string): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonService.findByRingNo(ringNo);
+  async findByRingNo(
+    @Param('ringNo') ringNo: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<PigeonResponseDto | null>> {
+    const pigeon = await this.pigeonService.findByRingNo(ringNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 
@@ -140,8 +177,9 @@ export class PigeonController {
   @ApiDataResponse(PigeonResponseDto)
   async findByDocumentationNo(
     @Param('documentationNo') documentationNo: string,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonService.findByDocumentationNo(documentationNo);
+    const pigeon = await this.pigeonService.findByDocumentationNo(documentationNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 
@@ -153,8 +191,11 @@ export class PigeonController {
     type: String,
   })
   @ApiDataResponse('string')
-  async generateRegistrationNumber(@Param('yearOfBirth') yearOfBirth: string): Promise<DataResponseDto<string>> {
-    const registrationNumber = await this.pigeonService.generateRegistrationNumber(yearOfBirth);
+  async generateRegistrationNumber(
+    @Param('yearOfBirth') yearOfBirth: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<string>> {
+    const registrationNumber = await this.pigeonService.generateRegistrationNumber(yearOfBirth, userId);
     return ResponseFactory.data(registrationNumber);
   }
 
@@ -166,8 +207,8 @@ export class PigeonController {
     type: String,
   })
   @ApiDataResponse(PigeonDetailsResponseDto)
-  async findOne(@Param('id') id: string): Promise<DataResponseDto<PigeonDetailsResponseDto>> {
-    const pigeon = await this.pigeonService.findOne(id);
+  async findOne(@Param('id') id: string, @UserId() userId: string): Promise<DataResponseDto<PigeonDetailsResponseDto>> {
+    const pigeon = await this.pigeonService.findOne(id, userId);
     return ResponseFactory.data(new PigeonDetailsResponseDto(pigeon));
   }
 
@@ -182,8 +223,9 @@ export class PigeonController {
   async update(
     @Param('id') id: string,
     @Body() updatePigeonDto: UpdatePigeonRequestDto,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto>> {
-    const pigeon = await this.pigeonService.update(id, updatePigeonDto);
+    const pigeon = await this.pigeonService.update(id, updatePigeonDto, userId);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 
@@ -198,8 +240,9 @@ export class PigeonController {
   async updateStatus(
     @Param('id') id: string,
     @Body() body: UpdatePigeonRequestDto,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto>> {
-    const pigeon = await this.pigeonService.update(id, body);
+    const pigeon = await this.pigeonService.update(id, body, userId);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 
@@ -211,7 +254,7 @@ export class PigeonController {
     description: 'Pigeon ID',
     type: String,
   })
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.pigeonService.remove(id);
+  async remove(@Param('id') id: string, @UserId() userId: string): Promise<void> {
+    await this.pigeonService.remove(id, userId);
   }
 }

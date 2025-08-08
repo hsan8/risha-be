@@ -1,9 +1,9 @@
+import { IsString, IsEmail, IsOptional, Length, Matches, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsString, IsEmail, IsNotEmpty, Length, Matches, IsOptional } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
-import { VALIDATION_CONSTANTS } from '@/core/constants/validation.constant';
-import { AUTH_CONSTANTS } from '@/auth/constants/auth.constants';
+import { VALIDATION_CONSTANTS } from '@/core/constants';
+import { AUTH_CONSTANTS } from '@/auth/constants';
 
 export class RegisterRequestDto {
   @ApiProperty({ example: 'أحمد محمد' })
@@ -50,15 +50,32 @@ export class RegisterRequestDto {
   })
   password!: string;
 
-  @ApiProperty({ example: '+966501234567', required: false })
+  @ApiProperty({ example: '+96512345678', required: false })
   @Expose()
   @IsOptional()
-  @Transform(({ value }) => value?.trim?.() ?? value)
+  @Transform(({ value }) => {
+    if (!value) return value;
+    const trimmed = value.trim();
+    // If phone number doesn't start with +965, add it
+    if (trimmed && !trimmed.startsWith('+965') && /^\d{8}$/.test(trimmed)) {
+      return `+965${trimmed}`;
+    }
+    return trimmed;
+  })
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'auth.phone' }),
   })
-  @Matches(/^\+[1-9]\d{1,14}$/, {
-    message: i18n('validation.PhoneFormat', { path: 'app', property: 'auth.phone' }),
+  @Matches(/^\+965[0-9]{8}$/, {
+    message: i18n('validation.KuwaitPhoneFormat', { path: 'app', property: 'auth.phone' }),
   })
   phone?: string;
+
+  @ApiProperty({ example: 'Kuwait', required: false })
+  @Expose()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim?.() ?? 'Kuwait')
+  @IsString({
+    message: i18n('validation.IsString', { path: 'app', property: 'auth.country' }),
+  })
+  country?: string;
 }

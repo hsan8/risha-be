@@ -6,12 +6,14 @@ import { LoggerModule } from 'nestjs-pino';
 import { AllExceptionsFilter, buildI18nValidationExceptionFilter } from './core/filters';
 import { buildConfigOptions, buildI18nOptions, buildPinoOptions } from './core/module-options';
 import { MiddlewaresModule } from './core/modules';
+import { ServicesModule } from './core/modules/services/services.module';
 import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
 import { PigeonModule } from './pigeon/pigeon.module';
 import { FormulaModule } from './formula/formula.module';
 import { AuthModule } from './auth/auth.module';
 import { Environment } from './core/enums';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -29,9 +31,11 @@ import { Environment } from './core/enums';
       },
     }),
     MiddlewaresModule, // LoggerModule must be registered first before this module
+    ServicesModule, // Global services module
 
     // Service modules
     AuthModule,
+    UserModule,
     PigeonModule,
     FormulaModule,
     HealthModule,

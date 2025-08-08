@@ -1,14 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
-import { User } from '../entities/user.entity';
-import { FirebaseService } from '@/core/services/firebase.service';
-import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { AuthProvider, UserStatus, UserRole } from '../enums/auth.enum';
+import { User } from '@/user/entities';
+import { FirebaseService } from '@/core/services';
+import { AUTH_CONSTANTS } from '@/auth/constants';
+import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export interface CreateUserData {
   name: string;
   email: string;
   phone?: string;
+  country?: string;
   avatar?: string;
   passwordHash?: string;
   provider: AuthProvider;
@@ -39,11 +40,7 @@ export class UserRepository {
       id,
       name: data.name,
       email: data.email,
-      phone: data.phone || null,
-      avatar: data.avatar || null,
-      passwordHash: data.passwordHash,
       provider: data.provider,
-      providerId: data.providerId || null,
       status: data.status,
       role: data.role,
       emailVerified: data.emailVerified,
@@ -51,6 +48,14 @@ export class UserRepository {
       createdAt: now,
       updatedAt: now,
     };
+
+    // Only add optional fields if they have values
+    if (data.phone) user.phone = data.phone;
+    if (data.country) user.country = data.country;
+    else user.country = 'Kuwait';
+    if (data.avatar) user.avatar = data.avatar;
+    if (data.passwordHash) user.passwordHash = data.passwordHash;
+    if (data.providerId) user.providerId = data.providerId;
 
     await userRef.set(user);
     return user;

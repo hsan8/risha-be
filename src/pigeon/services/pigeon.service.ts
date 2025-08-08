@@ -16,16 +16,19 @@ export class PigeonService {
     private readonly registrationNumberService: RegistrationNumberService,
   ) {}
 
-  async create(createPigeonDto: CreatePigeonRequestDto): Promise<Pigeon> {
+  async create(createPigeonDto: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
     try {
       // Check if ring number already exists
-      const existingPigeonWithRing = await this.pigeonRepository.findByRingNo(createPigeonDto.ringNo);
+      const existingPigeonWithRing = await this.pigeonRepository.findByRingNo(createPigeonDto.ringNo, userId);
       if (existingPigeonWithRing) {
         throw new ConflictException(I18nMessage.error('duplicateRingNumber', { ringNo: createPigeonDto.ringNo }));
       }
 
       // Check if documentation number already exists
-      const existingPigeonWithDoc = await this.pigeonRepository.findByDocumentationNo(createPigeonDto.documentationNo);
+      const existingPigeonWithDoc = await this.pigeonRepository.findByDocumentationNo(
+        createPigeonDto.documentationNo,
+        userId,
+      );
       if (existingPigeonWithDoc) {
         throw new ConflictException(
           I18nMessage.error('duplicateDocumentationNumber', { docNo: createPigeonDto.documentationNo }),
@@ -38,12 +41,13 @@ export class PigeonService {
       }
 
       // Validate parent relationships
-      await this.validateParentRelationships(createPigeonDto);
+      await this.validateParentRelationships(createPigeonDto, userId);
 
       // Generate documentation number if not provided
       if (!createPigeonDto.documentationNo) {
         createPigeonDto.documentationNo = await this.registrationNumberService.generateRegistrationNumber(
           createPigeonDto.yearOfBirth,
+          userId,
         );
       } else {
         // Validate provided documentation number format
@@ -57,7 +61,7 @@ export class PigeonService {
         createPigeonDto.deadAt = new Date().toISOString();
       }
 
-      const pigeon = await this.pigeonRepository.create(createPigeonDto);
+      const pigeon = await this.pigeonRepository.create(createPigeonDto, userId);
       this.logger.log(I18nMessage.success('created'));
 
       return pigeon;
@@ -70,10 +74,10 @@ export class PigeonService {
     }
   }
 
-  async findAll(pageOptions: PageOptionsRequestDto): Promise<{ items: Pigeon[]; total: number }> {
+  async findAll(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Pigeon[]; total: number }> {
     try {
       this.logger.log('🐦 PigeonService.findAll - Starting with options:', pageOptions);
-      const result = await this.pigeonRepository.findAll(pageOptions);
+      const result = await this.pigeonRepository.findAll(pageOptions, userId);
       this.logger.log('🐦 PigeonService.findAll - Repository returned:', {
         itemsCount: result.items.length,
         total: result.total,
@@ -86,9 +90,9 @@ export class PigeonService {
     }
   }
 
-  async findOne(id: string): Promise<Pigeon> {
+  async findOne(id: string, userId: string): Promise<Pigeon> {
     try {
-      const pigeon = await this.pigeonRepository.findById(id);
+      const pigeon = await this.pigeonRepository.findById(id, userId);
 
       if (!pigeon) {
         throw new NotFoundException(I18nMessage.error('notFound'));
@@ -104,17 +108,17 @@ export class PigeonService {
     }
   }
 
-  async update(id: string, updatePigeonDto: UpdatePigeonRequestDto): Promise<Pigeon> {
+  async update(id: string, updatePigeonDto: UpdatePigeonRequestDto, userId: string): Promise<Pigeon> {
     try {
       // Check if pigeon exists
-      const existingPigeon = await this.pigeonRepository.findById(id);
+      const existingPigeon = await this.pigeonRepository.findById(id, userId);
       if (!existingPigeon) {
         throw new NotFoundException(I18nMessage.error('notFound'));
       }
 
       // Check if ring number already exists (if being updated)
       if (updatePigeonDto.ringNo && updatePigeonDto.ringNo !== existingPigeon.ringNo) {
-        const existingPigeonWithRing = await this.pigeonRepository.findByRingNo(updatePigeonDto.ringNo);
+        const existingPigeonWithRing = await this.pigeonRepository.findByRingNo(updatePigeonDto.ringNo, userId);
         if (existingPigeonWithRing) {
           throw new ConflictException(I18nMessage.error('duplicateRingNumber', { ringNo: updatePigeonDto.ringNo }));
         }
@@ -124,6 +128,7 @@ export class PigeonService {
       if (updatePigeonDto.documentationNo && updatePigeonDto.documentationNo !== existingPigeon.documentationNo) {
         const existingPigeonWithDoc = await this.pigeonRepository.findByDocumentationNo(
           updatePigeonDto.documentationNo,
+          userId,
         );
         if (existingPigeonWithDoc) {
           throw new ConflictException(
@@ -134,10 +139,13 @@ export class PigeonService {
 
       // Validate parent relationships if being updated
       if (updatePigeonDto.fatherId || updatePigeonDto.motherId) {
-        await this.validateParentRelationships({
-          ...existingPigeon,
-          ...updatePigeonDto,
-        } as CreatePigeonRequestDto);
+        await this.validateParentRelationships(
+          {
+            ...existingPigeon,
+            ...updatePigeonDto,
+          } as CreatePigeonRequestDto,
+          userId,
+        );
       }
 
       // Handle status changes
@@ -153,7 +161,7 @@ export class PigeonService {
         throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
 
-      const pigeon = await this.pigeonRepository.update(id, updatePigeonDto);
+      const pigeon = await this.pigeonRepository.update(id, updatePigeonDto, userId);
       this.logger.log(I18nMessage.success('updated'));
 
       return pigeon;
@@ -170,14 +178,14 @@ export class PigeonService {
     }
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, userId: string): Promise<void> {
     try {
-      const pigeon = await this.pigeonRepository.findById(id);
+      const pigeon = await this.pigeonRepository.findById(id, userId);
       if (!pigeon) {
         throw new NotFoundException(I18nMessage.error('notFound'));
       }
 
-      await this.pigeonRepository.delete(id);
+      await this.pigeonRepository.delete(id, userId);
       this.logger.log(I18nMessage.success('deleted'));
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -188,82 +196,82 @@ export class PigeonService {
     }
   }
 
-  async search(query: string): Promise<Pigeon[]> {
+  async search(query: string, userId: string): Promise<Pigeon[]> {
     try {
-      return await this.pigeonRepository.search(query);
+      return await this.pigeonRepository.search(query, userId);
     } catch (error) {
       this.logger.error('Error searching pigeons:', error);
       throw error;
     }
   }
 
-  async findByRingNo(ringNo: string): Promise<Pigeon | null> {
+  async findByRingNo(ringNo: string, userId: string): Promise<Pigeon | null> {
     try {
-      return await this.pigeonRepository.findByRingNo(ringNo);
+      return await this.pigeonRepository.findByRingNo(ringNo, userId);
     } catch (error) {
       this.logger.error(`Error finding pigeon by ring number ${ringNo}:`, error);
       throw error;
     }
   }
 
-  async findByDocumentationNo(documentationNo: string): Promise<Pigeon | null> {
+  async findByDocumentationNo(documentationNo: string, userId: string): Promise<Pigeon | null> {
     try {
-      return await this.pigeonRepository.findByDocumentationNo(documentationNo);
+      return await this.pigeonRepository.findByDocumentationNo(documentationNo, userId);
     } catch (error) {
       this.logger.error(`Error finding pigeon by documentation number ${documentationNo}:`, error);
       throw error;
     }
   }
 
-  async findAlivePigeons(): Promise<Pigeon[]> {
+  async findAlivePigeons(userId: string): Promise<Pigeon[]> {
     try {
-      return await this.pigeonRepository.findAlivePigeons();
+      return await this.pigeonRepository.findAlivePigeons(userId);
     } catch (error) {
       this.logger.error('Error finding alive pigeons:', error);
       throw error;
     }
   }
 
-  async findAliveParents(): Promise<{ fathers: Pigeon[]; mothers: Pigeon[] }> {
+  async findAliveParents(userId: string): Promise<{ fathers: Pigeon[]; mothers: Pigeon[] }> {
     try {
-      return await this.pigeonRepository.findAliveParents();
+      return await this.pigeonRepository.findAliveParents(userId);
     } catch (error) {
       this.logger.error('Error finding alive parents:', error);
       throw error;
     }
   }
 
-  async count(): Promise<number> {
+  async count(userId: string): Promise<number> {
     try {
-      return await this.pigeonRepository.count();
+      return await this.pigeonRepository.count(userId);
     } catch (error) {
       this.logger.error('Error counting pigeons:', error);
       throw error;
     }
   }
 
-  async countByStatus(status: PigeonStatus): Promise<number> {
+  async countByStatus(status: PigeonStatus, userId: string): Promise<number> {
     try {
-      return await this.pigeonRepository.countByStatus(status);
+      return await this.pigeonRepository.countByStatus(status, userId);
     } catch (error) {
       this.logger.error(`Error counting pigeons by status ${status}:`, error);
       throw error;
     }
   }
 
-  async generateRegistrationNumber(yearOfBirth: string): Promise<string> {
+  async generateRegistrationNumber(yearOfBirth: string, userId: string): Promise<string> {
     try {
-      return await this.registrationNumberService.generateRegistrationNumber(yearOfBirth);
+      return await this.registrationNumberService.generateRegistrationNumber(yearOfBirth, userId);
     } catch (error) {
       this.logger.error(`Error generating registration number for year ${yearOfBirth}:`, error);
       throw error;
     }
   }
 
-  private async validateParentRelationships(pigeonDto: CreatePigeonRequestDto): Promise<void> {
+  private async validateParentRelationships(pigeonDto: CreatePigeonRequestDto, userId: string): Promise<void> {
     // Validate father if provided
     if (pigeonDto.fatherId) {
-      const father = await this.pigeonRepository.findById(pigeonDto.fatherId);
+      const father = await this.pigeonRepository.findById(pigeonDto.fatherId, userId);
       if (!father) {
         throw new BadRequestException(I18nMessage.error('fatherNotFound', { id: pigeonDto.fatherId }));
       }
@@ -277,7 +285,7 @@ export class PigeonService {
 
     // Validate mother if provided
     if (pigeonDto.motherId) {
-      const mother = await this.pigeonRepository.findById(pigeonDto.motherId);
+      const mother = await this.pigeonRepository.findById(pigeonDto.motherId, userId);
       if (!mother) {
         throw new BadRequestException(I18nMessage.error('motherNotFound', { id: pigeonDto.motherId }));
       }

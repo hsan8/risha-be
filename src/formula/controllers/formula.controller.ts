@@ -1,13 +1,17 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FormulaService } from '../services';
 import { CreateFormulaRequestDto } from '../dto/requests';
 import { FormulaResponseDto } from '../dto/responses';
 import { ApiDataResponse } from '@/core/decorators/api';
 import { DataResponseDto } from '@/core/dtos/responses';
 import { ResponseFactory } from '@/core/utils';
+import { JwtAuthGuard } from '@/auth/guards';
+import { UserId } from '@/user/decorators';
 
 @ApiTags('Formula')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('formula')
 export class FormulaController {
   constructor(private readonly formulaService: FormulaService) {}
@@ -15,24 +19,33 @@ export class FormulaController {
   @Post()
   @ApiOperation({ summary: 'Create a new formula' })
   @ApiDataResponse(FormulaResponseDto)
-  async createFormula(@Body() createFormulaDto: CreateFormulaRequestDto): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.createFormula(createFormulaDto);
+  async createFormula(
+    @Body() createFormulaDto: CreateFormulaRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<FormulaResponseDto>> {
+    const formula = await this.formulaService.createFormula(createFormulaDto, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a formula by ID' })
   @ApiDataResponse(FormulaResponseDto)
-  async getFormula(@Param('id', ParseUUIDPipe) id: string): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.getFormulaById(id);
+  async getFormula(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<FormulaResponseDto>> {
+    const formula = await this.formulaService.getFormulaById(id, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
   @Put(':id/egg')
   @ApiOperation({ summary: 'Add an egg to the formula' })
   @ApiDataResponse(FormulaResponseDto)
-  async addEgg(@Param('id', ParseUUIDPipe) id: string): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.addEgg(id);
+  async addEgg(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<FormulaResponseDto>> {
+    const formula = await this.formulaService.addEgg(id, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
@@ -43,8 +56,9 @@ export class FormulaController {
     @Param('id', ParseUUIDPipe) id: string,
     @Param('eggId', ParseUUIDPipe) eggId: string,
     @Body('pigeonId', ParseUUIDPipe) pigeonId: string,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.transformEggToPigeon(id, eggId, pigeonId);
+    const formula = await this.formulaService.transformEggToPigeon(id, eggId, pigeonId, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
@@ -54,8 +68,9 @@ export class FormulaController {
   async terminateFormula(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('reason') reason: string,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.terminateFormula(id, reason);
+    const formula = await this.formulaService.terminateFormula(id, reason, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 }

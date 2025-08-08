@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
-import { OTP } from '../entities/otp.entity';
-import { FirebaseService } from '@/core/services/firebase.service';
-import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { OTPType } from '../enums/auth.enum';
+import { OTP } from '@/auth/entities';
+import { FirebaseService } from '@/core/services';
+import { OTPType } from '@/auth/enums';
+import { AUTH_CONSTANTS } from '@/auth/constants';
 
 export interface CreateOTPData {
   email: string;

@@ -1,0 +1,760 @@
+{
+  "info": {
+    "name": "Risha-BE-Tests",
+    "description": "Comprehensive test suite for Risha Backend API with JWT authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Setup - Authentication Flow",
+      "description": "Test complete authentication flow",
+      "item": [
+        {
+          "name": "1. Register Test User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registration successful', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has required fields', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson).to.have.property('data');",
+                  "    pm.expect(responseJson.data).to.have.property('accessToken');",
+                  "    pm.expect(responseJson.data).to.have.property('refreshToken');",
+                  "    pm.expect(responseJson.data).to.have.property('user');",
+                  "});",
+                  "",
+                  "pm.test('User object has correct structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const user = responseJson.data.user;",
+                  "    pm.expect(user).to.have.property('id');",
+                  "    pm.expect(user).to.have.property('email', pm.environment.get('testEmail'));",
+                  "    pm.expect(user).to.have.property('name', pm.environment.get('testUserName'));",
+                  "    pm.expect(user).to.have.property('status', 'PENDING_VERIFICATION');",
+                  "});",
+                  "",
+                  "// Store tokens for subsequent tests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+                  "    pm.environment.set('userId', responseJson.data.user.id);",
+                  "    pm.environment.set('userEmail', responseJson.data.user.email);",
+                  "    pm.environment.set('userRole', responseJson.data.user.role);",
+                  "    ",
+                  "    // Calculate token expiry",
+                  "    const expiryTime = Date.now() + (responseJson.data.expiresIn * 1000);",
+                  "    pm.environment.set('tokenExpiry', expiryTime);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{testUserName}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"phone\": \"{{testUserPhone}}\",\n  \"country\": \"Kuwait\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Login Test User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has access token', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson.data).to.have.property('accessToken');",
+                  "    pm.expect(responseJson.data).to.have.property('refreshToken');",
+                  "    pm.expect(responseJson.data).to.have.property('tokenType', 'Bearer');",
+                  "});",
+                  "",
+                  "pm.test('Token is valid JWT format', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const token = responseJson.data.accessToken;",
+                  "    pm.expect(token).to.match(/^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_.+/=]*$/);",
+                  "});",
+                  "",
+                  "// Update stored tokens",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+                  "    ",
+                  "    // Calculate token expiry",
+                  "    const expiryTime = Date.now() + (responseJson.data.expiresIn * 1000);",
+                  "    pm.environment.set('tokenExpiry', expiryTime);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pigeon Management Tests",
+      "description": "Test pigeon CRUD operations with JWT authentication",
+      "item": [
+        {
+          "name": "3. Create Test Pigeon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Pigeon creation successful', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains pigeon data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson.data).to.have.property('id');",
+                  "    pm.expect(responseJson.data).to.have.property('name');",
+                  "    pm.expect(responseJson.data).to.have.property('ringNo');",
+                  "    pm.expect(responseJson.data).to.have.property('documentationNo');",
+                  "});",
+                  "",
+                  "pm.test('Pigeon has correct data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const pigeon = responseJson.data;",
+                  "    pm.expect(pigeon.name).to.equal('Test Pigeon');",
+                  "    pm.expect(pigeon.gender).to.equal('MALE');",
+                  "    pm.expect(pigeon.status).to.equal('ALIVE');",
+                  "    pm.expect(pigeon.ringNo).to.equal(pm.environment.get('ringNo'));",
+                  "});",
+                  "",
+                  "// Store pigeon ID for subsequent tests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('pigeonId', responseJson.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Pigeon\",\n  \"gender\": \"MALE\",\n  \"status\": \"ALIVE\",\n  \"documentationNo\": \"{{documentationNo}}\",\n  \"ringNo\": \"{{ringNo}}\",\n  \"ringColor\": \"Blue\",\n  \"fatherName\": \"Father Test\",\n  \"motherName\": \"Mother Test\",\n  \"yearOfBirth\": \"{{yearOfBirth}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Get All Pigeons",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Get pigeons successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson.data).to.have.property('items');",
+                  "    pm.expect(responseJson.data).to.have.property('meta');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('page');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('size');",
+                  "    pm.expect(responseJson.data.meta).to.have.property('itemCount');",
+                  "});",
+                  "",
+                  "pm.test('Pigeon array contains created pigeon', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const pigeons = responseJson.data.items;",
+                  "    pm.expect(pigeons).to.be.an('array');",
+                  "    pm.expect(pigeons.length).to.be.greaterThan(0);",
+                  "    ",
+                  "    // Check if our test pigeon is in the list",
+                  "    const testPigeonId = pm.environment.get('pigeonId');",
+                  "    const testPigeon = pigeons.find(p => p.id === testPigeonId);",
+                  "    pm.expect(testPigeon).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Get Pigeon by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Get pigeon by ID successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Pigeon data is correct', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const pigeon = responseJson.data;",
+                  "    pm.expect(pigeon).to.have.property('id', pm.environment.get('pigeonId'));",
+                  "    pm.expect(pigeon).to.have.property('name', 'Test Pigeon');",
+                  "    pm.expect(pigeon).to.have.property('ringNo', pm.environment.get('ringNo'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/{{pigeonId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "{{pigeonId}}"]
+            }
+          }
+        },
+        {
+          "name": "6. Search Pigeons",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Search pigeons successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Search results contain test pigeon', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const pigeons = responseJson.data.items;",
+                  "    pm.expect(pigeons).to.be.an('array');",
+                  "    ",
+                  "    // Search should return our test pigeon",
+                  "    const testPigeon = pigeons.find(p => p.name === 'Test Pigeon');",
+                  "    pm.expect(testPigeon).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/search?q=Test",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Test"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Update Pigeon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Update pigeon successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Pigeon data updated correctly', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const pigeon = responseJson.data;",
+                  "    pm.expect(pigeon).to.have.property('name', 'Updated Test Pigeon');",
+                  "    pm.expect(pigeon).to.have.property('status', 'SOLD');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/{{pigeonId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "{{pigeonId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Test Pigeon\",\n  \"status\": \"SOLD\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Formula Management Tests",
+      "description": "Test formula CRUD operations with JWT authentication",
+      "item": [
+        {
+          "name": "8. Create Test Formula",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Formula creation successful', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains formula data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson.data).to.have.property('id');",
+                  "    pm.expect(responseJson.data).to.have.property('father');",
+                  "    pm.expect(responseJson.data).to.have.property('mother');",
+                  "    pm.expect(responseJson.data).to.have.property('caseNumber');",
+                  "});",
+                  "",
+                  "pm.test('Formula has correct data', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const formula = responseJson.data;",
+                  "    pm.expect(formula.caseNumber).to.equal(pm.environment.get('caseNumber'));",
+                  "    pm.expect(formula.yearOfFormula).to.equal(pm.environment.get('yearOfFormula'));",
+                  "});",
+                  "",
+                  "// Store formula ID for subsequent tests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('formulaId', responseJson.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"father\": {\n    \"id\": \"{{pigeonId}}\",\n    \"name\": \"Father Test\"\n  },\n  \"mother\": {\n    \"id\": \"{{pigeonId}}\",\n    \"name\": \"Mother Test\"\n  },\n  \"caseNumber\": \"{{caseNumber}}\",\n  \"yearOfFormula\": \"{{yearOfFormula}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "9. Get All Formulas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Get formulas successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson.data).to.have.property('items');",
+                  "    pm.expect(responseJson.data).to.have.property('total');",
+                  "});",
+                  "",
+                  "pm.test('Formula array contains created formula', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const formulas = responseJson.data.items;",
+                  "    pm.expect(formulas).to.be.an('array');",
+                  "    pm.expect(formulas.length).to.be.greaterThan(0);",
+                  "    ",
+                  "    // Check if our test formula is in the list",
+                  "    const testFormulaId = pm.environment.get('formulaId');",
+                  "    const testFormula = formulas.find(f => f.id === testFormulaId);",
+                  "    pm.expect(testFormula).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Get Formula by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Get formula by ID successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Formula data is correct', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const formula = responseJson.data;",
+                  "    pm.expect(formula).to.have.property('id', pm.environment.get('formulaId'));",
+                  "    pm.expect(formula).to.have.property('caseNumber', pm.environment.get('caseNumber'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/{{formulaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "{{formulaId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Add Egg to Formula",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Add egg to formula successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Formula updated with egg', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const formula = responseJson.data;",
+                  "    pm.expect(formula).to.have.property('eggs');",
+                  "    pm.expect(formula.eggs).to.be.an('array');",
+                  "    pm.expect(formula.eggs.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "// Store egg ID for subsequent tests",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data.eggs && responseJson.data.eggs.length > 0) {",
+                  "        pm.environment.set('eggId', responseJson.data.eggs[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/{{formulaId}}/egg",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "{{formulaId}}", "egg"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication Tests",
+      "description": "Test authentication edge cases and security",
+      "item": [
+        {
+          "name": "12. Access Protected Endpoint Without Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Request without token should fail', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message is correct', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', false);",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"]
+            }
+          }
+        },
+        {
+          "name": "13. Access Protected Endpoint With Invalid Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Request with invalid token should fail', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message is correct', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', false);",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-token-here"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"]
+            }
+          }
+        },
+        {
+          "name": "14. Login With Invalid Credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login with invalid credentials should fail', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message is correct', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', false);",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "description": "Clean up test data",
+      "item": [
+        {
+          "name": "15. Delete Test Pigeon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delete pigeon successful', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "// Clear pigeon ID from environment",
+                  "pm.environment.unset('pigeonId');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/{{pigeonId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "{{pigeonId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

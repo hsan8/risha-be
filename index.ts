@@ -1,5 +1,5 @@
 import { createApp, createSwaggerDocument } from './src/bootstrap';
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 import { SwaggerModule } from '@nestjs/swagger';
@@ -47,7 +47,7 @@ const initializeApp = async () => {
   }
 };
 
-export const api = functions.https.onRequest(async (request, response) => {
+export const api = onRequest(async (request, response) => {
   try {
     await initializeApp();
     server(request, response);

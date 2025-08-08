@@ -26,7 +26,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "setup:firebase": "ts-node scripts/setup-firebase.ts"
+    "setup:firebase": "ts-node scripts/setup-firebase.ts",
+    "test:postman": "node postman/run-tests.js tests",
+    "test:postman:main": "node postman/run-tests.js main",
+    "test:api": "newman run postman/Risha-BE-Tests.postman_collection.json -e postman/Risha-BE-Environment.postman_environment.json --reporters cli,html,json"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",

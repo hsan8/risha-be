@@ -1,13 +1,17 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { FormulaService } from '../services';
-import { CreateFormulaRequestDto } from '../dto';
-import { FormulaResponseDto } from '../dto/responses';
-import { ApiDataResponse, ApiDataArrayResponse } from '@/core/decorators/api';
-import { DataResponseDto } from '@/core/dtos/responses';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { FormulaService } from '@/formula/services';
+import { CreateFormulaRequestDto } from '@/formula/dto/requests';
+import { FormulaResponseDto } from '@/formula/dto/responses';
+import { ApiDataResponse, ApiDataArrayResponse } from '@/core/decorators';
+import { DataResponseDto } from '@/core/dtos';
 import { PageOptionsRequestDto } from '@/core/dtos';
 import { ResponseFactory } from '@/core/utils';
+import { JwtAuthGuard } from '@/auth/guards';
+import { UserId } from '@/user/decorators';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @ApiTags('Formula Registration')
 @Controller('formulas')
 export class FormulaRegistrationController {
@@ -16,8 +20,11 @@ export class FormulaRegistrationController {
   @Post()
   @ApiOperation({ summary: 'Create a new formula' })
   @ApiDataResponse(FormulaResponseDto)
-  async createFormula(@Body() createFormulaDto: CreateFormulaRequestDto): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.createFormula(createFormulaDto);
+  async createFormula(
+    @Body() createFormulaDto: CreateFormulaRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<FormulaResponseDto>> {
+    const formula = await this.formulaService.createFormula(createFormulaDto, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
@@ -26,8 +33,9 @@ export class FormulaRegistrationController {
   @ApiDataArrayResponse(FormulaResponseDto)
   async getFormulas(
     @Body() pageOptions: PageOptionsRequestDto,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<{ items: FormulaResponseDto[]; total: number }>> {
-    const { items, total } = await this.formulaService.getFormulas(pageOptions);
+    const { items, total } = await this.formulaService.getFormulas(pageOptions, userId);
     return ResponseFactory.data({
       items: items.map((formula) => new FormulaResponseDto(formula)),
       total,
@@ -37,24 +45,27 @@ export class FormulaRegistrationController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a formula by ID' })
   @ApiDataResponse(FormulaResponseDto)
-  async getFormula(@Param('id', ParseUUIDPipe) id: string): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.getFormulaById(id);
+  async getFormula(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<FormulaResponseDto>> {
+    const formula = await this.formulaService.getFormulaById(id, userId);
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
   @Get('count')
   @ApiOperation({ summary: 'Get total count of formulas' })
   @ApiDataResponse(Number)
-  async getCount(): Promise<DataResponseDto<number>> {
-    const count = await this.formulaService.getFormulaCount();
+  async getCount(@UserId() userId: string): Promise<DataResponseDto<number>> {
+    const count = await this.formulaService.getFormulaCount(userId);
     return ResponseFactory.data(count);
   }
 
   @Get('count/:status')
   @ApiOperation({ summary: 'Get count of formulas by status' })
   @ApiDataResponse(Number)
-  async getCountByStatus(@Param('status') status: string): Promise<DataResponseDto<number>> {
-    const count = await this.formulaService.getFormulaCountByStatus(status as any);
+  async getCountByStatus(@Param('status') status: string, @UserId() userId: string): Promise<DataResponseDto<number>> {
+    const count = await this.formulaService.getFormulaCountByStatus(status as any, userId);
     return ResponseFactory.data(count);
   }
 }

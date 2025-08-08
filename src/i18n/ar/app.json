@@ -37,7 +37,11 @@
       "motherNotFound": "الحمامة الأم برقم {id} غير موجودة",
       "notFemalePigeon": "الحمامة برقم {id} ليست أنثى",
       "motherNotAlive": "الحمامة الأم برقم {id} غير حية",
-      "invalidDocumentationNumberFormat": "يجب أن يتبع رقم التوثيق النمط: ####-#-### (مثال: 2025-A-123)"
+      "invalidDocumentationNumberFormat": "يجب أن يتبع رقم التوثيق النمط: ####-#-### (مثال: 2025-A-123)",
+      "fatherMustBeAlive": "الحمامة الأب برقم {id} يجب أن تكون حية",
+      "fatherMustBeMale": "الحمامة برقم {id} يجب أن تكون ذكر",
+      "motherMustBeFemale": "الحمامة برقم {id} يجب أن تكون أنثى",
+      "motherMustBeAlive": "الحمامة الأم برقم {id} يجب أن تكون حية"
     }
   }
 }

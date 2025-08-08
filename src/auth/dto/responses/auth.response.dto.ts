@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { AuthProvider, UserStatus, UserRole } from '../../enums/auth.enum';
+import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export class UserResponseDto {
   @ApiProperty({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07' })
@@ -15,9 +15,13 @@ export class UserResponseDto {
   @Expose()
   email: string;
 
-  @ApiProperty({ example: '+966501234567', nullable: true })
+  @ApiProperty({ example: '+96512345678', nullable: true })
   @Expose()
   phone?: string;
+
+  @ApiProperty({ example: 'Kuwait', nullable: true })
+  @Expose()
+  country?: string;
 
   @ApiProperty({ example: 'https://avatar.url/user.jpg', nullable: true })
   @Expose()

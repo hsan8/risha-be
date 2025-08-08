@@ -2,5 +2,13 @@
   "IsNumber": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقما",
   "IsInt": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقما صحيحا",
   "Min": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن لا يقل عن {constraints.0}",
-  "Max": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن لا يزيد عن {constraints.0}"
+  "Max": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن لا يزيد عن {constraints.0}",
+  "IsString": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون نصا",
+  "IsEmail": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون بريد إلكتروني صحيح",
+  "IsNotEmpty": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن لا يكون فارغا",
+  "Length": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون بين {constraints.0} و {constraints.1} أحرف",
+  "NumbersOnly": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يحتوي على أرقام فقط",
+  "PhoneFormat": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقم هاتف صحيح",
+  "KuwaitPhoneFormat": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقم هاتف كويتي صحيح (+965XXXXXXXX)",
+  "IsFirebaseId": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون معرف Firebase صحيح"
 }

@@ -1,16 +1,17 @@
-import { Controller, Post, Body, HttpStatus, HttpCode } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AuthService } from '../services/auth.service';
-import { RegisterRequestDto } from '../dto/requests/register.request.dto';
-import { LoginRequestDto } from '../dto/requests/login.request.dto';
+import { AuthService } from '@/auth/services';
 import {
+  LoginRequestDto,
+  RegisterRequestDto,
   ForgotPasswordRequestDto,
+  AppleAuthRequestDto,
+  GoogleAuthRequestDto,
   VerifyOTPRequestDto,
   ResetPasswordRequestDto,
-} from '../dto/requests/forgot-password.request.dto';
-import { GoogleAuthRequestDto, AppleAuthRequestDto } from '../dto/requests/social-auth.request.dto';
-import { AuthResponseDto, MessageResponseDto } from '../dto/responses/auth.response.dto';
-import { ApiDataResponse } from '@/core/decorators/api';
+} from '@/auth/dto/requests';
+import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
+import { ApiDataResponse } from '@/core/decorators';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto } from '@/core/dtos';
 

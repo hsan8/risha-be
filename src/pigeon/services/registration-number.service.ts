@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PigeonRepository } from '../repositories/pigeon.repository';
-import { REGISTRATION_NUMBER_CONSTANTS } from '../constants/pigeon.constants';
-import { VALIDATION_CONSTANTS } from '@/core/constants/validation.constant';
+import { PigeonRepository } from '@/pigeon/repositories';
+import { REGISTRATION_NUMBER_CONSTANTS } from '@/pigeon/constants';
+import { VALIDATION_CONSTANTS } from '@/core/constants';
 
 @Injectable()
 export class RegistrationNumberService {
@@ -12,9 +12,9 @@ export class RegistrationNumberService {
   /**
    * Generates a registration number for a pigeon based on the year of birth
    */
-  async generateRegistrationNumber(yearOfBirth: string): Promise<string> {
+  async generateRegistrationNumber(yearOfBirth: string, userId: string): Promise<string> {
     const letter = this.getNextLetter();
-    const sequence = await this.getNextSequence();
+    const sequence = await this.getNextSequence(userId);
     return this.formatRegistrationNumber(yearOfBirth, letter, sequence);
   }
 
@@ -29,8 +29,8 @@ export class RegistrationNumberService {
   /**
    * Gets the next available sequence number
    */
-  private getNextSequence(): number {
-    // For now, just return 1. In the future, this will be based on the last used sequence
+  private getNextSequence(_userId: string): number {
+    // For now, just return 1. In the future, this will be based on the last used sequence for the user
     return 1;
   }
 

@@ -8,21 +8,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { User } from '../entities/user.entity';
-import { OTP } from '../entities/otp.entity';
-import { RegisterRequestDto } from '../dto/requests/register.request.dto';
-import { LoginRequestDto } from '../dto/requests/login.request.dto';
-import {
-  ForgotPasswordRequestDto,
-  VerifyOTPRequestDto,
-  ResetPasswordRequestDto,
-} from '../dto/requests/forgot-password.request.dto';
-import { GoogleAuthRequestDto, AppleAuthRequestDto } from '../dto/requests/social-auth.request.dto';
-import { AuthResponseDto, UserResponseDto, MessageResponseDto } from '../dto/responses/auth.response.dto';
-import { AuthProvider, UserStatus, UserRole, OTPType } from '../enums/auth.enum';
-import { AUTH_CONSTANTS, AUTH_MESSAGES } from '../constants/auth.constants';
-import { UserRepository } from '../repositories/user.repository';
-import { OTPRepository } from '../repositories/otp.repository';
+import { User } from '@/user/entities';
+import { OTP } from '@/auth/entities';
+import { RegisterRequestDto, LoginRequestDto } from '@/auth/dto/requests';
+import { ForgotPasswordRequestDto, VerifyOTPRequestDto, ResetPasswordRequestDto } from '@/auth/dto/requests';
+import { GoogleAuthRequestDto, AppleAuthRequestDto } from '@/auth/dto/requests';
+import { AuthResponseDto, UserResponseDto, MessageResponseDto } from '@/auth/dto/responses';
+import { AuthProvider, UserStatus, OTPType } from '@/auth/enums';
+import { AUTH_CONSTANTS, AUTH_MESSAGES } from '@/auth/constants';
+import { UserService } from '@/user/services';
+import { OTPRepository } from '@/auth/repositories';
 import { EmailService } from './email.service';
 import { GoogleAuthService } from './google-auth.service';
 import { AppleAuthService } from './apple-auth.service';
@@ -32,7 +27,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
     private readonly otpRepository: OTPRepository,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
@@ -42,7 +37,7 @@ export class AuthService {
 
   async register(dto: RegisterRequestDto): Promise<AuthResponseDto> {
     // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(dto.email);
+    const existingUser = await this.userService.findByEmail(dto.email);
     if (existingUser) {
       throw new ConflictException(AUTH_MESSAGES.EMAIL_ALREADY_EXISTS);
     }
@@ -51,16 +46,13 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, AUTH_CONSTANTS.SALT_ROUNDS);
 
     // Create user
-    const user = await this.userRepository.create({
+    const user = await this.userService.create({
       name: dto.name,
       email: dto.email,
       phone: dto.phone,
+      country: dto.country || 'Kuwait',
       passwordHash,
       provider: AuthProvider.EMAIL,
-      status: UserStatus.PENDING_VERIFICATION,
-      role: UserRole.USER,
-      emailVerified: false,
-      twoFactorEnabled: false,
     });
 
     // Send email verification
@@ -79,7 +71,7 @@ export class AuthService {
 
   async login(dto: LoginRequestDto): Promise<AuthResponseDto> {
     // Find user by email
-    const user = await this.userRepository.findByEmail(dto.email);
+    const user = await this.userService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
     }
@@ -104,9 +96,6 @@ export class AuthService {
       throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_INACTIVE);
     }
 
-    // Update last login
-    await this.userRepository.updateLastLogin(user.id);
-
     // Generate tokens
     const tokens = await this.generateTokens(user);
 
@@ -123,23 +112,19 @@ export class AuthService {
     const googleUser = await this.googleAuthService.verifyIdToken(dto.idToken);
 
     // Find or create user
-    let user = await this.userRepository.findByEmailOrProviderId(googleUser.email, googleUser.sub);
+    let user = await this.userService.findByEmailOrProviderId(googleUser.email, googleUser.sub);
 
     if (!user) {
-      user = await this.userRepository.create({
+      user = await this.userService.create({
         name: googleUser.name,
         email: googleUser.email,
         avatar: googleUser.picture,
         provider: AuthProvider.GOOGLE,
         providerId: googleUser.sub,
-        status: UserStatus.ACTIVE,
-        role: UserRole.USER,
-        emailVerified: googleUser.email_verified,
-        twoFactorEnabled: false,
       });
     } else {
       // Update last login
-      await this.userRepository.updateLastLogin(user.id);
+      await this.userService.updateLastLogin(user.id);
     }
 
     // Generate tokens
@@ -158,26 +143,22 @@ export class AuthService {
     await this.appleAuthService.verifyIdToken(dto.idToken);
 
     // Find or create user
-    let user = await this.userRepository.findByEmailOrProviderId(dto.email, dto.userId);
+    let user = await this.userService.findByEmailOrProviderId(dto.email, dto.userId);
 
     if (!user) {
       if (!dto.email) {
         throw new BadRequestException(AUTH_MESSAGES.SOCIAL_AUTH_EMAIL_REQUIRED);
       }
 
-      user = await this.userRepository.create({
+      user = await this.userService.create({
         name: dto.name || 'Apple User',
         email: dto.email,
         provider: AuthProvider.APPLE,
         providerId: dto.userId,
-        status: UserStatus.ACTIVE,
-        role: UserRole.USER,
-        emailVerified: true, // Apple emails are verified
-        twoFactorEnabled: false,
       });
     } else {
       // Update last login
-      await this.userRepository.updateLastLogin(user.id);
+      await this.userService.updateLastLogin(user.id);
     }
 
     // Generate tokens
@@ -193,7 +174,7 @@ export class AuthService {
 
   async forgotPassword(dto: ForgotPasswordRequestDto): Promise<MessageResponseDto> {
     // Find user by email
-    const user = await this.userRepository.findByEmail(dto.email);
+    const user = await this.userService.findByEmail(dto.email);
     if (!user) {
       throw new NotFoundException(AUTH_MESSAGES.EMAIL_NOT_FOUND);
     }
@@ -231,7 +212,7 @@ export class AuthService {
     }
 
     // Find user
-    const user = await this.userRepository.findByEmail(dto.email);
+    const user = await this.userService.findByEmail(dto.email);
     if (!user) {
       throw new NotFoundException(AUTH_MESSAGES.EMAIL_NOT_FOUND);
     }
@@ -246,7 +227,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.newPassword, AUTH_CONSTANTS.SALT_ROUNDS);
 
     // Update user password
-    await this.userRepository.updatePassword(user.id, passwordHash);
+    await this.userService.updatePassword(user.id, passwordHash);
 
     // Mark OTP as used
     await this.otpRepository.markAsUsed(otp.id);
@@ -271,11 +252,13 @@ export class AuthService {
       this.jwtService.signAsync(payload, { expiresIn: AUTH_CONSTANTS.JWT_REFRESH_TOKEN_EXPIRY }),
     ]);
 
+    const { TOKEN_EXPIRY_MINUTES } = await import('@/auth/constants');
+
     return {
       accessToken,
       refreshToken,
       tokenType: 'Bearer',
-      expiresIn: AUTH_CONSTANTS.TOKEN_EXPIRY_MINUTES * AUTH_CONSTANTS.MINUTES_TO_SECONDS, // 15 minutes in seconds
+      expiresIn: TOKEN_EXPIRY_MINUTES,
     };
   }
 

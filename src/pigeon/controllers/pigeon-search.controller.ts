@@ -1,11 +1,15 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { PigeonService } from '../services/pigeon.service';
-import { PigeonResponseDto } from '../dto/responses';
-import { ApiDataResponse, ApiDataArrayResponse } from '@/core/decorators/api';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { PigeonService } from '@/pigeon/services';
+import { PigeonResponseDto } from '@/pigeon/dto/responses';
+import { ApiDataResponse, ApiDataArrayResponse } from '@/core/decorators';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto, DataArrayResponseDto } from '@/core/dtos';
+import { JwtAuthGuard } from '@/auth/guards';
+import { UserId } from '@/user/decorators';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @ApiTags('Pigeon Search')
 @Controller('pigeons/search')
 export class PigeonSearchController {
@@ -19,8 +23,8 @@ export class PigeonSearchController {
     type: String,
   })
   @ApiDataArrayResponse(PigeonResponseDto)
-  async search(@Query('q') query: string): Promise<DataArrayResponseDto<PigeonResponseDto>> {
-    const pigeons = await this.pigeonService.search(query);
+  async search(@Query('q') query: string, @UserId() userId: string): Promise<DataArrayResponseDto<PigeonResponseDto>> {
+    const pigeons = await this.pigeonService.search(query, userId);
     return ResponseFactory.dataArray(pigeons.map((pigeon) => new PigeonResponseDto(pigeon)));
   }
 
@@ -32,8 +36,11 @@ export class PigeonSearchController {
     type: String,
   })
   @ApiDataResponse(PigeonResponseDto)
-  async findByRingNo(@Param('ringNo') ringNo: string): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonService.findByRingNo(ringNo);
+  async findByRingNo(
+    @Param('ringNo') ringNo: string,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<PigeonResponseDto | null>> {
+    const pigeon = await this.pigeonService.findByRingNo(ringNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 
@@ -47,8 +54,9 @@ export class PigeonSearchController {
   @ApiDataResponse(PigeonResponseDto)
   async findByDocumentationNo(
     @Param('documentationNo') documentationNo: string,
+    @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonService.findByDocumentationNo(documentationNo);
+    const pigeon = await this.pigeonService.findByDocumentationNo(documentationNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 }

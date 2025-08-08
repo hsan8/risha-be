@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEmail, IsOptional, IsEnum, IsDate, IsBoolean } from 'class-validator';
-import { AuthProvider, UserStatus, UserRole } from '../enums/auth.enum';
+import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export class User {
   @ApiProperty({ description: 'Unique identifier for the user' })
@@ -19,6 +19,11 @@ export class User {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiProperty({ description: 'User country', required: false })
+  @IsOptional()
+  @IsString()
+  country?: string;
 
   @ApiProperty({ description: 'User avatar URL', required: false })
   @IsOptional()

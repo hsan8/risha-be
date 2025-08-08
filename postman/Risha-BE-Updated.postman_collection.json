@@ -1,0 +1,925 @@
+{
+  "info": {
+    "name": "Risha-BE-Updated",
+    "description": "Risha Backend API Collection - Pigeon Management System with JWT Authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Check if we have a valid token",
+          "const token = pm.globals.get('accessToken');",
+          "const tokenExpiry = pm.globals.get('tokenExpiry');",
+          "const now = Date.now();",
+          "",
+          "// Skip authentication for auth endpoints",
+          "const authEndpoints = ['/auth/login', '/auth/register', '/auth/google', '/auth/apple', '/auth/forgot-password', '/auth/verify-otp', '/auth/reset-password'];",
+          "const currentUrl = pm.request.url.toString();",
+          "const isAuthEndpoint = authEndpoints.some(endpoint => currentUrl.includes(endpoint));",
+          "",
+          "if (!isAuthEndpoint) {",
+          "    if (!token || !tokenExpiry || now >= tokenExpiry) {",
+          "        console.log('Token is missing or expired. Please login first.');",
+          "        // Optionally, you can automatically login here",
+          "        // or throw an error to stop the request",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for user login and registration",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"1234\",\n  \"phone\": \"12345678\",\n  \"country\": \"Kuwait\"\n}"
+            },
+            "description": "Register a new user"
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Parse the response",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Check if login was successful",
+                  "if (pm.response.code === 200 && responseJson.data && responseJson.data.accessToken) {",
+                  "    // Store the access token",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "    ",
+                  "    // Calculate token expiry (15 minutes from now)",
+                  "    const expiryTime = Date.now() + (responseJson.data.expiresIn * 1000);",
+                  "    pm.globals.set('tokenExpiry', expiryTime);",
+                  "    ",
+                  "    // Store user information",
+                  "    pm.globals.set('userId', responseJson.data.user.id);",
+                  "    pm.globals.set('userEmail', responseJson.data.user.email);",
+                  "    pm.globals.set('userRole', responseJson.data.user.role);",
+                  "    ",
+                  "    console.log('Login successful! Token stored.');",
+                  "    console.log('User ID:', responseJson.data.user.id);",
+                  "    console.log('Access Token:', responseJson.data.accessToken.substring(0, 20) + '...');",
+                  "} else {",
+                  "    console.log('Login failed:', responseJson.message || 'Unknown error');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"1234\"\n}"
+            },
+            "description": "Login user and get JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Google OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Same token handling as login",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "if (pm.response.code === 200 && responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "    ",
+                  "    const expiryTime = Date.now() + (responseJson.data.expiresIn * 1000);",
+                  "    pm.globals.set('tokenExpiry', expiryTime);",
+                  "    ",
+                  "    pm.globals.set('userId', responseJson.data.user.id);",
+                  "    pm.globals.set('userEmail', responseJson.data.user.email);",
+                  "    pm.globals.set('userRole', responseJson.data.user.role);",
+                  "    ",
+                  "    console.log('Google OAuth successful! Token stored.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"google-id-token-here\"\n}"
+            },
+            "description": "Authenticate with Google OAuth"
+          },
+          "response": []
+        },
+        {
+          "name": "Apple OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Same token handling as login",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "if (pm.response.code === 200 && responseJson.data && responseJson.data.accessToken) {",
+                  "    pm.globals.set('accessToken', responseJson.data.accessToken);",
+                  "    pm.globals.set('refreshToken', responseJson.data.refreshToken);",
+                  "    ",
+                  "    const expiryTime = Date.now() + (responseJson.data.expiresIn * 1000);",
+                  "    pm.globals.set('tokenExpiry', expiryTime);",
+                  "    ",
+                  "    pm.globals.set('userId', responseJson.data.user.id);",
+                  "    pm.globals.set('userEmail', responseJson.data.user.email);",
+                  "    pm.globals.set('userRole', responseJson.data.user.role);",
+                  "    ",
+                  "    console.log('Apple OAuth successful! Token stored.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/apple",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "apple"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"apple-id-token-here\",\n  \"userId\": \"apple-user-id\",\n  \"email\": \"user@example.com\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "description": "Authenticate with Apple OAuth"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+            },
+            "description": "Send password reset OTP to email"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"code\": \"12345\",\n  \"type\": \"PASSWORD_RESET\"\n}"
+            },
+            "description": "Verify OTP for password reset"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"code\": \"12345\",\n  \"newPassword\": \"newPassword123\"\n}"
+            },
+            "description": "Reset password with OTP verification"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Formulas",
+      "description": "Formula Management Endpoints (JWT Required)",
+      "item": [
+        {
+          "name": "Create Formula",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"father\": {\n    \"id\": \"uuid-of-father\",\n    \"name\": \"Father Pigeon\"\n  },\n  \"mother\": {\n    \"id\": \"uuid-of-mother\",\n    \"name\": \"Mother Pigeon\"\n  },\n  \"caseNumber\": \"CASE-2024-001\",\n  \"yearOfFormula\": \"2024\"\n}"
+            },
+            "description": "Create a new formula (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Formulas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get all user's formulas with pagination (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Formula by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{formulaId}}",
+                  "description": "Formula ID"
+                }
+              ]
+            },
+            "description": "Get a specific formula by ID (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Egg to Formula",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id/egg",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id", "egg"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{formulaId}}",
+                  "description": "Formula ID"
+                }
+              ]
+            },
+            "description": "Add an egg to the formula (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Transform Egg to Pigeon",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id/egg/:eggId/transform",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id", "egg", ":eggId", "transform"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{formulaId}}",
+                  "description": "Formula ID"
+                },
+                {
+                  "key": "eggId",
+                  "value": "{{eggId}}",
+                  "description": "Egg ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pigeonId\": \"{{pigeonId}}\"\n}"
+            },
+            "description": "Transform an egg into a pigeon (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Terminate Formula",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/:id/terminate",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", ":id", "terminate"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{formulaId}}",
+                  "description": "Formula ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Termination reason\"\n}"
+            },
+            "description": "Terminate a formula (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Formulas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/search?q=search-term",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "search-term",
+                  "description": "Search query"
+                }
+              ]
+            },
+            "description": "Search user's formulas by query (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Formula Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/count",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "count"]
+            },
+            "description": "Get total count of user's formulas (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Formula Count by Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/formulas/count/:status",
+              "host": ["{{baseUrl}}"],
+              "path": ["formulas", "count", ":status"],
+              "variable": [
+                {
+                  "key": "status",
+                  "value": "INITIATED",
+                  "description": "Formula Status (INITIATED, TERMINATED, HAS_ONE_EGG, HAS_TWO_EGG, HAS_ONE_PIGEON, HAS_TWO_PIGEON)"
+                }
+              ]
+            },
+            "description": "Get count of user's formulas by status (requires JWT token)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pigeons",
+      "description": "Pigeon Management Endpoints (JWT Required)",
+      "item": [
+        {
+          "name": "Create Pigeon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Pigeon\",\n  \"gender\": \"MALE\",\n  \"status\": \"ALIVE\",\n  \"documentationNo\": \"2025-A-001\",\n  \"ringNo\": \"123456\",\n  \"ringColor\": \"Blue\",\n  \"fatherName\": \"Father Pigeon\",\n  \"motherName\": \"Mother Pigeon\",\n  \"yearOfBirth\": \"2025\"\n}"
+            },
+            "description": "Create a new pigeon (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Pigeons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get all user's pigeons with pagination (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pigeon by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{pigeonId}}",
+                  "description": "Pigeon ID"
+                }
+              ]
+            },
+            "description": "Get a specific pigeon by ID (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Pigeon",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{pigeonId}}",
+                  "description": "Pigeon ID"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Pigeon Name\",\n  \"status\": \"SOLD\"\n}"
+            },
+            "description": "Update a pigeon's information (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Pigeon",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{pigeonId}}",
+                  "description": "Pigeon ID"
+                }
+              ]
+            },
+            "description": "Delete a pigeon (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Pigeons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/search?q=search-term",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "search-term",
+                  "description": "Search query"
+                }
+              ]
+            },
+            "description": "Search user's pigeons by query (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Find by Ring Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/ring/:ringNo",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "ring", ":ringNo"],
+              "variable": [
+                {
+                  "key": "ringNo",
+                  "value": "123456",
+                  "description": "Ring Number"
+                }
+              ]
+            },
+            "description": "Find a pigeon by ring number (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Find by Documentation Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/documentation/:documentationNo",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "documentation", ":documentationNo"],
+              "variable": [
+                {
+                  "key": "documentationNo",
+                  "value": "2025-A-001",
+                  "description": "Documentation Number"
+                }
+              ]
+            },
+            "description": "Find a pigeon by documentation number (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Alive Pigeons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/alive",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "alive"]
+            },
+            "description": "Get all alive pigeons (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Alive Parents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/parents",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "parents"]
+            },
+            "description": "Get all alive parent pigeons (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pigeon Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/count",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "count"]
+            },
+            "description": "Get total count of user's pigeons (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pigeon Count by Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/count/:status",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "count", ":status"],
+              "variable": [
+                {
+                  "key": "status",
+                  "value": "ALIVE",
+                  "description": "Pigeon Status (ALIVE, DEAD, SOLD, STOLEN, LOST)"
+                }
+              ]
+            },
+            "description": "Get count of user's pigeons by status (requires JWT token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Registration Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pigeons/generate-registration/:yearOfBirth",
+              "host": ["{{baseUrl}}"],
+              "path": ["pigeons", "generate-registration", ":yearOfBirth"],
+              "variable": [
+                {
+                  "key": "yearOfBirth",
+                  "value": "2025",
+                  "description": "Year of birth"
+                }
+              ]
+            },
+            "description": "Generate a registration number for a given year (requires JWT token)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "description": "Health check endpoint (no authentication required)",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the API is running (no authentication required)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL for the API"
+    }
+  ]
+}

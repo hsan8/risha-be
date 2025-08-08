@@ -1,6 +1,5 @@
 import { ConfigModuleOptions } from '@nestjs/config';
 import * as path from 'path';
-import { Environment } from '../enums';
 import { validationSchema } from '../config/env.validation';
 
 export function buildConfigOptions(): ConfigModuleOptions {
@@ -12,7 +11,6 @@ export function buildConfigOptions(): ConfigModuleOptions {
       allowUnknown: true,
       abortEarly: false,
     },
-    ignoreEnvFile: process.env.NODE_ENV === Environment.TEST,
     envFilePath: [
       // Dev (sensitive + overridden default env vars)
       '.env',
