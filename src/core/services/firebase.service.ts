@@ -36,35 +36,45 @@ export class FirebaseService {
         // App doesn't exist, continue with initialization
       }
 
-      const databaseURL = 'https://risha-ef11e-default-rtdb.europe-west1.firebasedatabase.app/';
-      const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
+      const databaseURL =
+        this.configService.get<string>('FB_DATABASE_URL') ||
+        'https://risha-ef11e-default-rtdb.europe-west1.firebasedatabase.app/';
+      const projectId = this.configService.get<string>('FB_PROJECT_ID') || process.env.GCLOUD_PROJECT;
 
-      // Load service account from environment variables
-      const serviceAccount = {
-        type: 'service_account',
-        project_id: projectId,
-        private_key_id: this.configService.get<string>('FIREBASE_PRIVATE_KEY_ID'),
-        private_key: this.configService.get<string>('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-        client_email: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
-        client_id: this.configService.get<string>('FIREBASE_CLIENT_ID'),
-        auth_uri: this.configService.get<string>('FIREBASE_AUTH_URI'),
-        token_uri: this.configService.get<string>('FIREBASE_TOKEN_URI'),
-        auth_provider_x509_cert_url: this.configService.get<string>('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
-        client_x509_cert_url: this.configService.get<string>('FIREBASE_CLIENT_X509_CERT_URL'),
-        universe_domain: this.configService.get<string>('FIREBASE_UNIVERSE_DOMAIN'),
-      };
+      const isRunningOnGcp = Boolean(
+        process.env.K_SERVICE || // Cloud Run
+          process.env.FUNCTION_TARGET || // Cloud Functions
+          process.env.GOOGLE_CLOUD_PROJECT,
+      );
 
-      this.logger.log('Firebase configuration:', {
-        databaseURL,
-        projectId,
-      });
+      const appOptions: admin.AppOptions = { projectId, databaseURL };
 
-      // Initialize with service account credentials
-      this.app = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-        databaseURL,
-        projectId,
-      });
+      if (isRunningOnGcp) {
+        // On GCP, use Application Default Credentials automatically
+        this.logger.log('Initializing Firebase app using ADC on GCP');
+      } else {
+        // Local/dev: use service account file if provided for explicit creds, else ADC
+        const serviceAccountPath = this.configService.get<string>('FB_SERVICE_ACCOUNT');
+        if (serviceAccountPath) {
+          try {
+            // Resolve path relative to project root
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const serviceAccount = require(require('path').join(process.cwd(), serviceAccountPath));
+            appOptions.credential = admin.credential.cert(serviceAccount as admin.ServiceAccount);
+            this.logger.log('Initializing Firebase app with local service account file');
+          } catch (e) {
+            this.logger.warn(
+              `Failed to load service account at ${serviceAccountPath}, falling back to ADC: ${e.message}`,
+            );
+            appOptions.credential = admin.credential.applicationDefault();
+          }
+        } else {
+          appOptions.credential = admin.credential.applicationDefault();
+          this.logger.log('Initializing Firebase app using local ADC');
+        }
+      }
+
+      this.app = admin.initializeApp(appOptions);
 
       this.logger.log('Firebase app initialized successfully');
 

@@ -29,7 +29,7 @@ export const VALIDATION_CONSTANTS = {
   SEQUENCE_PADDING: 3,
 
   // Auth validation constants
-  MIN_PASSWORD_LENGTH: 4,
+  MIN_PASSWORD_LENGTH: 6,
   MAX_PASSWORD_LENGTH: 128,
   OTP_LENGTH: 5,
 } as const;

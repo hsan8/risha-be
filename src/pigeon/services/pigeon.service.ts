@@ -6,6 +6,7 @@ import { PageOptionsRequestDto } from '@/core/dtos';
 import { PigeonStatus, PigeonGender } from '../enums';
 import { RegistrationNumberService } from './registration-number.service';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
+import { UserStatisticsService } from '@/user/services';
 
 @Injectable()
 export class PigeonService {
@@ -14,6 +15,7 @@ export class PigeonService {
   constructor(
     private readonly pigeonRepository: PigeonRepository,
     private readonly registrationNumberService: RegistrationNumberService,
+    private readonly userStatisticsService: UserStatisticsService,
   ) {}
 
   async create(createPigeonDto: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
@@ -62,8 +64,13 @@ export class PigeonService {
       }
 
       const pigeon = await this.pigeonRepository.create(createPigeonDto, userId);
-      this.logger.log(I18nMessage.success('created'));
 
+      // Update statistics
+      const gender = createPigeonDto.gender === PigeonGender.MALE ? 'male' : 'female';
+      const isAlive = pigeon.status === PigeonStatus.ALIVE;
+      await this.userStatisticsService.incrementPigeonCount(userId, gender, isAlive);
+
+      this.logger.log(I18nMessage.success('created'));
       return pigeon;
     } catch (error) {
       if (error instanceof ConflictException || error instanceof BadRequestException) {
@@ -161,10 +168,17 @@ export class PigeonService {
         throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
 
-      const pigeon = await this.pigeonRepository.update(id, updatePigeonDto, userId);
-      this.logger.log(I18nMessage.success('updated'));
+      const updatedPigeon = await this.pigeonRepository.update(id, updatePigeonDto, userId);
 
-      return pigeon;
+      // Update statistics if status changed
+      if (updatePigeonDto.status && existingPigeon.status !== updatePigeonDto.status) {
+        const fromAlive = existingPigeon.status === PigeonStatus.ALIVE;
+        const toAlive = updatedPigeon.status === PigeonStatus.ALIVE;
+        await this.userStatisticsService.updatePigeonStatus(userId, fromAlive, toAlive);
+      }
+
+      this.logger.log(I18nMessage.success('updated'));
+      return updatedPigeon;
     } catch (error) {
       if (
         error instanceof ConflictException ||
@@ -184,6 +198,11 @@ export class PigeonService {
       if (!pigeon) {
         throw new NotFoundException(I18nMessage.error('notFound'));
       }
+
+      // Update statistics before deletion
+      const gender = pigeon.gender === PigeonGender.MALE ? 'male' : 'female';
+      const wasAlive = pigeon.status === PigeonStatus.ALIVE;
+      await this.userStatisticsService.decrementPigeonCount(userId, gender, wasAlive);
 
       await this.pigeonRepository.delete(id, userId);
       this.logger.log(I18nMessage.success('deleted'));
@@ -255,6 +274,17 @@ export class PigeonService {
       return await this.pigeonRepository.countByStatus(status, userId);
     } catch (error) {
       this.logger.error(`Error counting pigeons by status ${status}:`, error);
+      throw error;
+    }
+  }
+
+  async countByGenderAndStatus(
+    userId: string,
+  ): Promise<{ maleCount: number; femaleCount: number; totalCount: number }> {
+    try {
+      return await this.pigeonRepository.countByGenderAndStatus(userId);
+    } catch (error) {
+      this.logger.error('Error counting pigeons by gender and status:', error);
       throw error;
     }
   }

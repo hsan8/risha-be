@@ -9,6 +9,7 @@ import {
   GoogleAuthRequestDto,
   VerifyOTPRequestDto,
   ResetPasswordRequestDto,
+  ResendOTPRequestDto,
 } from '@/auth/dto/requests';
 import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
 import { ApiDataResponse } from '@/core/decorators';
@@ -69,10 +70,19 @@ export class AuthController {
 
   @Post('verify-otp')
   @ApiOperation({ summary: 'Verify OTP for password reset' })
+  @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)
+  async verifyOTP(@Body() verifyOTPDto: VerifyOTPRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
+    const result = await this.authService.verifyOTP(verifyOTPDto);
+    return ResponseFactory.data(result);
+  }
+
+  @Post('resend-otp')
+  @ApiOperation({ summary: 'Resend OTP for password reset' })
   @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async verifyOTP(@Body() verifyOTPDto: VerifyOTPRequestDto): Promise<DataResponseDto<MessageResponseDto>> {
-    const result = await this.authService.verifyOTP(verifyOTPDto);
+  async resendOTP(@Body() resendOTPDto: ResendOTPRequestDto): Promise<DataResponseDto<MessageResponseDto>> {
+    const result = await this.authService.resendOTP(resendOTPDto);
     return ResponseFactory.data(result);
   }
 

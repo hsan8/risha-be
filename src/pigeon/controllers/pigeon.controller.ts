@@ -15,7 +15,8 @@ import {
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { PigeonService } from '../services';
 import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
-import { PigeonResponseDto, PigeonDetailsResponseDto } from '../dto/responses';
+import { PigeonResponseDto, PigeonDetailsResponseDto, PigeonGenderAliveCountResponseDto } from '../dto/responses';
+import { UserStatisticsService } from '@/user/services';
 import { PageOptionsRequestDto } from '@/core/dtos';
 import { PigeonStatus } from '../enums';
 import { ApiDataResponse, ApiDataArrayResponse, ApiDataPageResponse } from '@/core/decorators/api';
@@ -31,7 +32,10 @@ import { UserId } from '@/user/decorators';
 export class PigeonController {
   private readonly logger = new Logger(PigeonController.name);
 
-  constructor(private readonly pigeonService: PigeonService) {}
+  constructor(
+    private readonly pigeonService: PigeonService,
+    private readonly userStatisticsService: UserStatisticsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new pigeon' })
@@ -136,6 +140,14 @@ export class PigeonController {
   ): Promise<DataResponseDto<number>> {
     const count = await this.pigeonService.countByStatus(status, userId);
     return ResponseFactory.data(count);
+  }
+
+  @Get('count/gender/alive')
+  @ApiOperation({ summary: 'Get count of alive pigeons by gender' })
+  @ApiDataResponse(PigeonGenderAliveCountResponseDto)
+  async countByGenderAndStatus(@UserId() userId: string) {
+    const statistics = await this.userStatisticsService.getPigeonStatistics(userId);
+    return ResponseFactory.data(new PigeonGenderAliveCountResponseDto(statistics));
   }
 
   @Get('search')

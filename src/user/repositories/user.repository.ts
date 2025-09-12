@@ -119,6 +119,33 @@ export class UserRepository {
     });
   }
 
+  async updateForRegistration(
+    id: string,
+    data: Partial<
+      Pick<
+        User,
+        'name' | 'phone' | 'country' | 'passwordHash' | 'provider' | 'status' | 'emailVerified' | 'twoFactorEnabled'
+      >
+    >,
+  ): Promise<User> {
+    const userRef = this.collectionRef.child(id);
+    const snapshot = await userRef.once('value');
+    const existingUser = snapshot.val() as User;
+
+    if (!existingUser) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+
+    const updatedUser: User = {
+      ...existingUser,
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    await userRef.update(updatedUser);
+    return updatedUser;
+  }
+
   async updateEmailVerification(id: string, emailVerified: boolean): Promise<void> {
     const userRef = this.collectionRef.child(id);
     await userRef.update({

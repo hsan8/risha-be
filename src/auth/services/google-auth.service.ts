@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { OAuth2Client } from 'google-auth-library';
+import { AUTH_CONSTANTS } from '../constants';
 
 export interface GoogleUserInfo {
   sub: string;
@@ -11,51 +13,76 @@ export interface GoogleUserInfo {
 @Injectable()
 export class GoogleAuthService {
   private readonly logger = new Logger(GoogleAuthService.name);
+  private readonly client: OAuth2Client;
 
-  verifyIdToken(_idToken: string): Promise<GoogleUserInfo> {
-    // In a real implementation, you would verify the Google ID token using:
-    // - Google Auth Library
-    // - Firebase Auth
-    // - Direct Google API verification
-
-    // For now, we'll mock the verification
-    // In production, use google-auth-library:
-    //
-    // const { OAuth2Client } = require('google-auth-library');
-    // const client = new OAuth2Client(AUTH_CONSTANTS.GOOGLE_CLIENT_ID);
-    // const ticket = await client.verifyIdToken({
-    //   idToken,
-    //   audience: AUTH_CONSTANTS.GOOGLE_CLIENT_ID,
-    // });
-    // const payload = ticket.getPayload();
-
-    // Mock Google user info (remove in production)
-    const mockGoogleUser: GoogleUserInfo = {
-      sub: 'google_user_id_123',
-      email: 'user@gmail.com',
-      name: 'Google User',
-      picture: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
-      email_verified: true,
-    };
-
-    this.logger.log(`Google ID token verified for user: ${mockGoogleUser.email}`);
-
-    return Promise.resolve(mockGoogleUser);
+  constructor() {
+    this.client = new OAuth2Client(AUTH_CONSTANTS.GOOGLE_CLIENT_ID);
   }
 
-  getUserInfo(_accessToken: string): Promise<GoogleUserInfo> {
-    // In a real implementation, you would fetch user info from Google API
-    // using the access token
+  async verifyIdToken(idToken: string): Promise<GoogleUserInfo> {
+    try {
+      const ticket = await this.client.verifyIdToken({
+        idToken,
+        audience: AUTH_CONSTANTS.GOOGLE_CLIENT_IDS,
+      });
 
-    // Mock implementation
-    const mockGoogleUser: GoogleUserInfo = {
-      sub: 'google_user_id_123',
-      email: 'user@gmail.com',
-      name: 'Google User',
-      picture: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
-      email_verified: true,
-    };
+      const payload = ticket.getPayload();
 
-    return Promise.resolve(mockGoogleUser);
+      if (!payload) {
+        throw new UnauthorizedException('Invalid Google ID token');
+      }
+
+      if (!payload.email || !payload.email_verified) {
+        throw new UnauthorizedException('Google account email not verified');
+      }
+
+      const googleUser: GoogleUserInfo = {
+        sub: payload.sub,
+        email: payload.email,
+        name: payload.name || '',
+        picture: payload.picture,
+        email_verified: payload.email_verified,
+      };
+
+      this.logger.log(`Google ID token verified for user: ${googleUser.email}`);
+      return googleUser;
+    } catch (error) {
+      this.logger.error(`Google ID token verification failed: ${error.message}`);
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+  }
+
+  async getUserInfo(accessToken: string): Promise<GoogleUserInfo> {
+    try {
+      this.client.setCredentials({ access_token: accessToken });
+
+      const userInfoClient = new OAuth2Client();
+      const userInfo = await userInfoClient.request({
+        url: 'https://www.googleapis.com/oauth2/v2/userinfo',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = userInfo.data as any;
+
+      if (!data.email || !data.verified_email) {
+        throw new UnauthorizedException('Google account email not verified');
+      }
+
+      const googleUser: GoogleUserInfo = {
+        sub: data.id,
+        email: data.email,
+        name: data.name || '',
+        picture: data.picture,
+        email_verified: data.verified_email,
+      };
+
+      this.logger.log(`Google user info retrieved for: ${googleUser.email}`);
+      return googleUser;
+    } catch (error) {
+      this.logger.error(`Google user info retrieval failed: ${error.message}`);
+      throw new UnauthorizedException('Failed to retrieve Google user info');
+    }
   }
 }

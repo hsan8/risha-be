@@ -1,9 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/auth/guards';
 import { UserId } from '../decorators';
 import { UserService } from '../services';
+import { UserProfileResponseDto } from '../dto/responses';
+import { ApiDataResponse } from '@/core/decorators';
 import { ResponseFactory } from '@/core/utils';
+import { DataResponseDto } from '@/core/dtos';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -13,10 +16,11 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('profile')
-  @ApiOperation({ summary: 'Get connected user' })
-  async getMe(@UserId() userId: string) {
+  @ApiOperation({ summary: 'Get connected user profile' })
+  @ApiDataResponse(UserProfileResponseDto, HttpStatus.OK)
+  async getMe(@UserId() userId: string): Promise<DataResponseDto<UserProfileResponseDto>> {
     const user = await this.userService.getConnectedUser(userId);
 
-    return ResponseFactory.data(user);
+    return ResponseFactory.data(new UserProfileResponseDto(user));
   }
 }

@@ -11,11 +11,16 @@ import * as bcrypt from 'bcryptjs';
 import { User } from '@/user/entities';
 import { OTP } from '@/auth/entities';
 import { RegisterRequestDto, LoginRequestDto } from '@/auth/dto/requests';
-import { ForgotPasswordRequestDto, VerifyOTPRequestDto, ResetPasswordRequestDto } from '@/auth/dto/requests';
+import {
+  ForgotPasswordRequestDto,
+  VerifyOTPRequestDto,
+  ResetPasswordRequestDto,
+  ResendOTPRequestDto,
+} from '@/auth/dto/requests';
 import { GoogleAuthRequestDto, AppleAuthRequestDto } from '@/auth/dto/requests';
 import { AuthResponseDto, UserResponseDto, MessageResponseDto } from '@/auth/dto/responses';
 import { AuthProvider, UserStatus, OTPType } from '@/auth/enums';
-import { AUTH_CONSTANTS, AUTH_MESSAGES } from '@/auth/constants';
+import { AUTH_CONSTANTS, AUTH_MESSAGES, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
 import { UserService } from '@/user/services';
 import { OTPRepository } from '@/auth/repositories';
 import { EmailService } from './email.service';
@@ -39,13 +44,33 @@ export class AuthService {
     // Check if user already exists
     const existingUser = await this.userService.findByEmail(dto.email);
     if (existingUser) {
-      throw new ConflictException(AUTH_MESSAGES.EMAIL_ALREADY_EXISTS);
+      if (existingUser.emailVerified) {
+        throw new ConflictException(AUTH_MESSAGES.EMAIL_ALREADY_EXISTS);
+      }
+
+      // Replace unverified account data
+      const passwordHash = await bcrypt.hash(dto.password, AUTH_CONSTANTS.SALT_ROUNDS);
+      const updated = await this.userService.updateForRegistration(existingUser.id, {
+        name: dto.name,
+        phone: dto.phone,
+        country: dto.country || 'Kuwait',
+        passwordHash,
+        provider: AuthProvider.EMAIL,
+        status: UserStatus.PENDING_VERIFICATION,
+        emailVerified: false,
+        twoFactorEnabled: false,
+      });
+
+      await this.sendEmailVerification(updated.email);
+      const tokens = await this.generateTokens(updated);
+      this.logger.log(`User registration replaced unverified account: ${updated.email}`);
+      return new AuthResponseDto({ ...tokens, user: new UserResponseDto(updated) });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(dto.password, AUTH_CONSTANTS.SALT_ROUNDS);
 
-    // Create user
+    // Create new user
     const user = await this.userService.create({
       name: dto.name,
       email: dto.email,
@@ -179,6 +204,16 @@ export class AuthService {
       throw new NotFoundException(AUTH_MESSAGES.EMAIL_NOT_FOUND);
     }
 
+    // Check if OTP can be sent (rate limiting)
+    const canSendResult = await this.otpRepository.canSendOTP(dto.email, OTPType.PASSWORD_RESET);
+    if (!canSendResult.canSend) {
+      if (canSendResult.reason === 'daily_limit') {
+        throw new BadRequestException(AUTH_MESSAGES.OTP_DAILY_LIMIT);
+      } else if (canSendResult.reason === 'cooldown') {
+        throw new BadRequestException(AUTH_MESSAGES.OTP_RESEND_COOLDOWN);
+      }
+    }
+
     // Generate and save OTP
     const otp = await this.generateOTP(dto.email, OTPType.PASSWORD_RESET);
 
@@ -190,9 +225,43 @@ export class AuthService {
     return new MessageResponseDto(AUTH_MESSAGES.OTP_SENT);
   }
 
-  async verifyOTP(dto: VerifyOTPRequestDto): Promise<MessageResponseDto> {
-    // Find and validate OTP
-    const otp = await this.otpRepository.findValidOTP(dto.email, dto.otp, OTPType.PASSWORD_RESET);
+  async resendOTP(dto: ResendOTPRequestDto): Promise<MessageResponseDto> {
+    // Find user by ID
+    const user = await this.userService.findById(dto.userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+    }
+
+    // Check if OTP can be sent (rate limiting)
+    const canSendResult = await this.otpRepository.canSendOTP(user.email, OTPType.PASSWORD_RESET);
+    if (!canSendResult.canSend) {
+      if (canSendResult.reason === 'daily_limit') {
+        throw new BadRequestException(AUTH_MESSAGES.OTP_DAILY_LIMIT);
+      } else if (canSendResult.reason === 'cooldown') {
+        throw new BadRequestException(AUTH_MESSAGES.OTP_RESEND_COOLDOWN);
+      }
+    }
+
+    // Generate and save new OTP
+    const otp = await this.generateOTP(user.email, OTPType.PASSWORD_RESET);
+
+    // Send OTP email
+    await this.emailService.sendPasswordResetOTP(user.email, otp.code);
+
+    this.logger.log(`OTP resent: ${user.email}`);
+
+    return new MessageResponseDto(AUTH_MESSAGES.OTP_SENT);
+  }
+
+  async verifyOTP(dto: VerifyOTPRequestDto): Promise<AuthResponseDto> {
+    // Find user by ID
+    const user = await this.userService.findById(dto.userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+    }
+
+    // Find and validate OTP by user's email
+    const otp = await this.otpRepository.findValidOTPByEmail(user.email, dto.otp);
     if (!otp) {
       throw new BadRequestException(AUTH_MESSAGES.INVALID_OTP);
     }
@@ -200,9 +269,18 @@ export class AuthService {
     // Mark OTP as used
     await this.otpRepository.markAsUsed(otp.id);
 
-    this.logger.log(`OTP verified successfully: ${dto.email}`);
+    // Mark user's email as verified and update status to ACTIVE
+    const updatedUser = await this.userService.markEmailAsVerifiedAndActivate(user.id);
 
-    return new MessageResponseDto(AUTH_MESSAGES.OTP_VERIFIED);
+    // Generate tokens
+    const tokens = await this.generateTokens(updatedUser);
+
+    this.logger.log(`OTP verified successfully: ${user.email}`);
+
+    return new AuthResponseDto({
+      ...tokens,
+      user: new UserResponseDto(updatedUser),
+    });
   }
 
   async resetPassword(dto: ResetPasswordRequestDto): Promise<MessageResponseDto> {
@@ -211,14 +289,14 @@ export class AuthService {
       throw new BadRequestException(AUTH_MESSAGES.PASSWORDS_DO_NOT_MATCH);
     }
 
-    // Find user
-    const user = await this.userService.findByEmail(dto.email);
+    // Find user by ID
+    const user = await this.userService.findById(dto.userId);
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.EMAIL_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
     }
 
     // Verify OTP again for security
-    const otp = await this.otpRepository.findValidOTP(dto.email, dto.otp, OTPType.PASSWORD_RESET);
+    const otp = await this.otpRepository.findValidOTPByEmail(user.email, dto.otp);
     if (!otp) {
       throw new BadRequestException(AUTH_MESSAGES.INVALID_OTP);
     }
@@ -232,7 +310,7 @@ export class AuthService {
     // Mark OTP as used
     await this.otpRepository.markAsUsed(otp.id);
 
-    this.logger.log(`Password reset successful: ${dto.email}`);
+    this.logger.log(`Password reset successful: ${user.email}`);
 
     return new MessageResponseDto(AUTH_MESSAGES.PASSWORD_RESET_SUCCESS);
   }
@@ -252,13 +330,11 @@ export class AuthService {
       this.jwtService.signAsync(payload, { expiresIn: AUTH_CONSTANTS.JWT_REFRESH_TOKEN_EXPIRY }),
     ]);
 
-    const { TOKEN_EXPIRY_MINUTES } = await import('@/auth/constants');
-
     return {
       accessToken,
       refreshToken,
       tokenType: 'Bearer',
-      expiresIn: TOKEN_EXPIRY_MINUTES,
+      expiresIn: TOKEN_EXPIRY_SECONDS,
     };
   }
 

@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../repositories';
-import { UserResponseDto } from '@/auth/dto/responses';
 import { User } from '@/user/entities';
 import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
 import { AUTH_MESSAGES } from '@/auth/constants';
@@ -9,14 +8,14 @@ import { AUTH_MESSAGES } from '@/auth/constants';
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async getConnectedUser(userId: string): Promise<UserResponseDto> {
+  async getConnectedUser(userId: string): Promise<User> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
     }
 
-    return new UserResponseDto(user);
+    return user;
   }
 
   findById(userId: string): Promise<User | null> {
@@ -76,5 +75,37 @@ export class UserService {
 
   updateStatus(userId: string, status: UserStatus): Promise<void> {
     return this.userRepository.updateStatus(userId, status);
+  }
+
+  updateForRegistration(
+    userId: string,
+    data: Partial<
+      Pick<
+        User,
+        'name' | 'phone' | 'country' | 'passwordHash' | 'provider' | 'status' | 'emailVerified' | 'twoFactorEnabled'
+      >
+    >,
+  ): Promise<User> {
+    return this.userRepository.updateForRegistration(userId, data);
+  }
+
+  async markEmailAsVerified(userId: string): Promise<User> {
+    await this.updateEmailVerification(userId, true);
+
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+    }
+    return user;
+  }
+
+  async markEmailAsVerifiedAndActivate(userId: string): Promise<User> {
+    await this.updateEmailVerification(userId, true);
+    await this.updateStatus(userId, UserStatus.ACTIVE);
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+    }
+    return user;
   }
 }

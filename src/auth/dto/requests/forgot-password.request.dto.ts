@@ -3,6 +3,7 @@ import { Expose, Transform } from 'class-transformer';
 import { IsString, IsEmail, IsNotEmpty, Length, Matches } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 import { AUTH_CONSTANTS } from '@/auth/constants';
+import { IsFirebaseId } from '@/core/validators/firebase-id.validator';
 
 export class ForgotPasswordRequestDto {
   @ApiProperty({ example: 'user@example.com' })
@@ -21,48 +22,52 @@ export class ForgotPasswordRequestDto {
 }
 
 export class VerifyOTPRequestDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: '-OV8mQOynkCqfL7wYRxN' })
   @Expose()
-  @Transform(({ value }) => value?.trim?.().toLowerCase() ?? value)
-  @IsEmail(
-    {},
-    {
-      message: i18n('validation.IsEmail', { path: 'app', property: 'auth.email' }),
-    },
-  )
   @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.email' }),
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.userId' }),
   })
-  email!: string;
+  @IsFirebaseId({
+    message: i18n('validation.IsFirebaseId', { path: 'app', property: 'auth.userId' }),
+  })
+  userId!: string;
 
   @ApiProperty({ example: '12345' })
   @Expose()
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'auth.otp' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.otp' }),
-  })
   @Length(AUTH_CONSTANTS.OTP_LENGTH, AUTH_CONSTANTS.OTP_LENGTH, {
     message: i18n('validation.OTPLength', { path: 'app', property: 'auth.otp' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.otp' }),
   })
   otp!: string;
 }
 
-export class ResetPasswordRequestDto {
-  @ApiProperty({ example: 'user@example.com' })
+export class ResendOTPRequestDto {
+  @ApiProperty({ example: '-OV8mQOynkCqfL7wYRxN' })
   @Expose()
-  @Transform(({ value }) => value?.trim?.().toLowerCase() ?? value)
-  @IsEmail(
-    {},
-    {
-      message: i18n('validation.IsEmail', { path: 'app', property: 'auth.email' }),
-    },
-  )
   @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.email' }),
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.userId' }),
   })
-  email!: string;
+  @IsFirebaseId({
+    message: i18n('validation.IsFirebaseId', { path: 'app', property: 'auth.userId' }),
+  })
+  userId!: string;
+}
+
+export class ResetPasswordRequestDto {
+  @ApiProperty({ example: '-OV8mQOynkCqfL7wYRxN' })
+  @Expose()
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.userId' }),
+  })
+  @IsFirebaseId({
+    message: i18n('validation.IsFirebaseId', { path: 'app', property: 'auth.userId' }),
+  })
+  userId!: string;
 
   @ApiProperty({ example: '12345' })
   @Expose()

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Exclude } from 'class-transformer';
 import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export class UserResponseDto {
@@ -58,6 +58,13 @@ export class UserResponseDto {
   @ApiProperty({ example: '2023-10-01T10:30:00.000Z' })
   @Expose()
   updatedAt: Date;
+
+  // Explicitly exclude sensitive fields
+  @Exclude()
+  passwordHash?: string;
+
+  @Exclude()
+  providerId?: string;
 
   constructor(partial: Partial<UserResponseDto>) {
     Object.assign(this, partial);

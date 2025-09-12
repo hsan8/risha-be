@@ -14,14 +14,22 @@ export const AUTH_CONSTANTS = {
   OTP_LENGTH: 5,
   OTP_EXPIRY_MINUTES: 10,
   MAX_OTP_ATTEMPTS: 5,
+  OTP_RESEND_COOLDOWN_MINUTES: 3,
+  MAX_OTP_PER_DAY: 10,
 
   // Password
   SALT_ROUNDS: 12,
-  MIN_PASSWORD_LENGTH: 4,
-  MAX_PASSWORD_LENGTH: 128,
+  MIN_PASSWORD_LENGTH: 5,
+  MAX_PASSWORD_LENGTH: 5,
 
   // Social Auth
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_ID:
+    process.env.GOOGLE_CLIENT_ID || '971298286559-nf2n2mnmevijcf2ib4p5rligfk6hk12f.apps.googleusercontent.com',
+  GOOGLE_CLIENT_IDS: [
+    process.env.GOOGLE_CLIENT_ID,
+    '971298286559-nf2n2mnmevijcf2ib4p5rligfk6hk12f.apps.googleusercontent.com', // Android
+    process.env.GOOGLE_IOS_CLIENT_ID, // iOS client ID
+  ].filter(Boolean),
   APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,
 
   // Email
@@ -48,6 +56,7 @@ export const AUTH_CONSTANTS = {
   // Time constants
   MINUTES_TO_SECONDS: 60,
   SECONDS_TO_MILLISECONDS: 1000,
+  HOURS_PER_DAY: 24,
 
   // Validation
   MIN_NAME_LENGTH: 2,
@@ -74,6 +83,8 @@ export const TOKEN_EXPIRY_SECONDS =
   AUTH_CONSTANTS.MINUTES_IN_HOUR *
   AUTH_CONSTANTS.SECONDS_IN_MINUTE;
 
+export const MILLISECONDS_PER_MINUTE = AUTH_CONSTANTS.MINUTES_TO_SECONDS * AUTH_CONSTANTS.SECONDS_TO_MILLISECONDS;
+
 export const AUTH_MESSAGES = {
   // Success
   REGISTRATION_SUCCESS: 'Registration successful',
@@ -94,6 +105,8 @@ export const AUTH_MESSAGES = {
   OTP_EXPIRED: 'OTP has expired',
   OTP_ALREADY_USED: 'OTP has already been used',
   MAX_OTP_ATTEMPTS: 'Maximum OTP attempts exceeded',
+  OTP_RESEND_COOLDOWN: 'Please wait 3 minutes before requesting another OTP',
+  OTP_DAILY_LIMIT: 'Maximum OTP requests per day exceeded. Please try again tomorrow',
   EMAIL_NOT_VERIFIED: 'Email not verified',
   INVALID_TOKEN: 'Invalid or expired token',
   PASSWORDS_DO_NOT_MATCH: 'Passwords do not match',

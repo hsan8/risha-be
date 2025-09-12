@@ -282,4 +282,30 @@ export class PigeonRepository {
 
     return count;
   }
+
+  async countByGenderAndStatus(
+    userId: string,
+  ): Promise<{ maleCount: number; femaleCount: number; totalCount: number }> {
+    const userPigeonsRef = this.getUserPigeonsRef(userId);
+    const snapshot = await userPigeonsRef.once('value');
+    let maleCount = 0;
+    let femaleCount = 0;
+
+    snapshot.forEach((childSnapshot) => {
+      const pigeon = childSnapshot.val() as Pigeon;
+      if (pigeon && pigeon.status === PigeonStatus.ALIVE) {
+        if (pigeon.gender === PigeonGender.MALE) {
+          maleCount++;
+        } else if (pigeon.gender === PigeonGender.FEMALE) {
+          femaleCount++;
+        }
+      }
+    });
+
+    return {
+      maleCount,
+      femaleCount,
+      totalCount: maleCount + femaleCount,
+    };
+  }
 }
