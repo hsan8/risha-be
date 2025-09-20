@@ -40,11 +40,7 @@ export class CreatePigeonRequestDto {
 
   @ApiPropertyOptional({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07' })
   @Expose()
-  @IsOptional()
-  @IsUUID('4', {
-    message: i18n('validation.IsUUID', { path: 'app', property: 'pigeon.ownerId' }),
-  })
-  ownerId?: string;
+  ownerId: string;
 
   @ApiProperty({ example: '2024-A-001' })
   @Expose()
