@@ -77,3 +77,6 @@ src/config/app.env
 # Build output
 dist/
 dist/src/
+google-services.json
+.gitignore
+GoogleService-Info.plist
