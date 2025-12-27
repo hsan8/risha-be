@@ -38,7 +38,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly googleAuthService: GoogleAuthService,
     private readonly appleAuthService: AppleAuthService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterRequestDto): Promise<AuthResponseDto> {
     // Check if user already exists
@@ -313,6 +313,11 @@ export class AuthService {
     this.logger.log(`Password reset successful: ${user.email}`);
 
     return new MessageResponseDto(AUTH_MESSAGES.PASSWORD_RESET_SUCCESS);
+  }
+
+  async logout(): Promise<MessageResponseDto> {
+    this.logger.log('User logged out');
+    return new MessageResponseDto(AUTH_MESSAGES.LOGOUT_SUCCESS);
   }
 
   private async generateTokens(

@@ -27,6 +27,7 @@ export const AUTH_CONSTANTS = {
     process.env.GOOGLE_CLIENT_ID || '971298286559-nf2n2mnmevijcf2ib4p5rligfk6hk12f.apps.googleusercontent.com',
   GOOGLE_CLIENT_IDS: [
     process.env.GOOGLE_CLIENT_ID,
+    '971298286559-5etslvog7t5bf22dmecqg51q6j1krqif.apps.googleusercontent.com', // Expo/Frontend Web Client ID
     '971298286559-nf2n2mnmevijcf2ib4p5rligfk6hk12f.apps.googleusercontent.com', // Android
     process.env.GOOGLE_IOS_CLIENT_ID, // iOS client ID
   ].filter(Boolean),
