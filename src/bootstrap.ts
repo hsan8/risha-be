@@ -37,6 +37,7 @@ export function createSwaggerDocument(app: INestApplication) {
     .setDescription('Risha Backend Application')
     .setVersion('1.0')
     .addBearerAuth({ in: 'header', type: 'http' })
+    .addServer('http://localhost:5001') // Add local development server
     .addServer('/risha-ef11e/us-central1/api') // Add Firebase Functions base path
     .build();
 

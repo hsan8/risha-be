@@ -19,7 +19,7 @@ import { DataResponseDto } from '@/core/dtos';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user with email and password' })
@@ -92,6 +92,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordRequestDto): Promise<DataResponseDto<MessageResponseDto>> {
     const result = await this.authService.resetPassword(resetPasswordDto);
+    return ResponseFactory.data(result);
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)
+  async logout(): Promise<DataResponseDto<MessageResponseDto>> {
+    const result = await this.authService.logout();
     return ResponseFactory.data(result);
   }
 }

@@ -38,6 +38,10 @@ const initializeApp = async () => {
             url: '/risha-ef11e/us-central1/api/api-docs-json',
             name: 'Risha API',
           },
+          {
+            url: 'http://localhost:5001',
+            name: 'Local Risha API',
+          },
         ],
       },
     });
