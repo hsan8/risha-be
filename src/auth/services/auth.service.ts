@@ -284,10 +284,7 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordRequestDto): Promise<MessageResponseDto> {
-    // Validate passwords match
-    if (dto.newPassword !== dto.confirmPassword) {
-      throw new BadRequestException(AUTH_MESSAGES.PASSWORDS_DO_NOT_MATCH);
-    }
+
 
     // Find user by ID
     const user = await this.userService.findById(dto.userId);

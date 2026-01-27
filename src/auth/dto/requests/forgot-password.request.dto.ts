@@ -97,20 +97,4 @@ export class ResetPasswordRequestDto {
     message: i18n('validation.NumbersOnly', { path: 'app', property: 'auth.newPassword' }),
   })
   newPassword!: string;
-
-  @ApiProperty({ example: '1234' })
-  @Expose()
-  @IsString({
-    message: i18n('validation.IsString', { path: 'app', property: 'auth.confirmPassword' }),
-  })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.confirmPassword' }),
-  })
-  @Length(AUTH_CONSTANTS.MIN_PASSWORD_LENGTH, AUTH_CONSTANTS.MAX_PASSWORD_LENGTH, {
-    message: i18n('validation.Length', { path: 'app', property: 'auth.confirmPassword' }),
-  })
-  @Matches(/^\d+$/, {
-    message: i18n('validation.NumbersOnly', { path: 'app', property: 'auth.confirmPassword' }),
-  })
-  confirmPassword!: string;
 }
