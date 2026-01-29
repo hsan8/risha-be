@@ -866,7 +866,7 @@
           "response": []
         },
         {
-          "name": "Generate Registration Number",
+          "name": "Generate Documentation Number",
           "request": {
             "method": "GET",
             "header": [
@@ -876,10 +876,10 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/pigeons/generate-registration/:yearOfBirth",
+              "raw": "{{baseUrl}}/pigeons/documentation-number/generate?yearOfBirth=2025",
               "host": ["{{baseUrl}}"],
-              "path": ["pigeons", "generate-registration", ":yearOfBirth"],
-              "variable": [
+              "path": ["pigeons", "documentation-number", "generate"],
+              "query": [
                 {
                   "key": "yearOfBirth",
                   "value": "2025",
@@ -887,7 +887,7 @@
                 }
               ]
             },
-            "description": "Generate a registration number for a given year (requires JWT token)"
+            "description": "Generate a documentation number for a given year (requires JWT token)"
           },
           "response": []
         }

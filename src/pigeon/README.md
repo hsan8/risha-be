@@ -1,13 +1,13 @@
 # Pigeon Management System
 
-A comprehensive CRUD (Create, Read, Update, Delete) API for managing pigeons with parent relationships, status management, and automatic registration number generation using Firebase Realtime Database.
+A comprehensive CRUD (Create, Read, Update, Delete) API for managing pigeons with parent relationships, status management, and automatic documentation number generation using Firebase Realtime Database.
 
 ## 🚀 Features
 
 - ✅ Complete CRUD operations for pigeons
 - ✅ Parent-child relationships (father/mother)
 - ✅ Status management (ALIVE, DEAD, SOLD)
-- ✅ Automatic registration number generation (####-#-### pattern)
+- ✅ Automatic documentation number generation (####-#-### pattern)
 - ✅ Ring number and documentation number uniqueness validation
 - ✅ Parent validation (gender and status checks)
 - ✅ Status transition validation
@@ -27,7 +27,7 @@ A comprehensive CRUD (Create, Read, Update, Delete) API for managing pigeons wit
   gender: PigeonGender;          // MALE or FEMALE (required)
   status: PigeonStatus;          // ALIVE, DEAD, or SOLD (required)
   ownerId?: string;              // Owner ID (optional)
-  documentationNo: string;       // Registration number (required)
+  documentationNo: string;       // Documentation number (required)
   ringNo: string;                // Ring number (required)
   ringColor: string;             // Ring color (required)
   caseNumber?: string;           // Case number (optional)
@@ -59,7 +59,7 @@ enum PigeonStatus {
 
 ## 🔧 Business Rules
 
-### Registration Number Generation
+### Documentation Number Generation
 
 - **Pattern**: `####-#-###` (e.g., 2025-A-123)
 - **Format**: Year of birth - Letter - Sequence number
@@ -95,22 +95,22 @@ enum PigeonStatus {
 
 ### Endpoints
 
-| Method | Endpoint                                      | Description                        |
-| ------ | --------------------------------------------- | ---------------------------------- |
-| POST   | `/pigeons`                                    | Create a new pigeon                |
-| GET    | `/pigeons`                                    | Get all pigeons                    |
-| GET    | `/pigeons/alive`                              | Get all alive pigeons              |
-| GET    | `/pigeons/parents`                            | Get all alive parent pigeons       |
-| GET    | `/pigeons/count`                              | Get total count of pigeons         |
-| GET    | `/pigeons/count/:status`                      | Get count by status                |
-| GET    | `/pigeons/search?q={query}`                   | Search pigeons                     |
-| GET    | `/pigeons/ring/:ringNo`                       | Get pigeon by ring number          |
-| GET    | `/pigeons/documentation/:documentationNo`     | Get pigeon by documentation number |
-| GET    | `/pigeons/generate-registration/:yearOfBirth` | Generate registration number       |
-| GET    | `/pigeons/:id`                                | Get pigeon by ID                   |
-| PATCH  | `/pigeons/:id`                                | Update pigeon                      |
-| PATCH  | `/pigeons/:id/status`                         | Update pigeon status               |
-| DELETE | `/pigeons/:id`                                | Delete pigeon                      |
+| Method | Endpoint                                                    | Description                        |
+| ------ | ----------------------------------------------------------- | ---------------------------------- |
+| POST   | `/pigeons`                                                  | Create a new pigeon                |
+| GET    | `/pigeons`                                                  | Get all pigeons                    |
+| GET    | `/pigeons/alive`                                            | Get all alive pigeons              |
+| GET    | `/pigeons/parents`                                          | Get all alive parent pigeons       |
+| GET    | `/pigeons/count`                                            | Get total count of pigeons         |
+| GET    | `/pigeons/count/:status`                                    | Get count by status                |
+| GET    | `/pigeons/search?q={query}`                                 | Search pigeons                     |
+| GET    | `/pigeons/ring/:ringNo`                                     | Get pigeon by ring number          |
+| GET    | `/pigeons/documentation/:documentationNo`                   | Get pigeon by documentation number |
+| GET    | `/pigeons/documentation-number/generate?yearOfBirth={year}` | Generate documentation number      |
+| GET    | `/pigeons/:id`                                              | Get pigeon by ID                   |
+| PATCH  | `/pigeons/:id`                                              | Update pigeon                      |
+| PATCH  | `/pigeons/:id/status`                                       | Update pigeon status               |
+| DELETE | `/pigeons/:id`                                              | Delete pigeon                      |
 
 ## 🔧 Usage Examples
 
@@ -166,17 +166,17 @@ Content-Type: application/json
 }
 ```
 
-### Generate Registration Number
+### Generate Documentation Number
 
 ```bash
-GET /api/pigeons/generate-registration/2025
+GET /api/pigeons/documentation-number/generate?yearOfBirth=2025
 ```
 
 Response:
 
 ```json
 {
-  "registrationNumber": "2025-A-001"
+  "data": "2025-A-001"
 }
 ```
 
@@ -265,13 +265,13 @@ Main business logic service handling:
 - Status transition validation
 - Ring number and documentation number uniqueness
 
-### RegistrationNumberService
+### DocumentationNumberService
 
-Handles registration number generation:
+Handles documentation number generation:
 
 - Automatic generation following ####-#-### pattern
-- Validation of registration number format
-- Parsing registration number components
+- Validation of documentation number format
+- Parsing documentation number components
 
 ### PigeonRepository
 
@@ -330,7 +330,7 @@ npm run deploy
 - Efficient Firebase Realtime Database queries
 - Optimized search functionality
 - Parent relationship caching
-- Registration number generation optimization
+- Documentation number generation optimization
 - Comprehensive error handling and logging
 
 ## 🔮 Future Enhancements

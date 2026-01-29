@@ -1,9 +1,10 @@
-import { RequestUser } from '@/user/decorators';
+import { User } from '@/user/entities';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: RequestUser;
+      /** Set by JwtAuthGuard: full user entity when JWT is valid */
+      user?: User;
     }
   }
 }

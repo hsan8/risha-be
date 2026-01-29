@@ -6,16 +6,7 @@ import { AbstractHttpAdapter } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Request, Response } from 'express';
 
-function loadFirebaseConfig() {
-  // In Firebase Functions v2, environment variables are loaded automatically
-  // No need to use functions.config() - just rely on process.env
-  // Firebase Functions v2 - using environment variables directly
-}
-
 export async function createApp(httpAdapter?: AbstractHttpAdapter) {
-  // Load Firebase config before creating the app
-  loadFirebaseConfig();
-
   const app = httpAdapter
     ? await NestFactory.create(AppModule, httpAdapter, { bufferLogs: true })
     : await NestFactory.create(AppModule, { bufferLogs: true });

@@ -29,7 +29,7 @@ export const PIGEON_MESSAGES = {
   DEAD_AT_REQUIRED: 'Dead date is required when changing status to DEAD',
 } as const;
 
-export const REGISTRATION_NUMBER_CONSTANTS = {
+export const DOCUMENTATION_NUMBER_CONSTANTS = {
   PATTERN: /^\d{4}-[A-Z]-\d{3}$/,
   LETTERS: [
     'A',

@@ -4,7 +4,7 @@ import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests'
 import { PigeonRepository } from '../repositories';
 import { PageOptionsRequestDto } from '@/core/dtos';
 import { PigeonStatus, PigeonGender } from '../enums';
-import { RegistrationNumberService } from './registration-number.service';
+import { DocumentationNumberService } from './documentation-number.service';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { UserStatisticsService } from '@/user/services';
 
@@ -14,7 +14,7 @@ export class PigeonService {
 
   constructor(
     private readonly pigeonRepository: PigeonRepository,
-    private readonly registrationNumberService: RegistrationNumberService,
+    private readonly documentationNumberService: DocumentationNumberService,
     private readonly userStatisticsService: UserStatisticsService,
   ) {}
 
@@ -38,7 +38,7 @@ export class PigeonService {
       }
 
       // Validate documentation number format
-      if (!this.registrationNumberService.validateRegistrationNumber(createPigeonDto.documentationNo)) {
+      if (!this.documentationNumberService.validateDocumentationNo(createPigeonDto.documentationNo)) {
         throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
 
@@ -47,13 +47,13 @@ export class PigeonService {
 
       // Generate documentation number if not provided
       if (!createPigeonDto.documentationNo) {
-        createPigeonDto.documentationNo = await this.registrationNumberService.generateRegistrationNumber(
-          createPigeonDto.yearOfBirth,
+        createPigeonDto.documentationNo = await this.documentationNumberService.generateDocumentationNo(
+          parseInt(createPigeonDto.yearOfBirth, 10),
           userId,
         );
       } else {
         // Validate provided documentation number format
-        if (!this.registrationNumberService.validateRegistrationNumber(createPigeonDto.documentationNo)) {
+        if (!this.documentationNumberService.validateDocumentationNo(createPigeonDto.documentationNo)) {
           throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
         }
       }
@@ -163,7 +163,7 @@ export class PigeonService {
       // Validate documentation number format if provided
       if (
         updatePigeonDto.documentationNo &&
-        !this.registrationNumberService.validateRegistrationNumber(updatePigeonDto.documentationNo)
+        !this.documentationNumberService.validateDocumentationNo(updatePigeonDto.documentationNo)
       ) {
         throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
@@ -289,11 +289,11 @@ export class PigeonService {
     }
   }
 
-  async generateRegistrationNumber(yearOfBirth: string, userId: string): Promise<string> {
+  async generateDocumentationNo(yearOfBirth: number, userId: string): Promise<string> {
     try {
-      return await this.registrationNumberService.generateRegistrationNumber(yearOfBirth, userId);
+      return this.documentationNumberService.generateDocumentationNo(yearOfBirth, userId);
     } catch (error) {
-      this.logger.error(`Error generating registration number for year ${yearOfBirth}:`, error);
+      this.logger.error(`Error generating documentation number for year ${yearOfBirth}:`, error);
       throw error;
     }
   }

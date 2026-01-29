@@ -27,9 +27,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "setup:firebase": "ts-node scripts/setup-firebase.ts",
+    "migrate:pigeons": "ts-node -r tsconfig-paths/register scripts/migrate-pigeons-out-of-users.ts",
+    "migrate:pigeons:dry-run": "ts-node -r tsconfig-paths/register scripts/migrate-pigeons-out-of-users.ts --dry-run",
     "test:postman": "node postman/run-tests.js tests",
-    "test:postman:main": "node postman/run-tests.js main",
-    "test:api": "newman run postman/Risha-BE-Tests.postman_collection.json -e postman/Risha-BE-Environment.postman_environment.json --reporters cli,html,json"
+    "test:postman:main": "node postman/run-tests.js main"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -88,6 +89,7 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
+    "dotenv": "^16.6.1",
     "eslint": "^8.39.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.0.0",

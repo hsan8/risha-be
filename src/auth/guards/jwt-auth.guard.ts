@@ -31,21 +31,19 @@ export class JwtAuthGuard implements CanActivate {
     try {
       const payload: JwtPayload = await this.jwtService.verifyAsync(token);
 
-      // Verify user still exists and is active
-      const user = await this.userService.findById(payload.sub);
-      if (!user) {
-        throw new UnauthorizedException(AUTH_MESSAGES.USER_NOT_FOUND);
-      }
+      // const user = await this.userService.findById(payload.sub);
+      // if (!user) {
+      //   throw new UnauthorizedException(AUTH_MESSAGES.USER_NOT_FOUND);
+      // }
 
-      if (user.status === UserStatus.SUSPENDED) {
+      if (payload.status === UserStatus.SUSPENDED) {
         throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_SUSPENDED);
       }
 
-      if (user.status === UserStatus.INACTIVE) {
+      if (payload.status === UserStatus.INACTIVE) {
         throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_INACTIVE);
       }
 
-      // Attach user info to request
       request.user = {
         id: payload.sub,
         email: payload.email,

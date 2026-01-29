@@ -3,8 +3,10 @@
     ".read": true,
     ".write": true,
     "pigeons": {
-      ".read": true,
-      ".write": true
+      "$userId": {
+        ".read": "$userId === auth.uid || auth != null",
+        ".write": "$userId === auth.uid || auth != null"
+      }
     },
     "users": {
       "$uid": {

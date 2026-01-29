@@ -19,7 +19,7 @@ export class PigeonRepository {
   }
 
   private getUserPigeonsRef(userId: string): Reference {
-    return this.db.ref(`users/${userId}/pigeons`);
+    return this.db.ref(PIGEON_CONSTANTS.COLLECTION_NAME).child(userId);
   }
 
   async create(data: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
@@ -211,6 +211,21 @@ export class PigeonRepository {
     snapshot.forEach((childSnapshot) => {
       const pigeon = childSnapshot.val() as Pigeon;
       if (pigeon && pigeon.yearOfBirth === yearOfBirth) {
+        pigeons.push(pigeon);
+      }
+    });
+
+    return pigeons;
+  }
+
+  async findAllByUserId(userId: string): Promise<Pigeon[]> {
+    const userPigeonsRef = this.getUserPigeonsRef(userId);
+    const snapshot = await userPigeonsRef.once('value');
+    const pigeons: Pigeon[] = [];
+
+    snapshot.forEach((childSnapshot) => {
+      const pigeon = childSnapshot.val() as Pigeon;
+      if (pigeon) {
         pigeons.push(pigeon);
       }
     });

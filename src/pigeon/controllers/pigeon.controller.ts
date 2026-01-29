@@ -195,22 +195,6 @@ export class PigeonController {
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 
-  @Get('generate-registration/:yearOfBirth')
-  @ApiOperation({ summary: 'Generate a registration number for a given year' })
-  @ApiParam({
-    name: 'yearOfBirth',
-    description: 'Year of birth',
-    type: String,
-  })
-  @ApiDataResponse('string')
-  async generateRegistrationNumber(
-    @Param('yearOfBirth') yearOfBirth: string,
-    @UserId() userId: string,
-  ): Promise<DataResponseDto<string>> {
-    const registrationNumber = await this.pigeonService.generateRegistrationNumber(yearOfBirth, userId);
-    return ResponseFactory.data(registrationNumber);
-  }
-
   @Get(':id')
   @ApiOperation({ summary: 'Get a pigeon by ID' })
   @ApiParam({

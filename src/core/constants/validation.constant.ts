@@ -24,8 +24,10 @@ export const VALIDATION_CONSTANTS = {
 
   // Year validation
   YEAR_LENGTH: 4,
+  MIN_YEAR: 1900,
+  MAX_YEAR: 2100,
 
-  // Registration number
+  // Documentation number
   SEQUENCE_PADDING: 3,
 
   // Auth validation constants
