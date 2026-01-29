@@ -59,15 +59,18 @@ export class ResendOTPRequestDto {
 }
 
 export class ResetPasswordRequestDto {
-  @ApiProperty({ example: '-OV8mQOynkCqfL7wYRxN' })
+  @ApiProperty({ example: 'user@example.com' })
   @Expose()
+  @IsEmail(
+    {},
+    {
+      message: i18n('validation.IsEmail', { path: 'app', property: 'auth.email' }),
+    },
+  )
   @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.userId' }),
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.email' }),
   })
-  @IsFirebaseId({
-    message: i18n('validation.IsFirebaseId', { path: 'app', property: 'auth.userId' }),
-  })
-  userId!: string;
+  email!: string;
 
   @ApiProperty({ example: '12345' })
   @Expose()

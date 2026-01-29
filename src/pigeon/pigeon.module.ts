@@ -6,8 +6,13 @@ import {
   PigeonStatusController,
   PigeonDocumentationNumberController,
 } from './controllers';
-import { PigeonService } from './services';
-import { DocumentationNumberService } from './services';
+import {
+  PigeonService,
+  PigeonSearchService,
+  PigeonParentService,
+  PigeonStatusService,
+  DocumentationNumberService,
+} from './services';
 import { PigeonRepository } from './repositories';
 import { ServicesModule } from '../core/modules/services/services.module';
 import { AuthModule } from '@/auth/auth.module';
@@ -22,7 +27,14 @@ import { UserModule } from '@/user/user.module';
     PigeonStatusController,
     PigeonDocumentationNumberController,
   ],
-  providers: [PigeonService, DocumentationNumberService, PigeonRepository],
-  exports: [PigeonService, DocumentationNumberService],
+  providers: [
+    PigeonRepository,
+    PigeonService,
+    PigeonSearchService,
+    PigeonParentService,
+    PigeonStatusService,
+    DocumentationNumberService,
+  ],
+  exports: [PigeonService, PigeonSearchService, PigeonParentService, PigeonStatusService, DocumentationNumberService],
 })
 export class PigeonModule {}

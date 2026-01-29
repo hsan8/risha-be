@@ -18,7 +18,8 @@ import {
   ResendOTPRequestDto,
 } from '@/auth/dto/requests';
 import { GoogleAuthRequestDto, AppleAuthRequestDto } from '@/auth/dto/requests';
-import { AuthResponseDto, UserResponseDto, MessageResponseDto } from '@/auth/dto/responses';
+import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
+import { UserResponseDto } from '@/user/dto/responses';
 import { AuthProvider, UserStatus, OTPType } from '@/auth/enums';
 import { AUTH_CONSTANTS, AUTH_MESSAGES, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
 import { UserService } from '@/user/services';
@@ -38,7 +39,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly googleAuthService: GoogleAuthService,
     private readonly appleAuthService: AppleAuthService,
-  ) { }
+  ) {}
 
   async register(dto: RegisterRequestDto): Promise<AuthResponseDto> {
     // Check if user already exists
@@ -284,18 +285,16 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordRequestDto): Promise<MessageResponseDto> {
-
-
-    // Find user by ID
-    const user = await this.userService.findById(dto.userId);
-    if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
-    }
-
     // Verify OTP again for security
-    const otp = await this.otpRepository.findValidOTPByEmail(user.email, dto.otp);
+    const otp = await this.otpRepository.findValidOTPByEmail(dto.email, dto.otp);
+
     if (!otp) {
       throw new BadRequestException(AUTH_MESSAGES.INVALID_OTP);
+    }
+
+    const user = await this.userService.findByEmail(dto.email);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
     }
 
     // Hash new password

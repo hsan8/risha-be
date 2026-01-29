@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
-import { PigeonService } from '@/pigeon/services';
+import { PigeonSearchService } from '@/pigeon/services';
 import { PigeonResponseDto } from '@/pigeon/dto/responses';
 import { ApiDataResponse, ApiDataArrayResponse } from '@/core/decorators';
 import { ResponseFactory } from '@/core/utils';
@@ -13,7 +13,7 @@ import { UserId } from '@/user/decorators';
 @ApiTags('Pigeon Search')
 @Controller('pigeons/search')
 export class PigeonSearchController {
-  constructor(private readonly pigeonService: PigeonService) {}
+  constructor(private readonly pigeonSearchService: PigeonSearchService) {}
 
   @Get()
   @ApiOperation({ summary: 'Search pigeons by query' })
@@ -24,7 +24,7 @@ export class PigeonSearchController {
   })
   @ApiDataArrayResponse(PigeonResponseDto)
   async search(@Query('q') query: string, @UserId() userId: string): Promise<DataArrayResponseDto<PigeonResponseDto>> {
-    const pigeons = await this.pigeonService.search(query, userId);
+    const pigeons = await this.pigeonSearchService.search(query, userId);
     return ResponseFactory.dataArray(pigeons.map((pigeon) => new PigeonResponseDto(pigeon)));
   }
 
@@ -40,7 +40,7 @@ export class PigeonSearchController {
     @Param('ringNo') ringNo: string,
     @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonService.findByRingNo(ringNo, userId);
+    const pigeon = await this.pigeonSearchService.findByRingNo(ringNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 
@@ -56,7 +56,7 @@ export class PigeonSearchController {
     @Param('documentationNo') documentationNo: string,
     @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonService.findByDocumentationNo(documentationNo, userId);
+    const pigeon = await this.pigeonSearchService.findByDocumentationNo(documentationNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 }

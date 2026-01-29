@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
 import { IsString, IsEmail, IsOptional, IsEnum, IsDate, IsBoolean } from 'class-validator';
+import { Exclude } from 'class-transformer';
 import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export class User {
@@ -30,7 +31,8 @@ export class User {
   @IsString()
   avatar?: string;
 
-  @ApiProperty({ description: 'Hashed password for email authentication', required: false })
+  @ApiHideProperty()
+  @Exclude()
   @IsOptional()
   @IsString()
   passwordHash?: string;
@@ -39,7 +41,8 @@ export class User {
   @IsEnum(AuthProvider)
   provider: AuthProvider;
 
-  @ApiProperty({ description: 'Provider specific user ID', required: false })
+  @ApiHideProperty()
+  @Exclude()
   @IsOptional()
   @IsString()
   providerId?: string;
@@ -65,22 +68,26 @@ export class User {
   @IsDate()
   lastLoginAt?: Date;
 
-  @ApiProperty({ description: 'Password reset token', required: false })
+  @ApiHideProperty()
+  @Exclude()
   @IsOptional()
   @IsString()
   resetPasswordToken?: string;
 
-  @ApiProperty({ description: 'Password reset token expiry', required: false })
+  @ApiHideProperty()
+  @Exclude()
   @IsOptional()
   @IsDate()
   resetPasswordTokenExpiry?: Date;
 
-  @ApiProperty({ description: 'Email verification token', required: false })
+  @ApiHideProperty()
+  @Exclude()
   @IsOptional()
   @IsString()
   emailVerificationToken?: string;
 
-  @ApiProperty({ description: 'Email verification token expiry', required: false })
+  @ApiHideProperty()
+  @Exclude()
   @IsOptional()
   @IsDate()
   emailVerificationTokenExpiry?: Date;

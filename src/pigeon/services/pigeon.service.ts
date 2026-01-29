@@ -205,12 +205,15 @@ export class PigeonService {
       await this.userStatisticsService.decrementPigeonCount(userId, gender, wasAlive);
 
       await this.pigeonRepository.delete(id, userId);
-      this.logger.log(I18nMessage.success('deleted'));
+
+      this.logger.log('deleted');
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
+
       this.logger.error(`Error deleting pigeon with ID ${id}:`, error);
+
       throw error;
     }
   }
@@ -220,6 +223,7 @@ export class PigeonService {
       return await this.pigeonRepository.search(query, userId);
     } catch (error) {
       this.logger.error('Error searching pigeons:', error);
+
       throw error;
     }
   }
@@ -229,6 +233,7 @@ export class PigeonService {
       return await this.pigeonRepository.findByRingNo(ringNo, userId);
     } catch (error) {
       this.logger.error(`Error finding pigeon by ring number ${ringNo}:`, error);
+
       throw error;
     }
   }
@@ -238,6 +243,7 @@ export class PigeonService {
       return await this.pigeonRepository.findByDocumentationNo(documentationNo, userId);
     } catch (error) {
       this.logger.error(`Error finding pigeon by documentation number ${documentationNo}:`, error);
+
       throw error;
     }
   }
@@ -247,6 +253,7 @@ export class PigeonService {
       return await this.pigeonRepository.findAlivePigeons(userId);
     } catch (error) {
       this.logger.error('Error finding alive pigeons:', error);
+
       throw error;
     }
   }
@@ -256,6 +263,7 @@ export class PigeonService {
       return await this.pigeonRepository.findAliveParents(userId);
     } catch (error) {
       this.logger.error('Error finding alive parents:', error);
+
       throw error;
     }
   }
@@ -265,6 +273,7 @@ export class PigeonService {
       return await this.pigeonRepository.count(userId);
     } catch (error) {
       this.logger.error('Error counting pigeons:', error);
+
       throw error;
     }
   }
@@ -274,6 +283,7 @@ export class PigeonService {
       return await this.pigeonRepository.countByStatus(status, userId);
     } catch (error) {
       this.logger.error(`Error counting pigeons by status ${status}:`, error);
+
       throw error;
     }
   }
@@ -285,6 +295,7 @@ export class PigeonService {
       return await this.pigeonRepository.countByGenderAndStatus(userId);
     } catch (error) {
       this.logger.error('Error counting pigeons by gender and status:', error);
+
       throw error;
     }
   }
@@ -294,6 +305,7 @@ export class PigeonService {
       return this.documentationNumberService.generateDocumentationNo(yearOfBirth, userId);
     } catch (error) {
       this.logger.error(`Error generating documentation number for year ${yearOfBirth}:`, error);
+
       throw error;
     }
   }
@@ -302,12 +314,15 @@ export class PigeonService {
     // Validate father if provided
     if (pigeonDto.fatherId) {
       const father = await this.pigeonRepository.findById(pigeonDto.fatherId, userId);
+
       if (!father) {
         throw new BadRequestException(I18nMessage.error('fatherNotFound', { id: pigeonDto.fatherId }));
       }
+
       if (father.gender !== PigeonGender.MALE) {
         throw new BadRequestException(I18nMessage.error('notMalePigeon', { id: pigeonDto.fatherId }));
       }
+
       if (father.status !== PigeonStatus.ALIVE) {
         throw new BadRequestException(I18nMessage.error('fatherNotAlive', { id: pigeonDto.fatherId }));
       }

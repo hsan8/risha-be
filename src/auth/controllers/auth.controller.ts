@@ -19,7 +19,7 @@ import { DataResponseDto } from '@/core/dtos';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user with email and password' })
@@ -36,7 +36,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
     const result = await this.authService.login(loginDto);
-    return ResponseFactory.data(result);
+    const response = new AuthResponseDto(result);
+    return ResponseFactory.data(response);
   }
 
   @Post('google')

@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { PigeonService } from '../services';
+import { PigeonParentService } from '../services';
 import { PigeonResponseDto } from '../dto/responses';
 import { ApiDataPageResponse } from '@/core/decorators/api';
 import { ResponseFactory } from '@/core/utils';
@@ -14,7 +14,7 @@ import { UserId } from '@/user/decorators';
 @ApiTags('Pigeon Parents')
 @Controller('pigeons/parents')
 export class PigeonParentController {
-  constructor(private readonly pigeonService: PigeonService) {}
+  constructor(private readonly pigeonParentService: PigeonParentService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all alive parent pigeons' })
@@ -23,7 +23,7 @@ export class PigeonParentController {
     @Query() pageOptions: PageOptionsRequestDto,
     @UserId() userId: string,
   ): Promise<DataPageResponseDto<PigeonResponseDto>> {
-    const result = await this.pigeonService.findAliveParents(userId);
+    const result = await this.pigeonParentService.findAliveParents(userId);
     return ResponseFactory.dataPage(
       [
         ...result.fathers.map((pigeon) => new PigeonResponseDto(pigeon)),

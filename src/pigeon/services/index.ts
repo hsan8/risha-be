@@ -1,2 +1,5 @@
 export * from './pigeon.service';
+export * from './pigeon-search.service';
+export * from './pigeon-parent.service';
+export * from './pigeon-status.service';
 export * from './documentation-number.service';
