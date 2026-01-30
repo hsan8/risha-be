@@ -177,16 +177,9 @@ export class PigeonService {
         await this.userStatisticsService.updatePigeonStatus(userId, fromAlive, toAlive);
       }
 
-      this.logger.log(I18nMessage.success('updated'));
+      this.logger.log('updated');
       return updatedPigeon;
     } catch (error) {
-      if (
-        error instanceof ConflictException ||
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
       this.logger.error(`Error updating pigeon with ID ${id}:`, error);
       throw error;
     }
@@ -195,6 +188,7 @@ export class PigeonService {
   async remove(id: string, userId: string): Promise<void> {
     try {
       const pigeon = await this.pigeonRepository.findById(id, userId);
+
       if (!pigeon) {
         throw new NotFoundException(I18nMessage.error('notFound'));
       }

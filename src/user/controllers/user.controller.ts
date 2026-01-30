@@ -4,9 +4,10 @@ import { JwtAuthGuard } from '@/auth/guards';
 import { UserId } from '../decorators';
 import { UserService } from '../services';
 import { UserProfileResponseDto } from '../dto/responses';
-import { ApiDataResponse } from '@/core/decorators';
+import { ApiDataResponse, Language } from '@/core/decorators';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto } from '@/core/dtos';
+import { UserLocale } from '@/core/enums';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -18,8 +19,11 @@ export class UserController {
   @Get('profile')
   @ApiOperation({ summary: 'Get connected user profile' })
   @ApiDataResponse(UserProfileResponseDto, HttpStatus.OK)
-  async getMe(@UserId() userId: string): Promise<DataResponseDto<UserProfileResponseDto>> {
-    const user = await this.userService.getConnectedUser(userId);
+  async getMe(
+    @UserId() userId: string,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<UserProfileResponseDto>> {
+    const user = await this.userService.getConnectedUser(userId, locale);
 
     return ResponseFactory.data(new UserProfileResponseDto(user));
   }

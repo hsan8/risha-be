@@ -5,7 +5,7 @@ import { FirebaseService } from '@/core/services';
 import { AUTH_CONSTANTS } from '@/auth/constants';
 import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
-export interface CreateUserData {
+export interface ICreateUserData {
   name: string;
   email: string;
   phone?: string;
@@ -31,7 +31,7 @@ export class UserRepository {
     this.collectionRef = this.db.ref(AUTH_CONSTANTS.USERS_COLLECTION);
   }
 
-  async create(data: CreateUserData): Promise<User> {
+  async create(data: ICreateUserData): Promise<User> {
     const userRef = this.collectionRef.push();
     const id = userRef.key;
 

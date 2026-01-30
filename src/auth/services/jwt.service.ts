@@ -1,7 +1,8 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
-import { AUTH_CONSTANTS, AUTH_MESSAGES } from '../constants/auth.constants';
+import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N } from '../constants/auth.constants';
 import { UserRole, UserStatus } from '../enums/auth.enum';
+import { DEFAULT_LOCALE } from '@/core/enums';
 
 export interface JwtPayload {
   sub: string;
@@ -55,7 +56,7 @@ export class JwtService {
       return payload as JwtPayload;
     } catch (error) {
       this.logger.error(`JWT verification failed:`, error);
-      throw new UnauthorizedException(AUTH_MESSAGES.INVALID_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_TOKEN[DEFAULT_LOCALE]);
     }
   }
 
@@ -84,7 +85,7 @@ export class JwtService {
       };
     } catch (error) {
       this.logger.error(`Token refresh failed:`, error);
-      throw new UnauthorizedException(AUTH_MESSAGES.INVALID_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_TOKEN[DEFAULT_LOCALE]);
     }
   }
 

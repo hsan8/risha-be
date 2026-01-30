@@ -12,9 +12,10 @@ import {
   ResendOTPRequestDto,
 } from '@/auth/dto/requests';
 import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
-import { ApiDataResponse } from '@/core/decorators';
+import { ApiDataResponse, Language } from '@/core/decorators';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto } from '@/core/dtos';
+import { UserLocale } from '@/core/enums';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -25,8 +26,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user with email and password' })
   @ApiDataResponse(AuthResponseDto, HttpStatus.CREATED)
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() registerDto: RegisterRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<AuthResponseDto>> {
+    const result = await this.authService.register(registerDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -34,8 +38,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<AuthResponseDto>> {
+    const result = await this.authService.login(loginDto, locale);
     const response = new AuthResponseDto(result);
     return ResponseFactory.data(response);
   }
@@ -44,8 +51,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Authenticate with Google' })
   @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async googleAuth(@Body() googleAuthDto: GoogleAuthRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.googleAuth(googleAuthDto);
+  async googleAuth(
+    @Body() googleAuthDto: GoogleAuthRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<AuthResponseDto>> {
+    const result = await this.authService.googleAuth(googleAuthDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -53,8 +63,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Authenticate with Apple' })
   @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async appleAuth(@Body() appleAuthDto: AppleAuthRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.appleAuth(appleAuthDto);
+  async appleAuth(
+    @Body() appleAuthDto: AppleAuthRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<AuthResponseDto>> {
+    const result = await this.authService.appleAuth(appleAuthDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -64,8 +77,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async forgotPassword(
     @Body() forgotPasswordDto: ForgotPasswordRequestDto,
+    @Language() locale: UserLocale,
   ): Promise<DataResponseDto<MessageResponseDto>> {
-    const result = await this.authService.forgotPassword(forgotPasswordDto);
+    const result = await this.authService.forgotPassword(forgotPasswordDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -73,8 +87,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify OTP for password reset' })
   @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async verifyOTP(@Body() verifyOTPDto: VerifyOTPRequestDto): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.verifyOTP(verifyOTPDto);
+  async verifyOTP(
+    @Body() verifyOTPDto: VerifyOTPRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<AuthResponseDto>> {
+    const result = await this.authService.verifyOTP(verifyOTPDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -82,8 +99,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Resend OTP for password reset' })
   @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async resendOTP(@Body() resendOTPDto: ResendOTPRequestDto): Promise<DataResponseDto<MessageResponseDto>> {
-    const result = await this.authService.resendOTP(resendOTPDto);
+  async resendOTP(
+    @Body() resendOTPDto: ResendOTPRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<MessageResponseDto>> {
+    const result = await this.authService.resendOTP(resendOTPDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -91,8 +111,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password with OTP verification' })
   @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordRequestDto): Promise<DataResponseDto<MessageResponseDto>> {
-    const result = await this.authService.resetPassword(resetPasswordDto);
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<MessageResponseDto>> {
+    const result = await this.authService.resetPassword(resetPasswordDto, locale);
     return ResponseFactory.data(result);
   }
 

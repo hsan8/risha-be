@@ -3,22 +3,8 @@ import { Database, Reference } from 'firebase-admin/database';
 import { FirebaseService } from '@/core/services';
 import { AUTH_CONSTANTS } from '@/auth/constants';
 import { User } from '@/user/entities';
-import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
-
-export interface CreateUserData {
-  name: string;
-  email: string;
-  phone?: string;
-  country?: string;
-  avatar?: string;
-  passwordHash?: string;
-  provider: AuthProvider;
-  providerId?: string;
-  status: UserStatus;
-  role: UserRole;
-  emailVerified: boolean;
-  twoFactorEnabled: boolean;
-}
+import { ICreateUserData, IUpdateForRegistrationData } from '@/user/interfaces';
+import { UserStatus } from '@/auth/enums';
 
 @Injectable()
 export class UserRepository {
@@ -31,7 +17,7 @@ export class UserRepository {
     this.collectionRef = this.db.ref(AUTH_CONSTANTS.USERS_COLLECTION);
   }
 
-  async create(data: CreateUserData): Promise<User> {
+  async create(data: ICreateUserData): Promise<User> {
     const userRef = this.collectionRef.push();
     const id = userRef.key;
 
@@ -119,15 +105,7 @@ export class UserRepository {
     });
   }
 
-  async updateForRegistration(
-    id: string,
-    data: Partial<
-      Pick<
-        User,
-        'name' | 'phone' | 'country' | 'passwordHash' | 'provider' | 'status' | 'emailVerified' | 'twoFactorEnabled'
-      >
-    >,
-  ): Promise<User> {
+  async updateForRegistration(id: string, data: IUpdateForRegistrationData): Promise<User> {
     const userRef = this.collectionRef.child(id);
     const snapshot = await userRef.once('value');
     const existingUser = snapshot.val() as User;

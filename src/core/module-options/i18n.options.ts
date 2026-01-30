@@ -1,16 +1,22 @@
-import { AcceptLanguageResolver, I18nJsonLoader, I18nOptions, QueryResolver } from 'nestjs-i18n';
+import { AcceptLanguageResolver, HeaderResolver, I18nJsonLoader, I18nOptions, QueryResolver } from 'nestjs-i18n';
 import path from 'path';
+import { X_LANGUAGE_HEADER } from '@/core/constants';
+import { UserLocale } from '@/core/enums';
 
 const LANG_QUERY_PARAM = 'lang';
 const baseI18nDir = path.join(__dirname, '..', '..', '..', 'i18n');
 
 export function buildI18nOptions(): I18nOptions {
   return {
-    fallbackLanguage: 'en',
+    fallbackLanguage: UserLocale.ARABIC,
     loaderOptions: {
       path: baseI18nDir,
     },
     loader: I18nJsonLoader,
-    resolvers: [new AcceptLanguageResolver({ matchType: 'strict' }), new QueryResolver([LANG_QUERY_PARAM])],
+    resolvers: [
+      new HeaderResolver([X_LANGUAGE_HEADER]),
+      new AcceptLanguageResolver({ matchType: 'strict' }),
+      new QueryResolver([LANG_QUERY_PARAM]),
+    ],
   };
 }

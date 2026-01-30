@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { RequestUser } from './user.decorator';
+import { IRequestUser } from '@/user/interfaces';
 
 function base64UrlDecode(input: string): string {
   const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
@@ -10,7 +10,7 @@ function base64UrlDecode(input: string): string {
   return Buffer.from(padded, 'base64').toString('utf8');
 }
 
-function decodeJwtPayload(token: string): Partial<RequestUser> | null {
+function decodeJwtPayload(token: string): Partial<IRequestUser> | null {
   try {
     const parts = token.split('.');
     const JWT_PARTS_COUNT = 3;
@@ -43,10 +43,10 @@ function decodeJwtPayload(token: string): Partial<RequestUser> | null {
 }
 
 export const TokenUser = createParamDecorator(
-  (data: keyof RequestUser | undefined, ctx: ExecutionContext): RequestUser | string | undefined => {
+  (data: keyof IRequestUser | undefined, ctx: ExecutionContext): IRequestUser | string | undefined => {
     const request = ctx.switchToHttp().getRequest<Request>();
 
-    const requestUser = request.user as RequestUser | undefined;
+    const requestUser = request.user as IRequestUser | undefined;
     if (requestUser) {
       return data ? requestUser[data] : requestUser;
     }
@@ -62,7 +62,7 @@ export const TokenUser = createParamDecorator(
       return undefined;
     }
 
-    const user: RequestUser = {
+    const user: IRequestUser = {
       id: decoded.id ?? '',
       email: decoded.email ?? '',
       role: decoded.role ?? '',

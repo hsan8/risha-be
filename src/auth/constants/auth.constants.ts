@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+
 export const AUTH_CONSTANTS = {
   // Collections
   USERS_COLLECTION: 'users',
@@ -89,39 +91,120 @@ export const TOKEN_EXPIRY_SECONDS =
 
 export const MILLISECONDS_PER_MINUTE = AUTH_CONSTANTS.MINUTES_TO_SECONDS * AUTH_CONSTANTS.SECONDS_TO_MILLISECONDS;
 
-export const AUTH_MESSAGES = {
+export const AUTH_MESSAGES_I18N: Record<string, Record<UserLocale, string>> = {
   // Success
-  REGISTRATION_SUCCESS: 'Registration successful',
-  LOGIN_SUCCESS: 'Login successful',
-  LOGOUT_SUCCESS: 'Logout successful',
-  PASSWORD_RESET_SUCCESS: 'Password reset successful',
-  OTP_SENT: 'OTP sent successfully',
-  OTP_VERIFIED: 'OTP verified successfully',
-  EMAIL_VERIFIED: 'Email verified successfully',
+  REGISTRATION_SUCCESS: {
+    [UserLocale.ENGLISH]: 'Registration successful',
+    [UserLocale.ARABIC]: 'تم التسجيل بنجاح',
+  },
+  LOGIN_SUCCESS: {
+    [UserLocale.ENGLISH]: 'Login successful',
+    [UserLocale.ARABIC]: 'تم تسجيل الدخول بنجاح',
+  },
+  LOGOUT_SUCCESS: {
+    [UserLocale.ENGLISH]: 'Logout successful',
+    [UserLocale.ARABIC]: 'تم تسجيل الخروج بنجاح',
+  },
+  PASSWORD_RESET_SUCCESS: {
+    [UserLocale.ENGLISH]: 'Password reset successful',
+    [UserLocale.ARABIC]: 'تم إعادة تعيين كلمة المرور بنجاح',
+  },
+  OTP_SENT: {
+    [UserLocale.ENGLISH]: 'OTP sent successfully',
+    [UserLocale.ARABIC]: 'تم إرسال رمز التحقق بنجاح',
+  },
+  OTP_VERIFIED: {
+    [UserLocale.ENGLISH]: 'OTP verified successfully',
+    [UserLocale.ARABIC]: 'تم التحقق من الرمز بنجاح',
+  },
+  EMAIL_VERIFIED: {
+    [UserLocale.ENGLISH]: 'Email verified successfully',
+    [UserLocale.ARABIC]: 'تم التحقق من البريد الإلكتروني بنجاح',
+  },
 
   // Errors
-  INVALID_CREDENTIALS: 'Invalid email or password',
-  ACCOUNT_SUSPENDED: 'Account has been suspended',
-  ACCOUNT_INACTIVE: 'Account is inactive',
-  EMAIL_ALREADY_EXISTS: 'Email already exists',
-  EMAIL_NOT_FOUND: 'Email not found',
-  INVALID_OTP: 'Invalid or expired OTP',
-  OTP_EXPIRED: 'OTP has expired',
-  OTP_ALREADY_USED: 'OTP has already been used',
-  MAX_OTP_ATTEMPTS: 'Maximum OTP attempts exceeded',
-  OTP_RESEND_COOLDOWN: 'Please wait 3 minutes before requesting another OTP',
-  OTP_DAILY_LIMIT: 'Maximum OTP requests per day exceeded. Please try again tomorrow',
-  EMAIL_NOT_VERIFIED: 'Email not verified',
-  INVALID_TOKEN: 'Invalid or expired token',
-  PASSWORDS_DO_NOT_MATCH: 'Passwords do not match',
-  WEAK_PASSWORD: 'Password must be at least 4 digits long',
+  INVALID_CREDENTIALS: {
+    [UserLocale.ENGLISH]: 'Invalid email or password',
+    [UserLocale.ARABIC]: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+  },
+  ACCOUNT_SUSPENDED: {
+    [UserLocale.ENGLISH]: 'Account has been suspended',
+    [UserLocale.ARABIC]: 'تم تعليق الحساب',
+  },
+  ACCOUNT_INACTIVE: {
+    [UserLocale.ENGLISH]: 'Account is inactive',
+    [UserLocale.ARABIC]: 'الحساب غير نشط',
+  },
+  EMAIL_ALREADY_EXISTS: {
+    [UserLocale.ENGLISH]: 'Email already exists',
+    [UserLocale.ARABIC]: 'البريد الإلكتروني مستخدم بالفعل',
+  },
+  EMAIL_NOT_FOUND: {
+    [UserLocale.ENGLISH]: 'Email not found',
+    [UserLocale.ARABIC]: 'البريد الإلكتروني غير موجود',
+  },
+  INVALID_OTP: {
+    [UserLocale.ENGLISH]: 'Invalid or expired OTP',
+    [UserLocale.ARABIC]: 'رمز التحقق غير صحيح أو منتهي الصلاحية',
+  },
+  OTP_EXPIRED: {
+    [UserLocale.ENGLISH]: 'OTP has expired',
+    [UserLocale.ARABIC]: 'انتهت صلاحية رمز التحقق',
+  },
+  OTP_ALREADY_USED: {
+    [UserLocale.ENGLISH]: 'OTP has already been used',
+    [UserLocale.ARABIC]: 'تم استخدام رمز التحقق مسبقاً',
+  },
+  MAX_OTP_ATTEMPTS: {
+    [UserLocale.ENGLISH]: 'Maximum OTP attempts exceeded',
+    [UserLocale.ARABIC]: 'تم تجاوز الحد الأقصى لمحاولات التحقق',
+  },
+  OTP_RESEND_COOLDOWN: {
+    [UserLocale.ENGLISH]: 'Please wait 3 minutes before requesting another OTP',
+    [UserLocale.ARABIC]: 'يرجى الانتظار 3 دقائق قبل طلب رمز تحقق جديد',
+  },
+  OTP_DAILY_LIMIT: {
+    [UserLocale.ENGLISH]: 'Maximum OTP requests per day exceeded. Please try again tomorrow',
+    [UserLocale.ARABIC]: 'تم تجاوز الحد اليومي لطلبات رمز التحقق. يرجى المحاولة غداً',
+  },
+  EMAIL_NOT_VERIFIED: {
+    [UserLocale.ENGLISH]: 'Email not verified',
+    [UserLocale.ARABIC]: 'البريد الإلكتروني غير موثق',
+  },
+  INVALID_TOKEN: {
+    [UserLocale.ENGLISH]: 'Invalid or expired token',
+    [UserLocale.ARABIC]: 'الرمز غير صحيح أو منتهي الصلاحية',
+  },
+  PASSWORDS_DO_NOT_MATCH: {
+    [UserLocale.ENGLISH]: 'Passwords do not match',
+    [UserLocale.ARABIC]: 'كلمات المرور غير متطابقة',
+  },
+  WEAK_PASSWORD: {
+    [UserLocale.ENGLISH]: 'Password must be at least 4 digits long',
+    [UserLocale.ARABIC]: 'كلمة المرور يجب أن تكون 4 أرقام على الأقل',
+  },
 
   // Social Auth
-  GOOGLE_AUTH_ERROR: 'Google authentication failed',
-  APPLE_AUTH_ERROR: 'Apple authentication failed',
-  SOCIAL_AUTH_EMAIL_REQUIRED: 'Email is required for social authentication',
+  GOOGLE_AUTH_ERROR: {
+    [UserLocale.ENGLISH]: 'Google authentication failed',
+    [UserLocale.ARABIC]: 'فشل تسجيل الدخول عبر Google',
+  },
+  APPLE_AUTH_ERROR: {
+    [UserLocale.ENGLISH]: 'Apple authentication failed',
+    [UserLocale.ARABIC]: 'فشل تسجيل الدخول عبر Apple',
+  },
+  SOCIAL_AUTH_EMAIL_REQUIRED: {
+    [UserLocale.ENGLISH]: 'Email is required for social authentication',
+    [UserLocale.ARABIC]: 'البريد الإلكتروني مطلوب لتسجيل الدخول الاجتماعي',
+  },
 
   // Auth Guard
-  TOKEN_REQUIRED: 'Authentication token is required',
-  USER_NOT_FOUND: 'User not found',
+  TOKEN_REQUIRED: {
+    [UserLocale.ENGLISH]: 'Authentication token is required',
+    [UserLocale.ARABIC]: 'رمز المصادقة مطلوب',
+  },
+  USER_NOT_FOUND: {
+    [UserLocale.ENGLISH]: 'User not found',
+    [UserLocale.ARABIC]: 'المستخدم غير موجود',
+  },
 } as const;

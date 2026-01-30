@@ -2,8 +2,9 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Logge
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { UserService } from '@/user/services';
-import { AUTH_MESSAGES } from '@/auth/constants';
+import { AUTH_MESSAGES_I18N } from '@/auth/constants';
 import { UserStatus } from '@/auth/enums';
+import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
 
 export interface JwtPayload {
   sub: string;
@@ -25,7 +26,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException(AUTH_MESSAGES.TOKEN_REQUIRED);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.TOKEN_REQUIRED[DEFAULT_LOCALE]);
     }
 
     try {
@@ -37,11 +38,11 @@ export class JwtAuthGuard implements CanActivate {
       // }
 
       if (payload.status === UserStatus.SUSPENDED) {
-        throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_SUSPENDED);
+        throw new UnauthorizedException(AUTH_MESSAGES_I18N.ACCOUNT_SUSPENDED[DEFAULT_LOCALE]);
       }
 
       if (payload.status === UserStatus.INACTIVE) {
-        throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_INACTIVE);
+        throw new UnauthorizedException(AUTH_MESSAGES_I18N.ACCOUNT_INACTIVE[DEFAULT_LOCALE]);
       }
 
       request.user = {
@@ -54,7 +55,7 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     } catch (error) {
       this.logger.warn(`JWT verification failed: ${error.message}`);
-      throw new UnauthorizedException(AUTH_MESSAGES.INVALID_TOKEN);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_TOKEN[DEFAULT_LOCALE]);
     }
   }
 

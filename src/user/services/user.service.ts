@@ -1,50 +1,55 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../repositories';
 import { User } from '@/user/entities';
-import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
-import { AUTH_MESSAGES } from '@/auth/constants';
+import { ICreateUserParams, IUpdateForRegistrationData } from '@/user/interfaces';
+import { UserRole, UserStatus } from '@/auth/enums';
+import { AUTH_MESSAGES_I18N } from '@/auth/constants';
+import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
 
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async getConnectedUser(userId: string): Promise<User> {
+  async getConnectedUser(userId: string, userLocale: UserLocale): Promise<User> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
     }
 
     return user;
   }
 
-  findById(userId: string): Promise<User | null> {
-    return this.userRepository.findById(userId);
+  async findById(userId: string, userLocale: UserLocale): Promise<User> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
+    }
+
+    return user;
   }
 
-  findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findByEmail(email);
+  async findByEmail(email: string, userLocale: UserLocale): Promise<User> {
+    const user = await this.userRepository.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
+    }
+
+    return user;
   }
 
-  async findByEmailOrProviderId(email: string, providerId: string): Promise<User> {
+  async findByEmailOrProviderId(email: string, providerId: string, userLocale: UserLocale): Promise<User> {
     const user = await this.userRepository.findByEmailOrProviderId(email, providerId);
 
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
     }
+
     return user;
   }
 
-  create(params: {
-    name: string;
-    email: string;
-    phone?: string;
-    country?: string;
-    avatar?: string;
-    passwordHash?: string;
-    provider: AuthProvider;
-    providerId?: string;
-  }): Promise<User> {
+  create(params: ICreateUserParams): Promise<User> {
     return this.userRepository.create({
       name: params.name,
       email: params.email,
@@ -77,34 +82,26 @@ export class UserService {
     return this.userRepository.updateStatus(userId, status);
   }
 
-  updateForRegistration(
-    userId: string,
-    data: Partial<
-      Pick<
-        User,
-        'name' | 'phone' | 'country' | 'passwordHash' | 'provider' | 'status' | 'emailVerified' | 'twoFactorEnabled'
-      >
-    >,
-  ): Promise<User> {
+  updateForRegistration(userId: string, data: IUpdateForRegistrationData): Promise<User> {
     return this.userRepository.updateForRegistration(userId, data);
   }
 
-  async markEmailAsVerified(userId: string): Promise<User> {
+  async markEmailAsVerified(userId: string, userLocale: UserLocale): Promise<User> {
     await this.updateEmailVerification(userId, true);
 
-    const user = await this.findById(userId);
+    const user = await this.findById(userId, userLocale);
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
     }
     return user;
   }
 
-  async markEmailAsVerifiedAndActivate(userId: string): Promise<User> {
+  async markEmailAsVerifiedAndActivate(userId: string, userLocale: UserLocale): Promise<User> {
     await this.updateEmailVerification(userId, true);
     await this.updateStatus(userId, UserStatus.ACTIVE);
-    const user = await this.findById(userId);
+    const user = await this.findById(userId, userLocale);
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
     }
     return user;
   }

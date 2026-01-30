@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { I18nModule } from 'nestjs-i18n';
+import { LanguageInterceptor } from './core/interceptors';
 import { LoggerModule } from 'nestjs-pino';
 import { AllExceptionsFilter, buildI18nValidationExceptionFilter } from './core/filters';
 import { buildConfigOptions, buildI18nOptions, buildPinoOptions } from './core/module-options';
@@ -41,6 +42,9 @@ import { UserModule } from './user/user.module';
     HealthModule,
   ],
   providers: [
+    // Global Interceptors (resolve language from x-language / Accept-Language / query)
+    { provide: APP_INTERCEPTOR, useClass: LanguageInterceptor },
+
     // Global Pipes (order matters)
     {
       inject: [ConfigService],

@@ -21,12 +21,15 @@ import { GoogleAuthRequestDto, AppleAuthRequestDto } from '@/auth/dto/requests';
 import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
 import { UserResponseDto } from '@/user/dto/responses';
 import { AuthProvider, UserStatus, OTPType } from '@/auth/enums';
-import { AUTH_CONSTANTS, AUTH_MESSAGES, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
+import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
 import { UserService } from '@/user/services';
 import { OTPRepository } from '@/auth/repositories';
 import { EmailService } from './email.service';
 import { GoogleAuthService } from './google-auth.service';
 import { AppleAuthService } from './apple-auth.service';
+import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import _ from 'lodash';
+import moment from 'moment';
 
 @Injectable()
 export class AuthService {
@@ -41,12 +44,16 @@ export class AuthService {
     private readonly appleAuthService: AppleAuthService,
   ) {}
 
-  async register(dto: RegisterRequestDto): Promise<AuthResponseDto> {
+  async getAllOTPs(email: string): Promise<OTP[]> {
+    return this.otpRepository.findByEmail(email);
+  }
+
+  async register(dto: RegisterRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
     // Check if user already exists
-    const existingUser = await this.userService.findByEmail(dto.email);
+    const existingUser = await this.userService.findByEmail(dto.email, locale);
     if (existingUser) {
       if (existingUser.emailVerified) {
-        throw new ConflictException(AUTH_MESSAGES.EMAIL_ALREADY_EXISTS);
+        throw new ConflictException(AUTH_MESSAGES_I18N.EMAIL_ALREADY_EXISTS[locale]);
       }
 
       // Replace unverified account data
@@ -95,31 +102,31 @@ export class AuthService {
     });
   }
 
-  async login(dto: LoginRequestDto): Promise<AuthResponseDto> {
+  async login(dto: LoginRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
     // Find user by email
-    const user = await this.userService.findByEmail(dto.email);
+    const user = await this.userService.findByEmail(dto.email, locale);
     if (!user) {
-      throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_CREDENTIALS[locale]);
     }
 
     // Check if user is using email authentication
     if (user.provider !== AuthProvider.EMAIL || !user.passwordHash) {
-      throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_CREDENTIALS[locale]);
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_CREDENTIALS[locale]);
     }
 
     // Check user status
     if (user.status === UserStatus.SUSPENDED) {
-      throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_SUSPENDED);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.ACCOUNT_SUSPENDED[locale]);
     }
 
     if (user.status === UserStatus.INACTIVE) {
-      throw new UnauthorizedException(AUTH_MESSAGES.ACCOUNT_INACTIVE);
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.ACCOUNT_INACTIVE[locale]);
     }
 
     // Generate tokens
@@ -133,12 +140,12 @@ export class AuthService {
     });
   }
 
-  async googleAuth(dto: GoogleAuthRequestDto): Promise<AuthResponseDto> {
+  async googleAuth(dto: GoogleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
     // Verify Google ID token
     const googleUser = await this.googleAuthService.verifyIdToken(dto.idToken);
 
     // Find or create user
-    let user = await this.userService.findByEmailOrProviderId(googleUser.email, googleUser.sub);
+    let user = await this.userService.findByEmailOrProviderId(googleUser.email, googleUser.sub, locale);
 
     if (!user) {
       user = await this.userService.create({
@@ -164,16 +171,16 @@ export class AuthService {
     });
   }
 
-  async appleAuth(dto: AppleAuthRequestDto): Promise<AuthResponseDto> {
+  async appleAuth(dto: AppleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
     // Verify Apple ID token
-    await this.appleAuthService.verifyIdToken(dto.idToken);
+    await this.appleAuthService.verifyIdToken(dto.idToken, locale);
 
     // Find or create user
-    let user = await this.userService.findByEmailOrProviderId(dto.email, dto.userId);
+    let user = await this.userService.findByEmailOrProviderId(dto.email, dto.userId, locale);
 
     if (!user) {
       if (!dto.email) {
-        throw new BadRequestException(AUTH_MESSAGES.SOCIAL_AUTH_EMAIL_REQUIRED);
+        throw new BadRequestException(AUTH_MESSAGES_I18N.SOCIAL_AUTH_EMAIL_REQUIRED[DEFAULT_LOCALE]);
       }
 
       user = await this.userService.create({
@@ -198,21 +205,18 @@ export class AuthService {
     });
   }
 
-  async forgotPassword(dto: ForgotPasswordRequestDto): Promise<MessageResponseDto> {
+  async forgotPassword(dto: ForgotPasswordRequestDto, locale: UserLocale): Promise<MessageResponseDto> {
     // Find user by email
-    const user = await this.userService.findByEmail(dto.email);
+    const user = await this.userService.findByEmail(dto.email, locale);
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.EMAIL_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES_I18N.EMAIL_NOT_FOUND[DEFAULT_LOCALE]);
     }
 
     // Check if OTP can be sent (rate limiting)
-    const canSendResult = await this.otpRepository.canSendOTP(dto.email, OTPType.PASSWORD_RESET);
-    if (!canSendResult.canSend) {
-      if (canSendResult.reason === 'daily_limit') {
-        throw new BadRequestException(AUTH_MESSAGES.OTP_DAILY_LIMIT);
-      } else if (canSendResult.reason === 'cooldown') {
-        throw new BadRequestException(AUTH_MESSAGES.OTP_RESEND_COOLDOWN);
-      }
+    const otps = await this.getAllOTPs(dto.email);
+    const canSend = this.canSendOTP(otps);
+    if (!canSend) {
+      throw new BadRequestException(AUTH_MESSAGES_I18N.OTP_DAILY_LIMIT[DEFAULT_LOCALE]);
     }
 
     // Generate and save OTP
@@ -220,27 +224,21 @@ export class AuthService {
 
     // Send OTP email
     await this.emailService.sendPasswordResetOTP(dto.email, otp.code);
-
     this.logger.log(`Password reset OTP sent: ${dto.email}`);
 
-    return new MessageResponseDto(AUTH_MESSAGES.OTP_SENT);
+    return new MessageResponseDto(AUTH_MESSAGES_I18N.OTP_SENT[DEFAULT_LOCALE]);
   }
 
-  async resendOTP(dto: ResendOTPRequestDto): Promise<MessageResponseDto> {
+  async resendOTP(dto: ResendOTPRequestDto, locale: UserLocale): Promise<MessageResponseDto> {
     // Find user by ID
-    const user = await this.userService.findById(dto.userId);
-    if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
-    }
+    const user = await this.userService.findById(dto.userId, locale);
 
     // Check if OTP can be sent (rate limiting)
-    const canSendResult = await this.otpRepository.canSendOTP(user.email, OTPType.PASSWORD_RESET);
-    if (!canSendResult.canSend) {
-      if (canSendResult.reason === 'daily_limit') {
-        throw new BadRequestException(AUTH_MESSAGES.OTP_DAILY_LIMIT);
-      } else if (canSendResult.reason === 'cooldown') {
-        throw new BadRequestException(AUTH_MESSAGES.OTP_RESEND_COOLDOWN);
-      }
+    const otps = await this.getAllOTPs(user.email);
+    const canSend = this.canSendOTP(otps);
+
+    if (!canSend) {
+      throw new BadRequestException(AUTH_MESSAGES_I18N.OTP_DAILY_LIMIT[DEFAULT_LOCALE]);
     }
 
     // Generate and save new OTP
@@ -251,27 +249,29 @@ export class AuthService {
 
     this.logger.log(`OTP resent: ${user.email}`);
 
-    return new MessageResponseDto(AUTH_MESSAGES.OTP_SENT);
+    return new MessageResponseDto(AUTH_MESSAGES_I18N.OTP_SENT[DEFAULT_LOCALE]);
   }
 
-  async verifyOTP(dto: VerifyOTPRequestDto): Promise<AuthResponseDto> {
+  async verifyOTP(dto: VerifyOTPRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
     // Find user by ID
-    const user = await this.userService.findById(dto.userId);
+    const user = await this.userService.findById(dto.userId, locale);
+
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[DEFAULT_LOCALE]);
     }
 
-    // Find and validate OTP by user's email
-    const otp = await this.otpRepository.findValidOTPByEmail(user.email, dto.otp);
+    const otps = await this.getAllOTPs(user.email);
+    const otp = this.findByEmailAndType(dto.otp, otps, OTPType.EMAIL_VERIFICATION);
+
     if (!otp) {
-      throw new BadRequestException(AUTH_MESSAGES.INVALID_OTP);
+      throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_OTP[DEFAULT_LOCALE]);
     }
 
     // Mark OTP as used
-    await this.otpRepository.markAsUsed(otp.id);
+    await this.otpRepository.deleteUsedOTPs(otps);
 
     // Mark user's email as verified and update status to ACTIVE
-    const updatedUser = await this.userService.markEmailAsVerifiedAndActivate(user.id);
+    const updatedUser = await this.userService.markEmailAsVerifiedAndActivate(user.id, locale);
 
     // Generate tokens
     const tokens = await this.generateTokens(updatedUser);
@@ -284,17 +284,21 @@ export class AuthService {
     });
   }
 
-  async resetPassword(dto: ResetPasswordRequestDto): Promise<MessageResponseDto> {
-    // Verify OTP again for security
-    const otp = await this.otpRepository.findValidOTPByEmail(dto.email, dto.otp);
-
-    if (!otp) {
-      throw new BadRequestException(AUTH_MESSAGES.INVALID_OTP);
+  async resetPassword(dto: ResetPasswordRequestDto, locale: UserLocale): Promise<MessageResponseDto> {
+    const user = await this.userService.findByEmail(dto.email, locale);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[DEFAULT_LOCALE]);
     }
 
-    const user = await this.userService.findByEmail(dto.email);
-    if (!user) {
-      throw new NotFoundException(AUTH_MESSAGES.USER_NOT_FOUND);
+    const otps = await this.getAllOTPs(user.email);
+    const canSend = this.canSendOTP(otps);
+    if (!canSend) {
+      throw new BadRequestException(AUTH_MESSAGES_I18N.OTP_DAILY_LIMIT[DEFAULT_LOCALE]);
+    }
+
+    const otp = await this.findValidOTPByEmail(user.email, dto.otp);
+    if (!otp) {
+      throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_OTP[DEFAULT_LOCALE]);
     }
 
     // Hash new password
@@ -308,12 +312,12 @@ export class AuthService {
 
     this.logger.log(`Password reset successful: ${user.email}`);
 
-    return new MessageResponseDto(AUTH_MESSAGES.PASSWORD_RESET_SUCCESS);
+    return new MessageResponseDto(AUTH_MESSAGES_I18N.PASSWORD_RESET_SUCCESS[DEFAULT_LOCALE]);
   }
 
   async logout(): Promise<MessageResponseDto> {
     this.logger.log('User logged out');
-    return new MessageResponseDto(AUTH_MESSAGES.LOGOUT_SUCCESS);
+    return new MessageResponseDto(AUTH_MESSAGES_I18N.LOGOUT_SUCCESS[DEFAULT_LOCALE]);
   }
 
   private async generateTokens(
@@ -344,8 +348,7 @@ export class AuthService {
     const code = Math.floor(AUTH_CONSTANTS.OTP_MIN_VALUE + Math.random() * AUTH_CONSTANTS.OTP_MAX_VALUE).toString();
 
     // Set expiry
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + AUTH_CONSTANTS.OTP_EXPIRY_MINUTES);
+    const expiresAt = moment().add(AUTH_CONSTANTS.OTP_EXPIRY_MINUTES, 'minutes').toDate();
 
     // Save OTP
     return await this.otpRepository.create({
@@ -354,17 +357,53 @@ export class AuthService {
       type,
       expiresAt,
       used: false,
-      attempts: 0,
     });
   }
 
   private async sendEmailVerification(email: string): Promise<void> {
     try {
       const otp = await this.generateOTP(email, OTPType.EMAIL_VERIFICATION);
+
       await this.emailService.sendEmailVerificationOTP(email, otp.code);
     } catch (error) {
       this.logger.error(`Failed to send email verification: ${error.message}`);
       // Don't throw error - user can still register without email verification
     }
+  }
+
+  private async findValidOTPByEmail(email: string, code: string): Promise<OTP | null> {
+    const otps = await this.getAllOTPs(email);
+
+    const now = moment();
+
+    const validOTP = _.find(otps, (otp) => otp.code === code && !otp.used && moment(otp.expiresAt).isAfter(now));
+
+    return validOTP;
+  }
+
+  private findByEmailAndType(otp: string, otps: OTP[], type: OTPType): OTP | null {
+    const list = _.values(otps);
+
+    // Filter by type
+    const filteredOtpByType = _.find(list, { type, code: otp });
+
+    if (!filteredOtpByType) {
+      return null;
+    }
+
+    return filteredOtpByType;
+  }
+
+  private canSendOTP(otps: OTP[]): boolean {
+    // get otps in 24 hours
+    const today = moment().startOf('day');
+
+    const filteredOtpByType = _.filter(otps, (otp) => moment(otp.createdAt).isAfter(today));
+
+    if (filteredOtpByType.length >= AUTH_CONSTANTS.MAX_OTP_PER_DAY) {
+      return false;
+    }
+
+    return true;
   }
 }
