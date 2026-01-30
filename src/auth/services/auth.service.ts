@@ -291,12 +291,8 @@ export class AuthService {
     }
 
     const otps = await this.getAllOTPs(user.email);
-    const canSend = this.canSendOTP(otps);
-    if (!canSend) {
-      throw new BadRequestException(AUTH_MESSAGES_I18N.OTP_DAILY_LIMIT[DEFAULT_LOCALE]);
-    }
 
-    const otp = this.findValidOTPByEmail(otps, dto.otp);
+    const otp = this.findByEmailAndType(dto.otp, otps, OTPType.PASSWORD_RESET);
     if (!otp) {
       throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_OTP[DEFAULT_LOCALE]);
     }
