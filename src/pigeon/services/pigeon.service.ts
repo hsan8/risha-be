@@ -7,6 +7,7 @@ import { PigeonStatus, PigeonGender } from '../enums';
 import { DocumentationNumberService } from './documentation-number.service';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { UserStatisticsService } from '@/user/services';
+import moment from 'moment';
 
 @Injectable()
 export class PigeonService {
@@ -60,15 +61,14 @@ export class PigeonService {
 
       // Set deadAt date if status is DEAD
       if (createPigeonDto.status === PigeonStatus.DEAD && !createPigeonDto.deadAt) {
-        createPigeonDto.deadAt = new Date().toISOString();
+        createPigeonDto.deadAt = moment().toDate().toISOString();
       }
 
       const pigeon = await this.pigeonRepository.create(createPigeonDto, userId);
 
       // Update statistics
-      const gender = createPigeonDto.gender === PigeonGender.MALE ? 'male' : 'female';
       const isAlive = pigeon.status === PigeonStatus.ALIVE;
-      await this.userStatisticsService.incrementPigeonCount(userId, gender, isAlive);
+      await this.userStatisticsService.incrementPigeonCount(userId, createPigeonDto.gender, isAlive);
 
       this.logger.log(I18nMessage.success('created'));
       return pigeon;
@@ -157,7 +157,7 @@ export class PigeonService {
 
       // Handle status changes
       if (updatePigeonDto.status) {
-        await this.handleStatusChange(existingPigeon, updatePigeonDto.status, updatePigeonDto.deadAt);
+        this.handleStatusChange(existingPigeon, updatePigeonDto.status, updatePigeonDto.deadAt);
       }
 
       // Validate documentation number format if provided
@@ -194,9 +194,8 @@ export class PigeonService {
       }
 
       // Update statistics before deletion
-      const gender = pigeon.gender === PigeonGender.MALE ? 'male' : 'female';
       const wasAlive = pigeon.status === PigeonStatus.ALIVE;
-      await this.userStatisticsService.decrementPigeonCount(userId, gender, wasAlive);
+      await this.userStatisticsService.decrementPigeonCount(userId, pigeon.gender, wasAlive);
 
       await this.pigeonRepository.delete(id, userId);
 

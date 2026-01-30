@@ -38,7 +38,5 @@ export class PigeonStatusService {
     }
   }
 
-  async update(id: string, updatePigeonDto: UpdatePigeonRequestDto, userId: string): Promise<Pigeon> {
-    return this.pigeonService.update(id, updatePigeonDto, userId);
-  }
+  
 }

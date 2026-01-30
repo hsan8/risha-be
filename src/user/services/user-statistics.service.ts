@@ -1,6 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserStatisticsRepository } from '../repositories';
 import { PigeonStatistics } from '../entities';
+import { PigeonGender } from '@/pigeon/enums';
+import { I18nMessage } from '@/core/utils/i18n-message.util';
 
 @Injectable()
 export class UserStatisticsService {
@@ -8,20 +10,22 @@ export class UserStatisticsService {
 
   constructor(private readonly userStatisticsRepository: UserStatisticsRepository) {}
 
-  async incrementPigeonCount(userId: string, gender: 'male' | 'female', isAlive: boolean): Promise<void> {
+  async incrementPigeonCount(userId: string, gender: PigeonGender, isAlive: boolean): Promise<void> {
     try {
       await this.userStatisticsRepository.incrementPigeonCount(userId, gender, isAlive);
     } catch (error) {
       this.logger.error('Error incrementing pigeon count:', error);
+
       throw error;
     }
   }
 
-  async decrementPigeonCount(userId: string, gender: 'male' | 'female', wasAlive: boolean): Promise<void> {
+  async decrementPigeonCount(userId: string, gender: PigeonGender, wasAlive: boolean): Promise<void> {
     try {
       await this.userStatisticsRepository.decrementPigeonCount(userId, gender, wasAlive);
     } catch (error) {
       this.logger.error('Error decrementing pigeon count:', error);
+
       throw error;
     }
   }
@@ -31,6 +35,7 @@ export class UserStatisticsService {
       await this.userStatisticsRepository.updatePigeonStatus(userId, fromAlive, toAlive);
     } catch (error) {
       this.logger.error('Error updating pigeon status:', error);
+
       throw error;
     }
   }
@@ -38,12 +43,15 @@ export class UserStatisticsService {
   async getPigeonStatistics(userId: string): Promise<PigeonStatistics> {
     try {
       const stats = await this.userStatisticsRepository.getStatistics(userId);
+
       if (!stats) {
-        throw new NotFoundException('User statistics not found');
+        throw new NotFoundException(I18nMessage.error('notFound', { entity: 'User Statistics' }));
       }
+
       return stats.pigeons;
     } catch (error) {
       this.logger.error('Error getting pigeon statistics:', error);
+
       throw error;
     }
   }

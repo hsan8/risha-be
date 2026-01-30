@@ -296,7 +296,7 @@ export class AuthService {
       throw new BadRequestException(AUTH_MESSAGES_I18N.OTP_DAILY_LIMIT[DEFAULT_LOCALE]);
     }
 
-    const otp = await this.findValidOTPByEmail(user.email, dto.otp);
+    const otp = this.findValidOTPByEmail(otps, dto.otp);
     if (!otp) {
       throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_OTP[DEFAULT_LOCALE]);
     }
@@ -308,7 +308,7 @@ export class AuthService {
     await this.userService.updatePassword(user.id, passwordHash);
 
     // Mark OTP as used
-    await this.otpRepository.markAsUsed(otp.id);
+    await this.otpRepository.deleteUsedOTPs(otps);
 
     this.logger.log(`Password reset successful: ${user.email}`);
 
@@ -371,14 +371,12 @@ export class AuthService {
     }
   }
 
-  private async findValidOTPByEmail(email: string, code: string): Promise<OTP | null> {
-    const otps = await this.getAllOTPs(email);
-
+  private async findValidOTPByEmail(otps: OTP[], code: string): Promise<OTP | null> {
     const now = moment();
 
     const validOTP = _.find(otps, (otp) => otp.code === code && !otp.used && moment(otp.expiresAt).isAfter(now));
 
-    return validOTP;
+    return validOTP || null;
   }
 
   private findByEmailAndType(otp: string, otps: OTP[], type: OTPType): OTP | null {

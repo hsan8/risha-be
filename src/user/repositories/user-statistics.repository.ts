@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import { FirebaseService } from '@/core/services';
 import { UserStatistics, PigeonStatistics } from '@/user/entities';
+import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
+import moment from 'moment';
 
 @Injectable()
 export class UserStatisticsRepository {
@@ -62,7 +64,7 @@ export class UserStatisticsRepository {
     });
   }
 
-  async incrementPigeonCount(userId: string, gender: 'male' | 'female', isAlive: boolean = true): Promise<void> {
+  async incrementPigeonCount(userId: string, gender: PigeonGender, isAlive: boolean = true): Promise<void> {
     const statistics = await this.getStatistics(userId);
     if (!statistics) return;
 
@@ -71,7 +73,7 @@ export class UserStatisticsRepository {
       lastUpdated: new Date(),
     };
 
-    if (gender === 'male') {
+    if (gender === PigeonGender.MALE) {
       updates.maleCount = statistics.pigeons.maleCount + 1;
     } else {
       updates.femaleCount = statistics.pigeons.femaleCount + 1;
@@ -86,7 +88,7 @@ export class UserStatisticsRepository {
     await this.updatePigeonStatistics(userId, updates);
   }
 
-  async decrementPigeonCount(userId: string, gender: 'male' | 'female', wasAlive: boolean = true): Promise<void> {
+  async decrementPigeonCount(userId: string, gender: PigeonGender, wasAlive: boolean = true): Promise<void> {
     const statistics = await this.getStatistics(userId);
     if (!statistics) return;
 
@@ -95,7 +97,7 @@ export class UserStatisticsRepository {
       lastUpdated: new Date(),
     };
 
-    if (gender === 'male') {
+    if (gender === PigeonGender.MALE) {
       updates.maleCount = Math.max(0, statistics.pigeons.maleCount - 1);
     } else {
       updates.femaleCount = Math.max(0, statistics.pigeons.femaleCount - 1);
@@ -117,7 +119,7 @@ export class UserStatisticsRepository {
     if (!statistics) return;
 
     const updates: Partial<PigeonStatistics> = {
-      lastUpdated: new Date(),
+      lastUpdated: moment().toDate(),
     };
 
     if (fromAlive && !toAlive) {
@@ -131,17 +133,20 @@ export class UserStatisticsRepository {
     await this.updatePigeonStatistics(userId, updates);
   }
 
-  async recalculateStatistics(userId: string, pigeonData: { gender: string; status: string }[]): Promise<void> {
+  async recalculateStatistics(
+    userId: string,
+    pigeonData: { gender: PigeonGender; status: PigeonStatus }[],
+  ): Promise<void> {
     let maleCount = 0;
     let femaleCount = 0;
     let aliveCount = 0;
     let deadCount = 0;
 
     pigeonData.forEach((pigeon) => {
-      if (pigeon.gender === 'MALE') maleCount++;
-      if (pigeon.gender === 'FEMALE') femaleCount++;
-      if (pigeon.status === 'ALIVE') aliveCount++;
-      if (pigeon.status === 'DEAD') deadCount++;
+      if (pigeon.gender === PigeonGender.MALE) maleCount++;
+      if (pigeon.gender === PigeonGender.FEMALE) femaleCount++;
+      if (pigeon.status === PigeonStatus.ALIVE) aliveCount++;
+      if (pigeon.status === PigeonStatus.DEAD) deadCount++;
     });
 
     const updates: Partial<PigeonStatistics> = {
@@ -150,7 +155,7 @@ export class UserStatisticsRepository {
       totalCount: pigeonData.length,
       aliveCount,
       deadCount,
-      lastUpdated: new Date(),
+      lastUpdated: moment().toDate(),
     };
 
     await this.updatePigeonStatistics(userId, updates);

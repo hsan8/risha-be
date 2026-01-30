@@ -1,6 +1,6 @@
 import { Controller, Get, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { PigeonStatusService } from '../services';
+import { PigeonService, PigeonStatusService } from '../services';
 import { PigeonResponseDto } from '../dto/responses';
 import { ApiDataResponse, ApiDataPageResponse } from '@/core/decorators/api';
 import { ResponseFactory } from '@/core/utils';
@@ -16,7 +16,10 @@ import { UserId } from '@/user/decorators';
 @ApiTags('Pigeon Status')
 @Controller('pigeons/status')
 export class PigeonStatusController {
-  constructor(private readonly pigeonStatusService: PigeonStatusService) {}
+  constructor(
+    private readonly pigeonStatusService: PigeonStatusService,
+    private readonly pigeonService: PigeonService,
+  ) {}
 
   @Get('alive')
   @ApiOperation({ summary: 'Get all alive pigeons' })
@@ -73,7 +76,7 @@ export class PigeonStatusController {
     @Body() body: UpdatePigeonRequestDto,
     @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto>> {
-    const pigeon = await this.pigeonStatusService.update(id, body, userId);
+    const pigeon = await this.pigeonService.update(id, body, userId);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 }
