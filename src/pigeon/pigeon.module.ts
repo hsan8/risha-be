@@ -14,7 +14,7 @@ import {
   DocumentationNumberService,
 } from './services';
 import { PigeonRepository } from './repositories';
-import { ServicesModule } from '../core/modules/services/services.module';
+import { ServicesModule } from '@/core/modules';
 import { AuthModule } from '@/auth/auth.module';
 import { UserModule } from '@/user/user.module';
 

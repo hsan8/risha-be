@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
+import _ from 'lodash';
 import { OTP } from '@/auth/entities';
 import { FirebaseService } from '@/core/services';
 import { OTPType } from '@/auth/enums';
@@ -66,14 +67,22 @@ export class OTPRepository {
       return [];
     }
 
-    return snapshot.val() as OTP[];
+    const data = snapshot.val();
+    if (_.isNil(data) || !_.isPlainObject(data)) {
+      return [];
+    }
+
+    return _.values(data) as OTP[];
   }
 
   deleteUsedOTPs(otps: OTP[]): Promise<void[]> {
+    const list: OTP[] = Array.isArray(otps) ? otps : (Object.values(otps ?? {}) as OTP[]);
     const deletePromises: Promise<void>[] = [];
 
-    for (const otp of otps) {
-      deletePromises.push(this.collectionRef.child(otp.id).remove());
+    for (const otp of list) {
+      if (otp?.id) {
+        deletePromises.push(this.collectionRef.child(otp.id).remove());
+      }
     }
 
     return Promise.all(deletePromises);

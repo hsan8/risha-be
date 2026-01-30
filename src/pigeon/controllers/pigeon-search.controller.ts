@@ -11,7 +11,7 @@ import { UserId } from '@/user/decorators';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @ApiTags('Pigeon Search')
-@Controller('pigeons/search')
+@Controller('pigeons-search')
 export class PigeonSearchController {
   constructor(private readonly pigeonSearchService: PigeonSearchService) {}
 
@@ -41,22 +41,6 @@ export class PigeonSearchController {
     @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto | null>> {
     const pigeon = await this.pigeonSearchService.findByRingNo(ringNo, userId);
-    return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
-  }
-
-  @Get('documentation/:documentationNo')
-  @ApiOperation({ summary: 'Get a pigeon by documentation number' })
-  @ApiParam({
-    name: 'documentationNo',
-    description: 'Pigeon documentation number',
-    type: String,
-  })
-  @ApiDataResponse(PigeonResponseDto)
-  async findByDocumentationNo(
-    @Param('documentationNo') documentationNo: string,
-    @UserId() userId: string,
-  ): Promise<DataResponseDto<PigeonResponseDto | null>> {
-    const pigeon = await this.pigeonSearchService.findByDocumentationNo(documentationNo, userId);
     return ResponseFactory.data(pigeon ? new PigeonResponseDto(pigeon) : null);
   }
 }

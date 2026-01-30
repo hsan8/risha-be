@@ -1,7 +1,7 @@
 import { Controller, Get, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { PigeonService, PigeonStatusService } from '../services';
-import { PigeonResponseDto } from '../dto/responses';
+import { PigeonCountByStatusResponseDto, PigeonResponseDto } from '../dto/responses';
 import { ApiDataResponse, ApiDataPageResponse } from '@/core/decorators/api';
 import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto, DataPageResponseDto } from '@/core/dtos';
@@ -14,7 +14,7 @@ import { UserId } from '@/user/decorators';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @ApiTags('Pigeon Status')
-@Controller('pigeons/status')
+@Controller('pigeons-status')
 export class PigeonStatusController {
   constructor(
     private readonly pigeonStatusService: PigeonStatusService,
@@ -54,29 +54,29 @@ export class PigeonStatusController {
     description: 'Pigeon status',
     enum: PigeonStatus,
   })
-  @ApiDataResponse('number')
+  @ApiDataResponse(PigeonCountByStatusResponseDto)
   async countByStatus(
     @Param('status') status: PigeonStatus,
     @UserId() userId: string,
-  ): Promise<DataResponseDto<number>> {
+  ): Promise<DataResponseDto<PigeonCountByStatusResponseDto>> {
     const count = await this.pigeonStatusService.countByStatus(status, userId);
-    return ResponseFactory.data(count);
+    return ResponseFactory.data(new PigeonCountByStatusResponseDto(count));
   }
 
-  @Patch(':id')
+  @Patch(':pigeonId')
   @ApiOperation({ summary: 'Update pigeon status' })
   @ApiParam({
-    name: 'id',
+    name: 'pigeonId',
     description: 'Pigeon ID',
     type: String,
   })
   @ApiDataResponse(PigeonResponseDto)
   async updateStatus(
-    @Param('id') id: string,
+    @Param('pigeonId') pigeonId: string,
     @Body() body: UpdatePigeonRequestDto,
     @UserId() userId: string,
   ): Promise<DataResponseDto<PigeonResponseDto>> {
-    const pigeon = await this.pigeonService.update(id, body, userId);
+    const pigeon = await this.pigeonService.update(pigeonId, body, userId);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 }

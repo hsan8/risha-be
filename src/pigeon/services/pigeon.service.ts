@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import _ from 'lodash';
 import { Pigeon } from '../entities';
 import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
 import { PigeonRepository } from '../repositories';
@@ -93,6 +94,15 @@ export class PigeonService {
     } catch (error) {
       this.logger.error('🐦 PigeonService.findAll - Error:', error);
       this.logger.error('Error retrieving pigeons:', error);
+      throw error;
+    }
+  }
+
+  async findAllPigeonsByUserId(userId: string): Promise<Pigeon[]> {
+    try {
+      return await this.pigeonRepository.findAllByUserId(userId);
+    } catch (error) {
+      this.logger.error('Error finding all pigeons by user ID:', error);
       throw error;
     }
   }
@@ -211,97 +221,6 @@ export class PigeonService {
     }
   }
 
-  async search(query: string, userId: string): Promise<Pigeon[]> {
-    try {
-      return await this.pigeonRepository.search(query, userId);
-    } catch (error) {
-      this.logger.error('Error searching pigeons:', error);
-
-      throw error;
-    }
-  }
-
-  async findByRingNo(ringNo: string, userId: string): Promise<Pigeon | null> {
-    try {
-      return await this.pigeonRepository.findByRingNo(ringNo, userId);
-    } catch (error) {
-      this.logger.error(`Error finding pigeon by ring number ${ringNo}:`, error);
-
-      throw error;
-    }
-  }
-
-  async findByDocumentationNo(documentationNo: string, userId: string): Promise<Pigeon | null> {
-    try {
-      return await this.pigeonRepository.findByDocumentationNo(documentationNo, userId);
-    } catch (error) {
-      this.logger.error(`Error finding pigeon by documentation number ${documentationNo}:`, error);
-
-      throw error;
-    }
-  }
-
-  async findAlivePigeons(userId: string): Promise<Pigeon[]> {
-    try {
-      return await this.pigeonRepository.findAlivePigeons(userId);
-    } catch (error) {
-      this.logger.error('Error finding alive pigeons:', error);
-
-      throw error;
-    }
-  }
-
-  async findAliveParents(userId: string): Promise<{ fathers: Pigeon[]; mothers: Pigeon[] }> {
-    try {
-      return await this.pigeonRepository.findAliveParents(userId);
-    } catch (error) {
-      this.logger.error('Error finding alive parents:', error);
-
-      throw error;
-    }
-  }
-
-  async count(userId: string): Promise<number> {
-    try {
-      return await this.pigeonRepository.count(userId);
-    } catch (error) {
-      this.logger.error('Error counting pigeons:', error);
-
-      throw error;
-    }
-  }
-
-  async countByStatus(status: PigeonStatus, userId: string): Promise<number> {
-    try {
-      return await this.pigeonRepository.countByStatus(status, userId);
-    } catch (error) {
-      this.logger.error(`Error counting pigeons by status ${status}:`, error);
-
-      throw error;
-    }
-  }
-
-  async countByGenderAndStatus(
-    userId: string,
-  ): Promise<{ maleCount: number; femaleCount: number; totalCount: number }> {
-    try {
-      return await this.pigeonRepository.countByGenderAndStatus(userId);
-    } catch (error) {
-      this.logger.error('Error counting pigeons by gender and status:', error);
-
-      throw error;
-    }
-  }
-
-  async generateDocumentationNo(yearOfBirth: number, userId: string): Promise<string> {
-    try {
-      return this.documentationNumberService.generateDocumentationNo(yearOfBirth, userId);
-    } catch (error) {
-      this.logger.error(`Error generating documentation number for year ${yearOfBirth}:`, error);
-
-      throw error;
-    }
-  }
 
   private async validateParentRelationships(pigeonDto: CreatePigeonRequestDto, userId: string): Promise<void> {
     // Validate father if provided

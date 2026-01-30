@@ -1,14 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PigeonRepository } from '@/pigeon/repositories';
 import { DOCUMENTATION_NUMBER_CONSTANTS } from '@/pigeon/constants';
 import { VALIDATION_CONSTANTS } from '@/core/constants';
 import { Pigeon } from '../entities';
+import { I18nMessage } from '@/core/utils/i18n-message.util';
+import _ from 'lodash';
 
 @Injectable()
 export class DocumentationNumberService {
   private readonly logger = new Logger(DocumentationNumberService.name);
 
   constructor(private readonly pigeonRepository: PigeonRepository) {}
+
+  async findByDocumentationNo(documentationNo: string, userId: string): Promise<Pigeon> {
+    try {
+      const pigeon = await this.pigeonRepository.findByDocumentationNo(documentationNo, userId);
+
+      if (!pigeon) {
+        throw new NotFoundException(I18nMessage.error('notFound'));
+      }
+      return pigeon;
+    } catch (error) {
+      this.logger.error(`Error finding pigeon by documentation number ${documentationNo}:`, error);
+
+      throw error;
+    }
+  }
 
   /**
    * Generates a documentation number for a pigeon based on the year of birth.

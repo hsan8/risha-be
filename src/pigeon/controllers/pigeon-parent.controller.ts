@@ -12,7 +12,7 @@ import { UserId } from '@/user/decorators';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @ApiTags('Pigeon Parents')
-@Controller('pigeons/parents')
+@Controller('pigeons-parents')
 export class PigeonParentController {
   constructor(private readonly pigeonParentService: PigeonParentService) {}
 

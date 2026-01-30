@@ -1,19 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PigeonRepository } from '@/pigeon/repositories';
 import { PigeonService } from './pigeon.service';
 import { Pigeon } from '../entities';
-import { PigeonStatus } from '../enums';
-import { UpdatePigeonRequestDto } from '../dto/requests';
+import { PigeonStatistics } from '@/user/entities';
+import { PigeonGender, PigeonStatus } from '../enums';
+import _ from 'lodash';
+import moment from 'moment';
 
 @Injectable()
 export class PigeonStatusService {
   private readonly logger = new Logger(PigeonStatusService.name);
 
-  constructor(private readonly pigeonRepository: PigeonRepository, private readonly pigeonService: PigeonService) {}
+  constructor(private readonly pigeonService: PigeonService) {}
 
   async findAlivePigeons(userId: string): Promise<Pigeon[]> {
     try {
-      return await this.pigeonRepository.findAlivePigeons(userId);
+      const pigeons = await this.pigeonService.findAllPigeonsByUserId(userId);
+      const alivePigeons = this.filterPigeonsByStatus(pigeons, PigeonStatus.ALIVE);
+
+      return alivePigeons;
     } catch (error) {
       this.logger.error('Error finding alive pigeons:', error);
       throw error;
@@ -22,21 +26,36 @@ export class PigeonStatusService {
 
   async count(userId: string): Promise<number> {
     try {
-      return await this.pigeonRepository.count(userId);
+      const pigeons = await this.pigeonService.findAllPigeonsByUserId(userId);
+      return pigeons.length;
     } catch (error) {
       this.logger.error('Error counting pigeons:', error);
       throw error;
     }
   }
 
-  async countByStatus(status: PigeonStatus, userId: string): Promise<number> {
+  async countByStatus(
+    status: PigeonStatus,
+    userId: string,
+  ): Promise<{ total: number; maleCount: number; femaleCount: number }> {
     try {
-      return await this.pigeonRepository.countByStatus(status, userId);
+      const pigeons = await this.pigeonService.findAllPigeonsByUserId(userId);
+
+      const filteredPigeons = this.filterPigeonsByStatus(pigeons, status);
+      const [maleCount, femaleCount] = _.partition(filteredPigeons, (pigeon) => pigeon.gender === PigeonGender.MALE);
+
+      return {
+        total: filteredPigeons.length,
+        maleCount: maleCount.length,
+        femaleCount: femaleCount.length,
+      };
     } catch (error) {
       this.logger.error(`Error counting pigeons by status ${status}:`, error);
       throw error;
     }
   }
 
-  
+  private filterPigeonsByStatus(pigeons: Pigeon[], status: PigeonStatus): Pigeon[] {
+    return _.filter(pigeons, (pigeon) => pigeon.status === status);
+  }
 }

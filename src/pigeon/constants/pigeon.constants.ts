@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import { UserLocale } from '@/core/enums';
 
 export const PIGEON_CONSTANTS = {
   COLLECTION_NAME: 'pigeons',
@@ -72,18 +72,6 @@ export const PIGEON_MESSAGES_I18N: Record<string, Record<UserLocale, string>> = 
     [UserLocale.ARABIC]: 'تاريخ الوفاة مطلوب عند تغيير الحالة إلى ميتة',
   },
 } as const;
-
-export type PigeonMessageKey = keyof typeof PIGEON_MESSAGES_I18N;
-
-/** Returns the pigeon message in the requested locale. Default: Arabic. */
-export function getPigeonMessage(key: PigeonMessageKey, locale?: UserLocale): string {
-  const lang = locale ?? DEFAULT_LOCALE;
-  const entry = PIGEON_MESSAGES_I18N[key];
-  return entry[lang] ?? entry[UserLocale.ARABIC];
-}
-
-/** @deprecated Use PIGEON_MESSAGES_I18N or getPigeonMessage(key, locale) for i18n */
-export const PIGEON_MESSAGES = PIGEON_MESSAGES_I18N;
 
 export const DOCUMENTATION_NUMBER_CONSTANTS = {
   PATTERN: /^\d{4}-[A-Z]-\d{3}$/,

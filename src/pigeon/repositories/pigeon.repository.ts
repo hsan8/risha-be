@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
+import _ from 'lodash';
 import { Pigeon } from '@/pigeon/entities';
 import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
 import { FirebaseService } from '@/core/services';
@@ -21,6 +22,8 @@ export class PigeonRepository {
   private getUserPigeonsRef(userId: string): Reference {
     return this.db.ref(PIGEON_CONSTANTS.COLLECTION_NAME).child(userId);
   }
+
+  find;
 
   async create(data: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
     const userPigeonsRef = this.getUserPigeonsRef(userId);
@@ -221,66 +224,13 @@ export class PigeonRepository {
   async findAllByUserId(userId: string): Promise<Pigeon[]> {
     const userPigeonsRef = this.getUserPigeonsRef(userId);
     const snapshot = await userPigeonsRef.once('value');
-    const pigeons: Pigeon[] = [];
 
-    snapshot.forEach((childSnapshot) => {
-      const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon) {
-        pigeons.push(pigeon);
-      }
-    });
+    const data = snapshot.val();
+    if (!snapshot.exists() || _.isNil(data) || !_.isPlainObject(data)) {
+      return [];
+    }
 
-    return pigeons;
-  }
-
-  async findAlivePigeons(userId: string): Promise<Pigeon[]> {
-    const userPigeonsRef = this.getUserPigeonsRef(userId);
-    const snapshot = await userPigeonsRef.once('value');
-    const pigeons: Pigeon[] = [];
-
-    snapshot.forEach((childSnapshot) => {
-      const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon && pigeon.status === PigeonStatus.ALIVE) {
-        pigeons.push(pigeon);
-      }
-    });
-
-    return pigeons;
-  }
-
-  async findAliveParents(userId: string): Promise<{ fathers: Pigeon[]; mothers: Pigeon[] }> {
-    const userPigeonsRef = this.getUserPigeonsRef(userId);
-    const snapshot = await userPigeonsRef.once('value');
-    const fathers: Pigeon[] = [];
-    const mothers: Pigeon[] = [];
-
-    snapshot.forEach((childSnapshot) => {
-      const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon && pigeon.status === PigeonStatus.ALIVE) {
-        if (pigeon.gender === PigeonGender.MALE) {
-          fathers.push(pigeon);
-        } else if (pigeon.gender === PigeonGender.FEMALE) {
-          mothers.push(pigeon);
-        }
-      }
-    });
-
-    return { fathers, mothers };
-  }
-
-  async count(userId: string): Promise<number> {
-    const userPigeonsRef = this.getUserPigeonsRef(userId);
-    const snapshot = await userPigeonsRef.once('value');
-    let count = 0;
-
-    snapshot.forEach((childSnapshot) => {
-      const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon) {
-        count++;
-      }
-    });
-
-    return count;
+    return _.compact(_.values(data)) as Pigeon[];
   }
 
   async countByStatus(status: PigeonStatus, userId: string): Promise<number> {

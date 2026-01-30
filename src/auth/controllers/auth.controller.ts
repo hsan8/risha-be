@@ -5,8 +5,6 @@ import {
   LoginRequestDto,
   RegisterRequestDto,
   ForgotPasswordRequestDto,
-  AppleAuthRequestDto,
-  GoogleAuthRequestDto,
   VerifyOTPRequestDto,
   ResetPasswordRequestDto,
   ResendOTPRequestDto,
@@ -47,27 +45,12 @@ export class AuthController {
     return ResponseFactory.data(response);
   }
 
-  @Post('google')
-  @ApiOperation({ summary: 'Authenticate with Google' })
-  @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
   @HttpCode(HttpStatus.OK)
-  async googleAuth(
-    @Body() googleAuthDto: GoogleAuthRequestDto,
-    @Language() locale: UserLocale,
-  ): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.googleAuth(googleAuthDto, locale);
-    return ResponseFactory.data(result);
-  }
-
-  @Post('apple')
-  @ApiOperation({ summary: 'Authenticate with Apple' })
-  @ApiDataResponse(AuthResponseDto, HttpStatus.OK)
-  @HttpCode(HttpStatus.OK)
-  async appleAuth(
-    @Body() appleAuthDto: AppleAuthRequestDto,
-    @Language() locale: UserLocale,
-  ): Promise<DataResponseDto<AuthResponseDto>> {
-    const result = await this.authService.appleAuth(appleAuthDto, locale);
+  async logout(): Promise<DataResponseDto<MessageResponseDto>> {
+    const result = await this.authService.logout();
     return ResponseFactory.data(result);
   }
 
@@ -80,6 +63,18 @@ export class AuthController {
     @Language() locale: UserLocale,
   ): Promise<DataResponseDto<MessageResponseDto>> {
     const result = await this.authService.forgotPassword(forgotPasswordDto, locale);
+    return ResponseFactory.data(result);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with OTP verification' })
+  @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordRequestDto,
+    @Language() locale: UserLocale,
+  ): Promise<DataResponseDto<MessageResponseDto>> {
+    const result = await this.authService.resetPassword(resetPasswordDto, locale);
     return ResponseFactory.data(result);
   }
 
@@ -104,27 +99,6 @@ export class AuthController {
     @Language() locale: UserLocale,
   ): Promise<DataResponseDto<MessageResponseDto>> {
     const result = await this.authService.resendOTP(resendOTPDto, locale);
-    return ResponseFactory.data(result);
-  }
-
-  @Post('reset-password')
-  @ApiOperation({ summary: 'Reset password with OTP verification' })
-  @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
-  @HttpCode(HttpStatus.OK)
-  async resetPassword(
-    @Body() resetPasswordDto: ResetPasswordRequestDto,
-    @Language() locale: UserLocale,
-  ): Promise<DataResponseDto<MessageResponseDto>> {
-    const result = await this.authService.resetPassword(resetPasswordDto, locale);
-    return ResponseFactory.data(result);
-  }
-
-  @Post('logout')
-  @ApiOperation({ summary: 'Logout user' })
-  @ApiDataResponse(MessageResponseDto, HttpStatus.OK)
-  @HttpCode(HttpStatus.OK)
-  async logout(): Promise<DataResponseDto<MessageResponseDto>> {
-    const result = await this.authService.logout();
     return ResponseFactory.data(result);
   }
 }
