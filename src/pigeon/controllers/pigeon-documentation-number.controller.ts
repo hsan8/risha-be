@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { DocumentationNumberService } from '../services';
 import { GenerateDocumentationNumberRequestDto } from '../dto/requests';
@@ -32,7 +32,7 @@ export class PigeonDocumentationNumberController {
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 
-  @Get('generate')
+  @Post('generate')
   @ApiOperation({ summary: 'Generate a documentation number for a given year' })
   @ApiDataResponse('string')
   async generateDocumentationNo(
