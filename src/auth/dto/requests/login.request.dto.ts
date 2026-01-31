@@ -4,7 +4,7 @@ import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class LoginRequestDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com' })
   @Expose()
   @Transform(({ value }) => value?.trim?.().toLowerCase() ?? value)
   @IsEmail(

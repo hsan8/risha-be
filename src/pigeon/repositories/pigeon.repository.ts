@@ -23,8 +23,6 @@ export class PigeonRepository {
     return this.db.ref(PIGEON_CONSTANTS.COLLECTION_NAME).child(userId);
   }
 
-  find;
-
   async create(data: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
     const userPigeonsRef = this.getUserPigeonsRef(userId);
     const pigeonRef = userPigeonsRef.push();

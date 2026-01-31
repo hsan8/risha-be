@@ -36,7 +36,7 @@ export class AppleAuthRequestDto {
   })
   userId!: string;
 
-  @ApiProperty({ example: 'user@example.com', required: false })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com', required: false })
   @Expose()
   @IsOptional()
   @IsEmail(

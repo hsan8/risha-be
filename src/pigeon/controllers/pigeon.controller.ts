@@ -31,10 +31,7 @@ import { UserId } from '@/user/decorators';
 export class PigeonController {
   private readonly logger = new Logger(PigeonController.name);
 
-  constructor(
-    private readonly pigeonService: PigeonService,
-    private readonly pigeonParentService: PigeonParentService,
-  ) {}
+  constructor(private readonly pigeonService: PigeonService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new pigeon' })

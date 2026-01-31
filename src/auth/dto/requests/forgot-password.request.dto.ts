@@ -6,7 +6,7 @@ import { AUTH_CONSTANTS } from '@/auth/constants';
 import { IsFirebaseId } from '@/core/validators/firebase-id.validator';
 
 export class ForgotPasswordRequestDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com' })
   @Expose()
   @Transform(({ value }) => value?.trim?.().toLowerCase() ?? value)
   @IsEmail(
@@ -59,7 +59,7 @@ export class ResendOTPRequestDto {
 }
 
 export class ResetPasswordRequestDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com' })
   @Expose()
   @IsEmail(
     {},

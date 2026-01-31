@@ -9,6 +9,8 @@ import { DocumentationNumberService } from './documentation-number.service';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { UserStatisticsService } from '@/user/services';
 import moment from 'moment';
+import { HistoryEventType } from '@/history/enums';
+import { HistoryRepository } from '@/history/repositories';
 
 @Injectable()
 export class PigeonService {
@@ -18,6 +20,7 @@ export class PigeonService {
     private readonly pigeonRepository: PigeonRepository,
     private readonly documentationNumberService: DocumentationNumberService,
     private readonly userStatisticsService: UserStatisticsService,
+    private readonly historyRepository: HistoryRepository,
   ) {}
 
   async create(createPigeonDto: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
@@ -69,9 +72,19 @@ export class PigeonService {
 
       // Update statistics
       const isAlive = pigeon.status === PigeonStatus.ALIVE;
-      await this.userStatisticsService.incrementPigeonCount(userId, createPigeonDto.gender, isAlive);
+
+      await Promise.all([
+        this.userStatisticsService.incrementPigeonCount(userId, createPigeonDto.gender, isAlive),
+        this.historyRepository.create({
+          pigeonId: pigeon.id,
+          userId,
+          eventType: isAlive ? HistoryEventType.PIGEON_CREATED_MANUALLY : HistoryEventType.PIGEON_DIED,
+          eventDate: isAlive ? pigeon.createdAt : moment(createPigeonDto.deadAt).toDate(),
+        }),
+      ]);
 
       this.logger.log(I18nMessage.success('created'));
+
       return pigeon;
     } catch (error) {
       if (error instanceof ConflictException || error instanceof BadRequestException) {
@@ -220,7 +233,6 @@ export class PigeonService {
       throw error;
     }
   }
-
 
   private async validateParentRelationships(pigeonDto: CreatePigeonRequestDto, userId: string): Promise<void> {
     // Validate father if provided

@@ -9,7 +9,7 @@ export class UserResponseDto {
   @ApiProperty({ example: 'أحمد محمد' })
   name: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com' })
   email: string;
 
   @ApiProperty({ example: '+96512345678', nullable: true })

@@ -12,7 +12,7 @@ export class UserProfileResponseDto {
   @Expose()
   name: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com' })
   @Expose()
   email: string;
 

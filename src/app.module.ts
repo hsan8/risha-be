@@ -11,6 +11,7 @@ import { ServicesModule } from './core/modules/services/services.module';
 import { buildValidationPipe } from './core/pipes';
 import { HealthModule } from './health/health.module';
 import { PigeonModule } from './pigeon/pigeon.module';
+import { HistoryModule } from './history/history.module';
 import { FormulaModule } from './formula/formula.module';
 import { AuthModule } from './auth/auth.module';
 import { Environment } from './core/enums';
@@ -38,6 +39,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     UserModule,
     PigeonModule,
+    HistoryModule,
     FormulaModule,
     HealthModule,
   ],

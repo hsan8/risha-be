@@ -20,7 +20,7 @@ export class RegisterRequestDto {
   })
   name!: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'dhaouadi002@gmail.com' })
   @Expose()
   @Transform(({ value }) => value?.trim?.().toLowerCase() ?? value)
   @IsEmail(

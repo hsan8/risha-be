@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import {
   PigeonController,
   PigeonSearchController,
@@ -17,9 +17,10 @@ import { PigeonRepository } from './repositories';
 import { ServicesModule } from '@/core/modules';
 import { AuthModule } from '@/auth/auth.module';
 import { UserModule } from '@/user/user.module';
+import { HistoryModule } from '@/history/history.module';
 
 @Module({
-  imports: [ServicesModule, AuthModule, UserModule],
+  imports: [ServicesModule, AuthModule, UserModule, forwardRef(() => HistoryModule)],
   controllers: [
     PigeonController,
     PigeonSearchController,
