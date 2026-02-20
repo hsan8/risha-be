@@ -1,9 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsDateString, IsString, MaxLength } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 import { HistoryEventType } from '../../enums';
-import { VALIDATION_CONSTANTS } from '@/core/constants';
 
 export class CreateHistoryEventRequestDto {
   @ApiProperty({ enum: HistoryEventType, example: HistoryEventType.FORMULA_CREATED })

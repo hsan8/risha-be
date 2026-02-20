@@ -1,6 +1,6 @@
+import { IRequestUser } from '@/user/interfaces';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { IRequestUser } from '@/user/interfaces';
 
 function base64UrlDecode(input: string): string {
   const normalized = input.replace(/-/g, '+').replace(/_/g, '/');

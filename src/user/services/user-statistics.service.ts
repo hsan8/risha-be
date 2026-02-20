@@ -1,8 +1,8 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { UserStatisticsRepository } from '../repositories';
-import { PigeonStatistics } from '../entities';
-import { PigeonGender } from '@/pigeon/enums';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
+import { PigeonGender } from '@/pigeon/enums';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PigeonStatistics } from '../entities';
+import { UserStatisticsRepository } from '../repositories';
 
 @Injectable()
 export class UserStatisticsService {

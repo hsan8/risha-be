@@ -1,15 +1,17 @@
-import { Controller, Get, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { PigeonService, PigeonStatusService } from '../services';
-import { PigeonCountByStatusResponseDto, PigeonResponseDto } from '../dto/responses';
-import { ApiDataResponse, ApiDataPageResponse } from '@/core/decorators/api';
-import { ResponseFactory } from '@/core/utils';
-import { DataResponseDto, DataPageResponseDto } from '@/core/dtos';
-import { PigeonStatus } from '../enums';
-import { PageOptionsRequestDto } from '@/core/dtos';
-import { UpdatePigeonRequestDto } from '../dto/requests';
 import { JwtAuthGuard } from '@/auth/guards';
+import { ApiDataPageResponse, ApiDataResponse } from '@/core/decorators/api';
+import { DataPageResponseDto, DataResponseDto, PageOptionsRequestDto } from '@/core/dtos';
+import { ResponseFactory } from '@/core/utils';
+import { HistoryService } from '@/history/services';
 import { UserId } from '@/user/decorators';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import moment from 'moment';
+import { RegisterVaccinatedRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
+import { PigeonCountByStatusResponseDto, PigeonResponseDto } from '../dto/responses';
+import { PigeonStatus } from '../enums';
+import { IVaccinationRecord } from '../interfaces';
+import { PigeonService, PigeonStatusService } from '../services';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -19,6 +21,7 @@ export class PigeonStatusController {
   constructor(
     private readonly pigeonStatusService: PigeonStatusService,
     private readonly pigeonService: PigeonService,
+    private readonly historyService: HistoryService,
   ) {}
 
   @Get('alive')
@@ -78,5 +81,27 @@ export class PigeonStatusController {
   ): Promise<DataResponseDto<PigeonResponseDto>> {
     const pigeon = await this.pigeonService.update(pigeonId, body, userId);
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
+  }
+
+  @Post(':pigeonId/vaccinated')
+  @ApiOperation({ summary: 'Register pigeon as vaccinated' })
+  @ApiParam({
+    name: 'pigeonId',
+    description: 'Pigeon ID',
+    type: String,
+  })
+  @ApiDataResponse(PigeonResponseDto)
+  async registerVaccinated(
+    @Param('pigeonId') pigeonId: string,
+    @Body() body: RegisterVaccinatedRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<PigeonResponseDto>> {
+    const vaccinationRecord: IVaccinationRecord = {
+      date: moment(body.vaccinatedAt).toDate(),
+      vaccine: body.vaccineName,
+      note: body.note,
+    };
+    const updatedPigeon = await this.pigeonStatusService.registerVaccinated(pigeonId, vaccinationRecord, userId);
+    return ResponseFactory.data(new PigeonResponseDto(updatedPigeon));
   }
 }

@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { HistoryRepository } from '../repositories';
-import { HistoryEvent } from '../entities';
-import { CreateHistoryEventRequestDto } from '../dto/requests';
-import { HISTORY_EVENT_LABELS_I18N } from '../constants';
 import { UserLocale } from '@/core/enums';
 import { PigeonService } from '@/pigeon/services';
+import { Injectable, Logger } from '@nestjs/common';
 import moment from 'moment';
+import { HISTORY_EVENT_LABELS_I18N } from '../constants';
+import { CreateHistoryEventRequestDto } from '../dto/requests';
+import { HistoryEvent } from '../entities';
+import { HistoryRepository } from '../repositories';
 @Injectable()
 export class HistoryService {
   private readonly logger = new Logger(HistoryService.name);

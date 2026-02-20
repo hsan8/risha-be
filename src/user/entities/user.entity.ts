@@ -1,7 +1,7 @@
-import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsOptional, IsEnum, IsDate, IsBoolean } from 'class-validator';
+import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class User {
   @ApiProperty({ description: 'Unique identifier for the user' })

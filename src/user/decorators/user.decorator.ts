@@ -1,6 +1,6 @@
+import { IRequestUser } from '@/user/interfaces';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { IRequestUser } from '@/user/interfaces';
 
 export const User = createParamDecorator(
   (data: keyof IRequestUser | undefined, ctx: ExecutionContext): IRequestUser | string => {

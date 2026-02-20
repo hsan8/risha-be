@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsInt, Min, Max } from 'class-validator';
+import { VALIDATION_CONSTANTS } from '@/core/constants';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { i18nValidationMessage as i18n } from 'nestjs-i18n';
-import { VALIDATION_CONSTANTS } from '@/core/constants';
+import { IsInt, IsNotEmpty, Max, Min } from 'class-validator';
 import moment from 'moment';
+import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class GenerateDocumentationNumberRequestDto {
   @ApiProperty({ example: '2025', minimum: VALIDATION_CONSTANTS.MIN_YEAR, maximum: moment().year() })

@@ -1,8 +1,8 @@
+import { FirebaseService } from '@/core/services';
+import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
+import { PigeonStatistics, UserStatistics } from '@/user/entities';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
-import { FirebaseService } from '@/core/services';
-import { UserStatistics, PigeonStatistics } from '@/user/entities';
-import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
 import moment from 'moment';
 
 @Injectable()

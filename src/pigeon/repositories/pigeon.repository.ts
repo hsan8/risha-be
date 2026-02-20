@@ -1,12 +1,14 @@
+import { PageOptionsRequestDto } from '@/core/dtos';
+import { FirebaseService } from '@/core/services';
+import { Pigeon } from '@/pigeon/entities';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
-import { Pigeon } from '@/pigeon/entities';
-import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
-import { FirebaseService } from '@/core/services';
-import { PigeonStatus, PigeonGender } from '../enums';
+import moment from 'moment';
 import { PIGEON_CONSTANTS } from '../constants';
-import { PageOptionsRequestDto } from '@/core/dtos';
+import { CreatePigeonRequestDto } from '../dto/requests';
+import { PigeonGender, PigeonStatus } from '../enums';
+import { IVaccinationRecord } from '../interfaces';
 
 @Injectable()
 export class PigeonRepository {
@@ -100,18 +102,11 @@ export class PigeonRepository {
     return pigeon;
   }
 
-  async update(id: string, data: UpdatePigeonRequestDto, userId: string): Promise<Pigeon> {
-    const userPigeonsRef = this.getUserPigeonsRef(userId);
-    const pigeonRef = userPigeonsRef.child(id);
-    const snapshot = await pigeonRef.once('value');
-    const existingPigeon = snapshot.val() as Pigeon;
+  async update(id: string, data: Partial<Pigeon>, userId: string): Promise<Pigeon> {
+    const userPigeonsRef = this.getUserPigeonsRef(userId).child(id);
 
-    if (!existingPigeon) {
-      throw new Error(`Pigeon with ID ${id} not found`);
-    }
-
-    const updatedPigeon: Pigeon = {
-      ...existingPigeon,
+    const updatedPigeon: Partial<Pigeon> = {
+      ...data,
       ...(data.name && { name: data.name }),
       ...(data.gender && { gender: data.gender }),
       ...(data.status && { status: data.status }),
@@ -124,11 +119,19 @@ export class PigeonRepository {
       ...(data.motherName && { motherName: data.motherName }),
       ...(data.yearOfBirth && { yearOfBirth: data.yearOfBirth }),
       ...(data.deadAt && { deadAt: new Date(data.deadAt) }),
-      updatedAt: new Date(),
+      ...(data.vaccinationDates && {
+        vaccinationDates:
+          data.vaccinationDates?.map((vaccinationRecord: IVaccinationRecord) => ({
+            date: vaccinationRecord.date ?? moment().toDate(),
+            vaccine: vaccinationRecord.vaccine ?? '',
+            note: vaccinationRecord.note ?? '',
+          })) ?? [],
+      }),
+      updatedAt: moment().toDate(),
     };
 
-    await pigeonRef.update(updatedPigeon);
-    return updatedPigeon;
+    await userPigeonsRef.update(updatedPigeon);
+    return updatedPigeon as Pigeon;
   }
 
   async delete(id: string, userId: string): Promise<void> {

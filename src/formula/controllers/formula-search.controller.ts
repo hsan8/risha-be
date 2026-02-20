@@ -1,12 +1,12 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { FormulaService } from '../services';
-import { ApiDataArrayResponse } from '@/core/decorators/api';
-import { ResponseFactory } from '@/core/utils';
-import { DataResponseDto } from '@/core/dtos/responses';
-import { FormulaResponseDto } from '../dto/responses';
 import { JwtAuthGuard } from '@/auth/guards';
+import { ApiDataArrayResponse } from '@/core/decorators/api';
+import { DataResponseDto } from '@/core/dtos/responses';
+import { ResponseFactory } from '@/core/utils';
 import { UserId } from '@/user/decorators';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FormulaResponseDto } from '../dto/responses';
+import { FormulaService } from '../services';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)

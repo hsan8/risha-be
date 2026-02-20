@@ -1,7 +1,7 @@
+import { UserRole, UserStatus } from '@/auth/enums';
+import { User } from '@/user/entities';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { UserStatus, UserRole } from '@/auth/enums';
-import { User } from '@/user/entities';
 
 export class UserProfileResponseDto {
   @ApiProperty({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07' })

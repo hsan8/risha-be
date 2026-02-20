@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserRepository } from '../repositories';
+import { AUTH_MESSAGES_I18N } from '@/auth/constants';
+import { UserRole, UserStatus } from '@/auth/enums';
+import { UserLocale } from '@/core/enums';
 import { User } from '@/user/entities';
 import { ICreateUserParams, IUpdateForRegistrationData } from '@/user/interfaces';
-import { UserRole, UserStatus } from '@/auth/enums';
-import { AUTH_MESSAGES_I18N } from '@/auth/constants';
-import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserRepository } from '../repositories';
 
 @Injectable()
 export class UserService {

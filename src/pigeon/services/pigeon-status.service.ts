@@ -1,16 +1,23 @@
+import { HistoryEventType } from '@/history/enums';
+import { HistoryService } from '@/history/services';
 import { Injectable, Logger } from '@nestjs/common';
-import { PigeonService } from './pigeon.service';
-import { Pigeon } from '../entities';
-import { PigeonStatistics } from '@/user/entities';
-import { PigeonGender, PigeonStatus } from '../enums';
 import _ from 'lodash';
 import moment from 'moment';
+import { Pigeon } from '../entities';
+import { PigeonGender, PigeonStatus } from '../enums';
+import { IVaccinationRecord } from '../interfaces';
+import { PigeonRepository } from '../repositories';
+import { PigeonService } from './pigeon.service';
 
 @Injectable()
 export class PigeonStatusService {
   private readonly logger = new Logger(PigeonStatusService.name);
 
-  constructor(private readonly pigeonService: PigeonService) {}
+  constructor(
+    private readonly pigeonService: PigeonService,
+    private readonly pigeonRepository: PigeonRepository,
+    private readonly historyService: HistoryService,
+  ) {}
 
   async findAlivePigeons(userId: string): Promise<Pigeon[]> {
     try {
@@ -51,6 +58,33 @@ export class PigeonStatusService {
       };
     } catch (error) {
       this.logger.error(`Error counting pigeons by status ${status}:`, error);
+      throw error;
+    }
+  }
+
+  async registerVaccinated(pigeonId: string, vaccinationRecord: IVaccinationRecord, userId: string): Promise<Pigeon> {
+    try {
+      const pigeon = await this.pigeonService.findOne(pigeonId, userId);
+      if (!pigeon.vaccinationDates) {
+        pigeon.vaccinationDates = [];
+      }
+
+      pigeon.vaccinationDates.push({
+        date: vaccinationRecord.date,
+        vaccine: vaccinationRecord.vaccine,
+        note: vaccinationRecord.note,
+      });
+
+      await this.pigeonRepository.update(pigeonId, pigeon, userId);
+      await this.historyService.create(pigeonId, userId, {
+        eventType: HistoryEventType.PIGEON_VACCINATED,
+        eventDate: moment(vaccinationRecord.date).toISOString(),
+        note: vaccinationRecord.note ?? '',
+      });
+      const updatedPigeon = await this.pigeonService.findOne(pigeonId, userId);
+      return updatedPigeon;
+    } catch (error) {
+      this.logger.error('Error registering pigeon as vaccinated:', error);
       throw error;
     }
   }

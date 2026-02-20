@@ -1,9 +1,9 @@
-import { IsString, IsEmail, IsOptional, Length, Matches, IsNotEmpty } from 'class-validator';
+import { AUTH_CONSTANTS } from '@/auth/constants';
+import { VALIDATION_CONSTANTS } from '@/core/constants';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, Matches } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
-import { VALIDATION_CONSTANTS } from '@/core/constants';
-import { AUTH_CONSTANTS } from '@/auth/constants';
 
 export class RegisterRequestDto {
   @ApiProperty({ example: 'أحمد محمد' })

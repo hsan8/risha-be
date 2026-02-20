@@ -1,13 +1,13 @@
+import { JwtAuthGuard } from '@/auth/guards';
+import { ApiDataResponse } from '@/core/decorators/api';
+import { DataResponseDto } from '@/core/dtos';
+import { ResponseFactory } from '@/core/utils';
+import { UserId } from '@/user/decorators';
 import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { DocumentationNumberService } from '../services';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { GenerateDocumentationNumberRequestDto } from '../dto/requests';
 import { PigeonResponseDto } from '../dto/responses';
-import { ApiDataResponse } from '@/core/decorators/api';
-import { ResponseFactory } from '@/core/utils';
-import { DataResponseDto } from '@/core/dtos';
-import { JwtAuthGuard } from '@/auth/guards';
-import { UserId } from '@/user/decorators';
+import { DocumentationNumberService } from '../services';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)

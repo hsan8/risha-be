@@ -1,10 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PigeonRepository } from '@/pigeon/repositories';
-import { DOCUMENTATION_NUMBER_CONSTANTS } from '@/pigeon/constants';
 import { VALIDATION_CONSTANTS } from '@/core/constants';
-import { Pigeon } from '../entities';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
-import _ from 'lodash';
+import { DOCUMENTATION_NUMBER_CONSTANTS } from '@/pigeon/constants';
+import { PigeonRepository } from '@/pigeon/repositories';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Pigeon } from '../entities';
 
 @Injectable()
 export class DocumentationNumberService {

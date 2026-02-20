@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import { UserLocale } from '@/core/enums';
 
 export const AUTH_CONSTANTS = {
   // Collections
@@ -24,17 +24,16 @@ export const AUTH_CONSTANTS = {
   MIN_PASSWORD_LENGTH: 5,
   MAX_PASSWORD_LENGTH: 5,
 
-  // Social Auth
-  GOOGLE_CLIENT_ID:
-    process.env.GOOGLE_CLIENT_ID || '971298286559-nf2n2mnmevijcf2ib4p5rligfk6hk12f.apps.googleusercontent.com',
+  // Social Auth - OAuth 2.0 Client IDs for com.anonymous.pigeonapp
+  GOOGLE_CLIENT_ID: '885034111440-fopbpctktaiiii7qp08ucoshe5l718vu.apps.googleusercontent.com',
+  GOOGLE_CLIENT_SECRET: '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',
   GOOGLE_CLIENT_IDS: [
     process.env.GOOGLE_CLIENT_ID,
-    '885034111440-fopbpctktaiiii7qp08ucoshe5l718vu.apps.googleusercontent.com', // New Web Client ID (also used for Expo Go)
-    '885034111440-pk55t90q87vaqgrf30jmgvvf3rm99rt5.apps.googleusercontent.com', // New Android Client ID
-    '885034111440-tkn165f617h9m2stkh5843ra19q9rc8n.apps.googleusercontent.com', // New iOS Client ID
+    '885034111440-fopbpctktaiiii7qp08ucoshe5l718vu.apps.googleusercontent.com', // Web client (Expo Go, auth.expo.io)
+    '885034111440-3n9brjg623vfo65g2i99lidnombp568r.apps.googleusercontent.com', // Android (com.anonymous.pigeonapp, auto created)
+    '885034111440-pk55t90q87vaqgrf30jmgvvf3rm99rt5.apps.googleusercontent.com', // Android (com.anonymous.pigeonapp)
+    '885034111440-tkn165f617h9m2stkh5843ra19q9rc8n.apps.googleusercontent.com', // iOS (com.anonymous.PIGEONAPP)
     process.env.GOOGLE_IOS_CLIENT_ID,
-    '971298286559-nf2n2mnmevijcf2ib4p5rligfk6hk12f.apps.googleusercontent.com', // Old Android (for compatibility during transition)
-    '971298286559-5etslvog7t5bf22dmecqg51q6j1krqif.apps.googleusercontent.com', // Old Web (for compatibility during transition)
   ].filter(Boolean),
   APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,
 

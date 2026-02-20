@@ -1,10 +1,10 @@
+import { FirebaseService } from '@/core/services';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
+import { HISTORY_CONSTANTS } from '../constants';
 import { HistoryEvent } from '../entities';
 import { HistoryEventType } from '../enums';
-import { HISTORY_CONSTANTS } from '../constants';
-import { FirebaseService } from '@/core/services';
 
 export interface CreateHistoryEventData {
   pigeonId: string;

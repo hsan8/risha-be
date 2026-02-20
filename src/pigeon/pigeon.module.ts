@@ -1,23 +1,23 @@
+import { AuthModule } from '@/auth/auth.module';
+import { ServicesModule } from '@/core/modules';
+import { HistoryModule } from '@/history/history.module';
+import { UserModule } from '@/user/user.module';
 import { Module, forwardRef } from '@nestjs/common';
 import {
   PigeonController,
-  PigeonSearchController,
-  PigeonParentController,
-  PigeonStatusController,
   PigeonDocumentationNumberController,
+  PigeonParentController,
+  PigeonSearchController,
+  PigeonStatusController,
 } from './controllers';
-import {
-  PigeonService,
-  PigeonSearchService,
-  PigeonParentService,
-  PigeonStatusService,
-  DocumentationNumberService,
-} from './services';
 import { PigeonRepository } from './repositories';
-import { ServicesModule } from '@/core/modules';
-import { AuthModule } from '@/auth/auth.module';
-import { UserModule } from '@/user/user.module';
-import { HistoryModule } from '@/history/history.module';
+import {
+  DocumentationNumberService,
+  PigeonParentService,
+  PigeonSearchService,
+  PigeonService,
+  PigeonStatusService,
+} from './services';
 
 @Module({
   imports: [ServicesModule, AuthModule, UserModule, forwardRef(() => HistoryModule)],

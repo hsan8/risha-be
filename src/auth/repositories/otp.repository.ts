@@ -1,10 +1,10 @@
+import { AUTH_CONSTANTS } from '@/auth/constants';
+import { OTP } from '@/auth/entities';
+import { OTPType } from '@/auth/enums';
+import { FirebaseService } from '@/core/services';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
-import { OTP } from '@/auth/entities';
-import { FirebaseService } from '@/core/services';
-import { OTPType } from '@/auth/enums';
-import { AUTH_CONSTANTS } from '@/auth/constants';
 import moment from 'moment';
 
 export interface CreateOTPData {

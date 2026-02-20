@@ -1,6 +1,6 @@
+import { UserResponseDto } from '@/user/dto/responses';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { UserResponseDto } from '@/user/dto/responses';
 
 export class AuthResponseDto {
   @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })

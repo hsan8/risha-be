@@ -1,10 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-import { UserService } from '@/user/services';
 import { AUTH_MESSAGES_I18N } from '@/auth/constants';
 import { UserStatus } from '@/auth/enums';
-import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import { DEFAULT_LOCALE } from '@/core/enums';
+import { UserService } from '@/user/services';
+import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 
 export interface JwtPayload {
   sub: string;

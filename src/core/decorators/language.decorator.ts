@@ -1,8 +1,8 @@
+import { X_LANGUAGE_HEADER } from '@/core/constants';
+import { DEFAULT_LOCALE, normalizeToSupportedLocale, UserLocale } from '@/core/enums';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 import { I18nContext } from 'nestjs-i18n';
-import { X_LANGUAGE_HEADER } from '@/core/constants';
-import { DEFAULT_LOCALE, normalizeToSupportedLocale, UserLocale } from '@/core/enums';
 
 /** Alias for controller/service use; same as UserLocale */
 export type ResolvedLocale = UserLocale;

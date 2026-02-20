@@ -1,19 +1,19 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AuthService } from '@/auth/services';
 import {
+  ForgotPasswordRequestDto,
   LoginRequestDto,
   RegisterRequestDto,
-  ForgotPasswordRequestDto,
-  VerifyOTPRequestDto,
-  ResetPasswordRequestDto,
   ResendOTPRequestDto,
+  ResetPasswordRequestDto,
+  VerifyOTPRequestDto,
 } from '@/auth/dto/requests';
 import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
+import { AuthService } from '@/auth/services';
 import { ApiDataResponse, Language } from '@/core/decorators';
-import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto } from '@/core/dtos';
 import { UserLocale } from '@/core/enums';
+import { ResponseFactory } from '@/core/utils';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
 @Controller('auth')

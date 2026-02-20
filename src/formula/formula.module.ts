@@ -1,15 +1,15 @@
+import { AuthModule } from '@/auth/auth.module';
+import { PigeonRepository } from '@/pigeon/repositories';
+import { UserModule } from '@/user/user.module';
 import { Module } from '@nestjs/common';
 import {
-  FormulaRegistrationController,
-  FormulaStatusController,
-  FormulaSearchController,
   FormulaParentController,
+  FormulaRegistrationController,
+  FormulaSearchController,
+  FormulaStatusController,
 } from './controllers';
-import { FormulaService } from './services';
 import { FormulaRepository } from './repositories';
-import { AuthModule } from '@/auth/auth.module';
-import { UserModule } from '@/user/user.module';
-import { PigeonRepository } from '@/pigeon/repositories';
+import { FormulaService } from './services';
 
 @Module({
   imports: [AuthModule, UserModule],

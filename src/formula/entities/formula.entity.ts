@@ -1,6 +1,6 @@
-import { IsString, IsOptional, IsDate, IsEnum, IsUUID, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { FormulaStatus, FormulaActions } from '../enums';
+import { IsArray, IsDate, IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { FormulaActions, FormulaStatus } from '../enums';
 
 export class Parent {
   @IsOptional()

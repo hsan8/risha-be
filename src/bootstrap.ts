@@ -1,10 +1,9 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
+import { AbstractHttpAdapter, NestFactory } from '@nestjs/core';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
-import { AbstractHttpAdapter } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { Request, Response } from 'express';
+import { AppModule } from './app.module';
 
 export async function createApp(httpAdapter?: AbstractHttpAdapter) {
   const app = httpAdapter

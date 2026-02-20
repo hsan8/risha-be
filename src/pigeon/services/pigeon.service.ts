@@ -1,16 +1,15 @@
-import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import _ from 'lodash';
-import { Pigeon } from '../entities';
-import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
-import { PigeonRepository } from '../repositories';
 import { PageOptionsRequestDto } from '@/core/dtos';
-import { PigeonStatus, PigeonGender } from '../enums';
-import { DocumentationNumberService } from './documentation-number.service';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
-import { UserStatisticsService } from '@/user/services';
-import moment from 'moment';
 import { HistoryEventType } from '@/history/enums';
 import { HistoryRepository } from '@/history/repositories';
+import { UserStatisticsService } from '@/user/services';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import moment from 'moment';
+import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
+import { Pigeon } from '../entities';
+import { PigeonGender, PigeonStatus } from '../enums';
+import { PigeonRepository } from '../repositories';
+import { DocumentationNumberService } from './documentation-number.service';
 
 @Injectable()
 export class PigeonService {
@@ -191,7 +190,11 @@ export class PigeonService {
         throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
 
-      const updatedPigeon = await this.pigeonRepository.update(id, updatePigeonDto, userId);
+      const updatedPigeon = await this.pigeonRepository.update(
+        id,
+        updatePigeonDto as unknown as Partial<Pigeon>,
+        userId,
+      );
 
       // Update statistics if status changed
       if (updatePigeonDto.status && existingPigeon.status !== updatePigeonDto.status) {

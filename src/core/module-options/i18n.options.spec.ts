@@ -1,6 +1,6 @@
+import { UserLocale } from '@/core/enums';
 import { AcceptLanguageResolver, HeaderResolver, I18nJsonLoader, QueryResolver } from 'nestjs-i18n';
 import path from 'path';
-import { UserLocale } from '@/core/enums';
 import { buildI18nOptions } from './i18n.options';
 
 describe('I18nOptions', () => {

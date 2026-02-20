@@ -1,8 +1,8 @@
+import { DEFAULT_LOCALE } from '@/core/enums';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N } from '../constants/auth.constants';
 import { UserRole, UserStatus } from '../enums/auth.enum';
-import { DEFAULT_LOCALE } from '@/core/enums';
 
 export interface JwtPayload {
   sub: string;

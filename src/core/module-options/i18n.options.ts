@@ -1,7 +1,7 @@
-import { AcceptLanguageResolver, HeaderResolver, I18nJsonLoader, I18nOptions, QueryResolver } from 'nestjs-i18n';
-import path from 'path';
 import { X_LANGUAGE_HEADER } from '@/core/constants';
 import { UserLocale } from '@/core/enums';
+import { AcceptLanguageResolver, HeaderResolver, I18nJsonLoader, I18nOptions, QueryResolver } from 'nestjs-i18n';
+import path from 'path';
 
 const LANG_QUERY_PARAM = 'lang';
 const baseI18nDir = path.join(__dirname, '..', '..', '..', 'i18n');

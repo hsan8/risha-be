@@ -1,13 +1,13 @@
-import { Controller, Get, UseGuards, HttpStatus } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/auth/guards';
-import { UserId } from '../decorators';
-import { UserService } from '../services';
-import { UserProfileResponseDto } from '../dto/responses';
 import { ApiDataResponse, Language } from '@/core/decorators';
-import { ResponseFactory } from '@/core/utils';
 import { DataResponseDto } from '@/core/dtos';
 import { UserLocale } from '@/core/enums';
+import { ResponseFactory } from '@/core/utils';
+import { Controller, Get, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserId } from '../decorators';
+import { UserProfileResponseDto } from '../dto/responses';
+import { UserService } from '../services';
 
 @ApiTags('User')
 @ApiBearerAuth()

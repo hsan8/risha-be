@@ -1,9 +1,9 @@
+import { AUTH_CONSTANTS } from '@/auth/constants';
+import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
+import { FirebaseService } from '@/core/services';
+import { User } from '@/user/entities';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
-import { User } from '@/user/entities';
-import { FirebaseService } from '@/core/services';
-import { AUTH_CONSTANTS } from '@/auth/constants';
-import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export interface ICreateUserData {
   name: string;

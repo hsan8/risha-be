@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Database, Reference } from 'firebase-admin/database';
-import { FirebaseService } from '@/core/services';
 import { AUTH_CONSTANTS } from '@/auth/constants';
+import { UserStatus } from '@/auth/enums';
+import { FirebaseService } from '@/core/services';
 import { User } from '@/user/entities';
 import { ICreateUserData, IUpdateForRegistrationData } from '@/user/interfaces';
-import { UserStatus } from '@/auth/enums';
+import { Injectable, Logger } from '@nestjs/common';
+import { Database, Reference } from 'firebase-admin/database';
 
 @Injectable()
 export class UserRepository {

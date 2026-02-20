@@ -1,9 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
-import { IsString, IsEmail, IsNotEmpty, Length, Matches } from 'class-validator';
-import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 import { AUTH_CONSTANTS } from '@/auth/constants';
 import { IsFirebaseId } from '@/core/validators/firebase-id.validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose, Transform } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class ForgotPasswordRequestDto {
   @ApiProperty({ example: 'dhaouadi002@gmail.com' })

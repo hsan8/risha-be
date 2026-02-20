@@ -1,28 +1,26 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  HttpStatus,
-  HttpCode,
-  UseGuards,
-  Logger,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { PigeonParentService, PigeonService } from '../services';
-import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
-import { PigeonResponseDto, PigeonDetailsResponseDto } from '../dto/responses';
-import { IAliveParentsResult } from '../interfaces';
-import { PageOptionsRequestDto } from '@/core/dtos';
-import { ApiDataResponse, ApiDataPageResponse } from '@/core/decorators/api';
-import { ResponseFactory } from '@/core/utils';
-import { DataResponseDto, DataPageResponseDto } from '@/core/dtos';
 import { JwtAuthGuard } from '@/auth/guards';
+import { ApiDataPageResponse, ApiDataResponse } from '@/core/decorators/api';
+import { DataPageResponseDto, DataResponseDto, PageOptionsRequestDto } from '@/core/dtos';
+import { ResponseFactory } from '@/core/utils';
 import { UserId } from '@/user/decorators';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
+import { PigeonResponseDto } from '../dto/responses';
+import { PigeonService } from '../services';
 
 @ApiTags('Pigeons')
 @ApiBearerAuth()
@@ -71,10 +69,10 @@ export class PigeonController {
     description: 'Pigeon ID',
     type: String,
   })
-  @ApiDataResponse(PigeonDetailsResponseDto)
-  async findOne(@Param('id') id: string, @UserId() userId: string): Promise<DataResponseDto<PigeonDetailsResponseDto>> {
+  @ApiDataResponse(PigeonResponseDto)
+  async findOne(@Param('id') id: string, @UserId() userId: string) {
     const pigeon = await this.pigeonService.findOne(id, userId);
-    return ResponseFactory.data(new PigeonDetailsResponseDto(pigeon));
+    return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 
   @Patch(':id')

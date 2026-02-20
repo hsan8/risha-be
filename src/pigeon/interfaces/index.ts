@@ -1,1 +1,2 @@
-export * from './IAliveParentsResult.interface';
+export * from './live-parents-result.interface';
+export * from './vaccination-record.interface';

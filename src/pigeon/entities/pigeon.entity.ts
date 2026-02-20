@@ -1,6 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDate, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PigeonGender, PigeonStatus } from '../enums/pigeon.enum';
+import { IVaccinationRecord } from '../interfaces';
+
+/** Swagger shape for a single vaccination record */
+class VaccinationRecordSchema {
+  @ApiProperty({ example: '2025-01-15T10:00:00.000Z' })
+  date!: Date;
+
+  @ApiProperty({ example: 'Newcastle' })
+  vaccine!: string;
+
+  @ApiPropertyOptional({ example: 'First dose' })
+  note?: string;
+}
 
 export class Pigeon {
   @ApiProperty({ description: 'Unique identifier for the pigeon' })
@@ -65,6 +78,15 @@ export class Pigeon {
   @IsOptional()
   @IsDate()
   deadAt?: Date;
+
+  @ApiProperty({
+    description: 'Vaccination records (date, vaccine, optional note)',
+    type: [VaccinationRecordSchema],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  vaccinationDates?: IVaccinationRecord[];
 
   @ApiProperty({ description: 'Date when the pigeon was created' })
   @IsDate()

@@ -1,6 +1,5 @@
+import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { AuthProvider, UserStatus, UserRole } from '@/auth/enums';
 
 export class UserResponseDto {
   @ApiProperty({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07' })

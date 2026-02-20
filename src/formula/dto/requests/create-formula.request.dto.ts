@@ -1,9 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import { IsString, IsOptional, IsNotEmpty, Length, ValidateNested } from 'class-validator';
-import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 import { VALIDATION_CONSTANTS } from '@/core/constants';
 import { IsFirebaseId } from '@/core/validators/firebase-id.validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import { IsNotEmpty, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
+import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class ParentDto {
   @ApiProperty({ example: '-OV8mQOynkCqfL7wYRxN' })

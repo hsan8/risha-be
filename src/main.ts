@@ -1,4 +1,4 @@
-import { createApp, createSwaggerDocument, bootstrap } from './bootstrap';
+import { bootstrap, createApp, createSwaggerDocument } from './bootstrap';
 
 async function main() {
   const app = await createApp();

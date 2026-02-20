@@ -1,6 +1,6 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AUTH_MESSAGES_I18N } from '@/auth/constants';
-import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import { UserLocale } from '@/core/enums';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 export interface AppleUserInfo {
   id: string;

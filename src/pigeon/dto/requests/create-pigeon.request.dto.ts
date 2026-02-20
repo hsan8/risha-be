@@ -1,9 +1,9 @@
-import { IsString, IsEnum, IsOptional, IsDateString, Length, IsNotEmpty, IsUUID } from 'class-validator';
+import { VALIDATION_CONSTANTS } from '@/core/constants';
+import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Length } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
-import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
-import { VALIDATION_CONSTANTS } from '@/core/constants';
 
 export class CreatePigeonRequestDto {
   @ApiProperty({ example: 'Blue Thunder' })

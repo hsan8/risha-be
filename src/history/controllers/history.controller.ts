@@ -1,15 +1,14 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { HistoryService } from '../services';
-import { CreateHistoryEventRequestDto } from '../dto/requests';
-import { HistoryEventResponseDto } from '../dto/responses';
-import { ApiDataResponse, ApiDataArrayResponse } from '@/core/decorators/api';
-import { ResponseFactory } from '@/core/utils';
-import { DataResponseDto, DataArrayResponseDto } from '@/core/dtos';
 import { JwtAuthGuard } from '@/auth/guards';
-import { UserId } from '@/user/decorators';
 import { Language } from '@/core/decorators';
+import { ApiDataArrayResponse } from '@/core/decorators/api';
+import { DataArrayResponseDto } from '@/core/dtos';
 import { UserLocale } from '@/core/enums';
+import { ResponseFactory } from '@/core/utils';
+import { UserId } from '@/user/decorators';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { HistoryEventResponseDto } from '../dto/responses';
+import { HistoryService } from '../services';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)

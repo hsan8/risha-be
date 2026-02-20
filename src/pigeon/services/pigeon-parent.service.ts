@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Pigeon } from '../entities';
-import { IAliveParentsResult } from '../interfaces';
-import { PigeonGender, PigeonStatus } from '../enums';
-import { PigeonService } from './pigeon.service';
 import _ from 'lodash';
+import { Pigeon } from '../entities';
+import { PigeonGender, PigeonStatus } from '../enums';
+import { IAliveParentsResult } from '../interfaces';
+import { PigeonService } from './pigeon.service';
 
 @Injectable()
 export class PigeonParentService {

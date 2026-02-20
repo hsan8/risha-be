@@ -1,35 +1,35 @@
+import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
 import {
+  ForgotPasswordRequestDto,
+  GoogleAuthRequestDto,
+  LoginRequestDto,
+  RegisterRequestDto,
+  ResendOTPRequestDto,
+  ResetPasswordRequestDto,
+  VerifyOTPRequestDto,
+} from '@/auth/dto/requests';
+import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
+import { OTP } from '@/auth/entities';
+import { AuthProvider, OTPType, UserStatus } from '@/auth/enums';
+import { OTPRepository } from '@/auth/repositories';
+import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
+import { UserResponseDto } from '@/user/dto/responses';
+import { User } from '@/user/entities';
+import { UserService } from '@/user/services';
+import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
-  ConflictException,
-  UnauthorizedException,
   NotFoundException,
-  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { User } from '@/user/entities';
-import { OTP } from '@/auth/entities';
-import { RegisterRequestDto, LoginRequestDto } from '@/auth/dto/requests';
-import {
-  ForgotPasswordRequestDto,
-  VerifyOTPRequestDto,
-  ResetPasswordRequestDto,
-  ResendOTPRequestDto,
-} from '@/auth/dto/requests';
-import { GoogleAuthRequestDto, AppleAuthRequestDto } from '@/auth/dto/requests';
-import { AuthResponseDto, MessageResponseDto } from '@/auth/dto/responses';
-import { UserResponseDto } from '@/user/dto/responses';
-import { AuthProvider, UserStatus, OTPType } from '@/auth/enums';
-import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
-import { UserService } from '@/user/services';
-import { OTPRepository } from '@/auth/repositories';
-import { EmailService } from './email.service';
-import { GoogleAuthService } from './google-auth.service';
-import { AppleAuthService } from './apple-auth.service';
-import { DEFAULT_LOCALE, UserLocale } from '@/core/enums';
 import _ from 'lodash';
 import moment from 'moment';
+import { EmailService } from './email.service';
+import { GoogleAuthService } from './google-auth.service';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +41,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly googleAuthService: GoogleAuthService,
-    private readonly appleAuthService: AppleAuthService,
   ) {}
 
   async getAllOTPs(email: string): Promise<OTP[]> {
@@ -142,9 +141,18 @@ export class AuthService {
 
   async googleAuth(dto: GoogleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
     // Verify Google ID token
-    const googleUser = await this.googleAuthService.verifyIdToken(dto.idToken);
+    const googleUser = await this.googleAuthService.exchangeCodeForUserInfo(
+      dto.code,
+      dto.codeVerifier,
+      dto.redirectUri,
+    );
+    return this.authenticateGoogleUser(googleUser, locale);
+  }
 
-    // Find or create user
+  private async authenticateGoogleUser(
+    googleUser: { email: string; sub: string; name: string; picture?: string },
+    locale: UserLocale,
+  ): Promise<AuthResponseDto> {
     let user = await this.userService.findByEmailOrProviderId(googleUser.email, googleUser.sub, locale);
 
     if (!user) {
@@ -156,48 +164,11 @@ export class AuthService {
         providerId: googleUser.sub,
       });
     } else {
-      // Update last login
       await this.userService.updateLastLogin(user.id);
     }
 
-    // Generate tokens
     const tokens = await this.generateTokens(user);
-
     this.logger.log(`Google auth successful: ${user.email}`);
-
-    return new AuthResponseDto({
-      ...tokens,
-      user: new UserResponseDto(user),
-    });
-  }
-
-  async appleAuth(dto: AppleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
-    // Verify Apple ID token
-    await this.appleAuthService.verifyIdToken(dto.idToken, locale);
-
-    // Find or create user
-    let user = await this.userService.findByEmailOrProviderId(dto.email, dto.userId, locale);
-
-    if (!user) {
-      if (!dto.email) {
-        throw new BadRequestException(AUTH_MESSAGES_I18N.SOCIAL_AUTH_EMAIL_REQUIRED[DEFAULT_LOCALE]);
-      }
-
-      user = await this.userService.create({
-        name: dto.name || 'Apple User',
-        email: dto.email,
-        provider: AuthProvider.APPLE,
-        providerId: dto.userId,
-      });
-    } else {
-      // Update last login
-      await this.userService.updateLastLogin(user.id);
-    }
-
-    // Generate tokens
-    const tokens = await this.generateTokens(user);
-
-    this.logger.log(`Apple auth successful: ${user.email}`);
 
     return new AuthResponseDto({
       ...tokens,

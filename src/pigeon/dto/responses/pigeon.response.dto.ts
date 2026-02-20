@@ -1,6 +1,25 @@
+import { IVaccinationRecord } from '@/pigeon/interfaces';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { Pigeon } from '../../entities/pigeon.entity';
 import { PigeonGender, PigeonStatus } from '../../enums/pigeon.enum';
+
+class VaccinationRecordDto {
+  @ApiProperty({ example: '2024-12-01T10:30:00Z' })
+  date!: Date;
+
+  @ApiProperty({ example: 'Newcastle' })
+  vaccine!: string;
+
+  @ApiProperty({ example: 'First dose' })
+  note?: string;
+
+  constructor(vaccinationRecord: IVaccinationRecord) {
+    this.date = vaccinationRecord.date;
+    this.vaccine = vaccinationRecord.vaccine;
+    this.note = vaccinationRecord.note;
+  }
+}
 
 export class PigeonResponseDto {
   @ApiProperty({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07' })
@@ -45,6 +64,10 @@ export class PigeonResponseDto {
   @ApiProperty({ example: '2024' })
   yearOfBirth: string;
 
+  @ApiProperty({ example: [{ date: '2024-12-01T10:30:00Z', vaccine: 'Newcastle', note: 'First dose' }] })
+  @Type(() => VaccinationRecordDto)
+  vaccination: VaccinationRecordDto[];
+
   @ApiProperty({ example: '2024-12-01T10:30:00Z', nullable: true })
   deadAt: Date | null;
 
@@ -70,6 +93,10 @@ export class PigeonResponseDto {
     this.motherId = pigeon.mother?.id || null;
     this.yearOfBirth = pigeon.yearOfBirth;
     this.deadAt = pigeon.deadAt;
+    this.vaccination =
+      pigeon.vaccinationDates?.map(
+        (vaccinationRecord: IVaccinationRecord) => new VaccinationRecordDto(vaccinationRecord),
+      ) ?? [];
     this.createdAt = pigeon.createdAt;
     this.updatedAt = pigeon.updatedAt;
   }
