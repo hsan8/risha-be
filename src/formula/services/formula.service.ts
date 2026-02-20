@@ -3,12 +3,15 @@ import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
 import { PigeonRepository } from '@/pigeon/repositories';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
 import { FORMULA_MESSAGES } from '../constants';
 import { CreateFormulaRequestDto } from '../dto';
 import { Formula } from '../entities';
 import { FormulaActions, FormulaStatus } from '../enums';
+import { FormulaHistoryService } from '@/formula-history/services';
 import { FormulaRepository } from '../repositories';
+import { forwardRef, Inject } from '@nestjs/common';
 
 const MAX_EGGS_PER_FORMULA = 2;
 
@@ -18,47 +21,83 @@ export class FormulaService {
 
   constructor(
     private readonly formulaRepository: FormulaRepository,
+    @Inject(forwardRef(() => FormulaHistoryService)) private readonly formulaHistoryService: FormulaHistoryService,
     private readonly pigeonRepository: PigeonRepository,
   ) {}
 
   async createFormula(createFormulaDto: CreateFormulaRequestDto, userId: string): Promise<Formula> {
     this.logger.log('Creating new formula');
 
-    // Validate parent pigeons
-    await this.validateParentPigeons(createFormulaDto, userId);
+    this.normalizeParentIds(createFormulaDto);
+    this.ensureBothParents(createFormulaDto);
+    await this.validateAndEnrichParentPigeons(createFormulaDto, userId);
 
     const formula = await this.formulaRepository.create(createFormulaDto, userId);
+    await this.formulaHistoryService.create({
+      formulaId: formula.id,
+      userId,
+      action: FormulaActions.FORMULA_INITIATED,
+      description: 'Formula has been created',
+      date: moment(formula.createdAt).toDate(),
+    });
     return formula;
   }
 
-  private async validateParentPigeons(createFormulaDto: CreateFormulaRequestDto, userId: string): Promise<void> {
-    // Validate father
-    if (createFormulaDto.father?.id) {
-      const father = await this.pigeonRepository.findById(createFormulaDto.father.id, userId);
-      if (!father) {
-        throw new BadRequestException(I18nMessage.error('fatherNotFound', { id: createFormulaDto.father.id }));
-      }
-      if (father.gender !== PigeonGender.MALE) {
-        throw new BadRequestException(I18nMessage.error('fatherMustBeMale', { id: createFormulaDto.father.id }));
-      }
-      if (father.status !== PigeonStatus.ALIVE) {
-        throw new BadRequestException(I18nMessage.error('fatherMustBeAlive', { id: createFormulaDto.father.id }));
-      }
+  /** Map maleId/femaleId to father/mother when client sends IDs only. */
+  private normalizeParentIds(dto: CreateFormulaRequestDto): void {
+    if (dto.maleId && !dto.father) {
+      dto.father = { id: dto.maleId };
     }
+    if (dto.femaleId && !dto.mother) {
+      dto.mother = { id: dto.femaleId };
+    }
+  }
 
-    // Validate mother
-    if (createFormulaDto.mother?.id) {
-      const mother = await this.pigeonRepository.findById(createFormulaDto.mother.id, userId);
-      if (!mother) {
-        throw new BadRequestException(I18nMessage.error('motherNotFound', { id: createFormulaDto.mother.id }));
-      }
-      if (mother.gender !== PigeonGender.FEMALE) {
-        throw new BadRequestException(I18nMessage.error('motherMustBeFemale', { id: createFormulaDto.mother.id }));
-      }
-      if (mother.status !== PigeonStatus.ALIVE) {
-        throw new BadRequestException(I18nMessage.error('motherMustBeAlive', { id: createFormulaDto.mother.id }));
-      }
+  private ensureBothParents(dto: CreateFormulaRequestDto): void {
+    if (!dto.father?.id || !dto.mother?.id) {
+      throw new BadRequestException(I18nMessage.error('formulaRequiresBothParents', {}));
     }
+  }
+
+  private async validateAndEnrichParentPigeons(
+    createFormulaDto: CreateFormulaRequestDto,
+    userId: string,
+  ): Promise<void> {
+    const father = await this.pigeonRepository.findById(createFormulaDto.father!.id, userId);
+    if (!father) {
+      throw new BadRequestException(
+        I18nMessage.error('fatherNotFound', { id: createFormulaDto.father!.id }),
+      );
+    }
+    if (father.gender !== PigeonGender.MALE) {
+      throw new BadRequestException(
+        I18nMessage.error('fatherMustBeMale', { id: createFormulaDto.father!.id }),
+      );
+    }
+    if (father.status !== PigeonStatus.ALIVE) {
+      throw new BadRequestException(
+        I18nMessage.error('fatherMustBeAlive', { id: createFormulaDto.father!.id }),
+      );
+    }
+    createFormulaDto.father!.name = createFormulaDto.father!.name ?? father.name;
+
+    const mother = await this.pigeonRepository.findById(createFormulaDto.mother!.id, userId);
+    if (!mother) {
+      throw new BadRequestException(
+        I18nMessage.error('motherNotFound', { id: createFormulaDto.mother!.id }),
+      );
+    }
+    if (mother.gender !== PigeonGender.FEMALE) {
+      throw new BadRequestException(
+        I18nMessage.error('motherMustBeFemale', { id: createFormulaDto.mother!.id }),
+      );
+    }
+    if (mother.status !== PigeonStatus.ALIVE) {
+      throw new BadRequestException(
+        I18nMessage.error('motherMustBeAlive', { id: createFormulaDto.mother!.id }),
+      );
+    }
+    createFormulaDto.mother!.name = createFormulaDto.mother!.name ?? mother.name;
   }
 
   async getFormulas(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Formula[]; total: number }> {
@@ -86,15 +125,18 @@ export class FormulaService {
 
     const egg = {
       id: uuidv4(),
-      deliveredAt: new Date(),
+      deliveredAt: moment().toDate(),
     };
 
     formula.eggs.push(egg);
     formula.status = formula.eggs.length === 1 ? FormulaStatus.HAS_ONE_EGG : FormulaStatus.HAS_TWO_EGG;
-    formula.history.push({
+    const date = moment().toDate();
+    await this.formulaHistoryService.create({
+      formulaId,
+      userId,
       action: formula.eggs.length === 1 ? FormulaActions.FIRST_EGG_DELIVERED : FormulaActions.SECOND_EGG_DELIVERED,
       description: `Egg ${formula.eggs.length} has been delivered`,
-      date: new Date(),
+      date,
     });
 
     return this.formulaRepository.update(formulaId, formula, userId);
@@ -113,19 +155,18 @@ export class FormulaService {
       throw new BadRequestException('Egg already transformed to pigeon');
     }
 
-    formula.eggs[eggIndex].transformedToPigeonAt = new Date();
+    formula.eggs[eggIndex].transformedToPigeonAt = moment().toDate();
     formula.eggs[eggIndex].pigeonId = pigeonId;
     formula.children.push(pigeonId);
 
     const isFirstEgg = eggIndex === 0;
     formula.status = formula.children.length === 1 ? FormulaStatus.HAS_ONE_PIGEON : FormulaStatus.HAS_TWO_PIGEON;
-    formula.history.push({
-      action: isFirstEgg
-        ? FormulaActions.FIRST_EGG_TRANSFORMED_TO_FRESH_PIGEON
-        : FormulaActions.SECOND_EGG_TRANSFORMED_TO_FRESH_PIGEON,
-      description: `Egg ${eggIndex + 1} has been transformed to pigeon with ID: ${pigeonId}`,
-      date: new Date(),
-    });
+    const date = moment().toDate();
+    const action = isFirstEgg
+      ? FormulaActions.FIRST_EGG_TRANSFORMED_TO_FRESH_PIGEON
+      : FormulaActions.SECOND_EGG_TRANSFORMED_TO_FRESH_PIGEON;
+    const description = `Egg ${eggIndex + 1} has been transformed to pigeon with ID: ${pigeonId}`;
+    await this.formulaHistoryService.create({ formulaId, userId, action, description, date });
 
     return this.formulaRepository.update(formulaId, formula, userId);
   }
@@ -139,10 +180,13 @@ export class FormulaService {
     }
 
     formula.status = FormulaStatus.TERMINATED;
-    formula.history.push({
+    const date = moment().toDate();
+    await this.formulaHistoryService.create({
+      formulaId,
+      userId,
       action: FormulaActions.FORMULA_GOT_TERMINATED,
       description: reason,
-      date: new Date(),
+      date,
     });
 
     return this.formulaRepository.update(formulaId, formula, userId);
@@ -163,19 +207,14 @@ export class FormulaService {
 
   updateFormulaStatus(formula: Formula, newStatus: FormulaStatus): Formula {
     formula.status = newStatus;
-    formula.updatedAt = new Date();
+    formula.updatedAt = moment().toDate();
     // TODO: Save to database
     return formula;
   }
 
   addHistoryEntry(formula: Formula, action: FormulaActions, description: string): Formula {
-    formula.history.push({
-      action,
-      description,
-      date: new Date(),
-    });
-    formula.updatedAt = new Date();
-    // TODO: Save to database
+    formula.updatedAt = moment().toDate();
+    // Use formulaHistoryService.create() when persisting formula history
     return formula;
   }
 }

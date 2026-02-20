@@ -2,6 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes, randomUUID } from 'crypto';
 import { IncomingMessage, ServerResponse } from 'http';
+import moment from 'moment';
 import { Params as PinoParams } from 'nestjs-pino';
 import { Options as PinoHttpOptions } from 'pino-http';
 import URL from 'url';
@@ -137,7 +138,7 @@ function getLoggedFieldPaths(keys: string[]) {
  * Add custom properties to the logs.
  */
 const customProps: PinoHttpOptions['customProps'] = (_req: IncomingMessage, _res: ServerResponse<IncomingMessage>) => {
-  return { context: 'HTTP', timestamp: new Date().toISOString() };
+  return { context: 'HTTP', timestamp: moment().toISOString() };
 };
 
 /**

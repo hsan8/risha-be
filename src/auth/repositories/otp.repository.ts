@@ -30,23 +30,25 @@ export class OTPRepository {
     const otpRef = this.collectionRef.push();
     const id = otpRef.key;
 
-    const now = new Date();
-    const otp = {
+    const entity = this.dataToEntity(data, id);
+    const payload = {
+      ...entity,
+      expiresAt: entity.expiresAt.toISOString(),
+      createdAt: entity.createdAt.toISOString(),
+    };
+    await otpRef.set(payload);
+    return entity;
+  }
+
+  private dataToEntity(data: CreateOTPData, id: string): OTP {
+    const now = moment().toDate();
+    return {
       id,
       email: data.email.toLowerCase(),
       code: data.code,
       type: data.type,
-      expiresAt: data.expiresAt.toISOString(), // Store as ISO string
-      used: data.used,
-      createdAt: now.toISOString(), // Store as ISO string
-    };
-
-    await otpRef.set(otp);
-
-    // Return the OTP with Date objects for the response
-    return {
-      ...otp,
       expiresAt: data.expiresAt,
+      used: data.used,
       createdAt: now,
     } as OTP;
   }

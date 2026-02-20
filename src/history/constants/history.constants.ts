@@ -1,7 +1,7 @@
 import { UserLocale } from '@/core/enums';
 
 export const HISTORY_CONSTANTS = {
-  COLLECTION_NAME: 'history',
+  COLLECTION_NAME: 'pigeon-history',
 } as const;
 
 export const HISTORY_EVENT_LABELS_I18N: Record<string, Record<UserLocale, string>> = {

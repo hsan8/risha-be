@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import moment from 'moment';
 
 @Controller('health')
 @ApiTags('Health')
@@ -8,7 +9,7 @@ export class HealthController {
   checkHealth() {
     return {
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: moment().toISOString(),
       service: 'risha-api',
       version: '1.0.0',
     };
@@ -18,7 +19,7 @@ export class HealthController {
   checkHealthDetails() {
     return {
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: moment().toISOString(),
       service: 'risha-api',
       version: '1.0.0',
       checks: {

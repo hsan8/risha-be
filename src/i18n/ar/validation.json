@@ -10,5 +10,6 @@
   "NumbersOnly": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يحتوي على أرقام فقط",
   "PhoneFormat": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقم هاتف صحيح",
   "KuwaitPhoneFormat": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقم هاتف كويتي صحيح (+965XXXXXXXX)",
-  "IsFirebaseId": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون معرف Firebase صحيح"
+  "IsFirebaseId": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون معرف Firebase صحيح",
+  "IsUUID": "$t({path}.PROPERTY_MAPPINGS.{property}) يجب أن يكون رقم تعريفي صحيح"
 }

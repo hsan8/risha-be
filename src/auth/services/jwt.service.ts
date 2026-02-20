@@ -1,6 +1,7 @@
 import { DEFAULT_LOCALE } from '@/core/enums';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
+import moment from 'moment';
 import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N } from '../constants/auth.constants';
 import { UserRole, UserStatus } from '../enums/auth.enum';
 
@@ -118,6 +119,6 @@ export class JwtService {
       return true;
     }
 
-    return expiry < new Date();
+    return expiry < moment().toDate();
   }
 }

@@ -28,10 +28,16 @@ export class PigeonRepository {
   async create(data: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
     const userPigeonsRef = this.getUserPigeonsRef(userId);
     const pigeonRef = userPigeonsRef.push();
-    const id = pigeonRef.key;
+    const id = pigeonRef.key!;
 
-    const now = new Date();
-    const pigeon: Pigeon = {
+    const pigeon = this.dtoToEntity(data, id);
+    await pigeonRef.set(pigeon);
+    return pigeon;
+  }
+
+  private dtoToEntity(data: CreatePigeonRequestDto, id: string): Pigeon {
+    const now = moment().toDate();
+    return {
       id,
       name: data.name,
       gender: data.gender,
@@ -46,11 +52,8 @@ export class PigeonRepository {
       updatedAt: now,
       ...(data.ownerId && { ownerId: data.ownerId }),
       ...(data.caseNumber && { caseNumber: data.caseNumber }),
-      ...(data.deadAt && { deadAt: new Date(data.deadAt) }),
+      ...(data.deadAt && { deadAt: moment(data.deadAt).toDate() }),
     };
-
-    await pigeonRef.set(pigeon);
-    return pigeon;
   }
 
   async findAll(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Pigeon[]; total: number }> {
@@ -74,7 +77,7 @@ export class PigeonRepository {
 
       this.logger.log('🐦 Processing complete. Found', pigeons.length, 'pigeons');
 
-      pigeons.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      pigeons.sort((a, b) => moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf());
 
       const startIndex = (pageOptions.page - 1) * pageOptions.size;
       const endIndex = startIndex + pageOptions.size;
@@ -118,7 +121,7 @@ export class PigeonRepository {
       ...(data.fatherName && { fatherName: data.fatherName }),
       ...(data.motherName && { motherName: data.motherName }),
       ...(data.yearOfBirth && { yearOfBirth: data.yearOfBirth }),
-      ...(data.deadAt && { deadAt: new Date(data.deadAt) }),
+      ...(data.deadAt && { deadAt: moment(data.deadAt).toDate() }),
       ...(data.vaccinationDates && {
         vaccinationDates:
           data.vaccinationDates?.map((vaccinationRecord: IVaccinationRecord) => ({

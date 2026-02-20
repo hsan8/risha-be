@@ -36,7 +36,7 @@ export class HistoryService {
     await this.pigeonService.findOne(pigeonId, userId);
 
     const events = await this.historyRepository.findByPigeonId(userId, pigeonId);
-    events.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+    events.sort((a, b) => moment(a.eventDate).valueOf() - moment(b.eventDate).valueOf());
     return events;
   }
 

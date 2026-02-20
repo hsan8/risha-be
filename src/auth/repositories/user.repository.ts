@@ -4,6 +4,7 @@ import { FirebaseService } from '@/core/services';
 import { User } from '@/user/entities';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
+import moment from 'moment';
 
 export interface ICreateUserData {
   name: string;
@@ -35,7 +36,13 @@ export class UserRepository {
     const userRef = this.collectionRef.push();
     const id = userRef.key;
 
-    const now = new Date();
+    const user = this.dataToEntity(data, id);
+    await userRef.set(user);
+    return user;
+  }
+
+  private dataToEntity(data: ICreateUserData, id: string): User {
+    const now = moment().toDate();
     const user: User = {
       id,
       name: data.name,
@@ -48,16 +55,12 @@ export class UserRepository {
       createdAt: now,
       updatedAt: now,
     };
-
-    // Only add optional fields if they have values
     if (data.phone) user.phone = data.phone;
     if (data.country) user.country = data.country;
     else user.country = 'Kuwait';
     if (data.avatar) user.avatar = data.avatar;
     if (data.passwordHash) user.passwordHash = data.passwordHash;
     if (data.providerId) user.providerId = data.providerId;
-
-    await userRef.set(user);
     return user;
   }
 
@@ -109,8 +112,8 @@ export class UserRepository {
   async updateLastLogin(id: string): Promise<void> {
     const userRef = this.collectionRef.child(id);
     await userRef.update({
-      lastLoginAt: new Date(),
-      updatedAt: new Date(),
+      lastLoginAt: moment().toDate(),
+      updatedAt: moment().toDate(),
     });
   }
 
@@ -118,7 +121,7 @@ export class UserRepository {
     const userRef = this.collectionRef.child(id);
     await userRef.update({
       passwordHash,
-      updatedAt: new Date(),
+      updatedAt: moment().toDate(),
     });
   }
 
@@ -127,7 +130,7 @@ export class UserRepository {
     await userRef.update({
       emailVerified,
       status: emailVerified ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION,
-      updatedAt: new Date(),
+      updatedAt: moment().toDate(),
     });
   }
 
@@ -135,7 +138,7 @@ export class UserRepository {
     const userRef = this.collectionRef.child(id);
     await userRef.update({
       status,
-      updatedAt: new Date(),
+      updatedAt: moment().toDate(),
     });
   }
 
@@ -151,7 +154,7 @@ export class UserRepository {
     const updatedUser: User = {
       ...existingUser,
       ...data,
-      updatedAt: new Date(),
+      updatedAt: moment().toDate(),
     };
 
     await userRef.update(updatedUser);
@@ -170,8 +173,8 @@ export class UserRepository {
     // Soft delete
     await userRef.update({
       status: UserStatus.INACTIVE,
-      deletedAt: new Date(),
-      updatedAt: new Date(),
+      deletedAt: moment().toDate(),
+      updatedAt: moment().toDate(),
     });
   }
 

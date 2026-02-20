@@ -1,7 +1,8 @@
 import { AuthModule } from '@/auth/auth.module';
+import { FormulaHistoryModule } from '@/formula-history/formula-history.module';
 import { PigeonRepository } from '@/pigeon/repositories';
 import { UserModule } from '@/user/user.module';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import {
   FormulaParentController,
   FormulaRegistrationController,
@@ -12,7 +13,7 @@ import { FormulaRepository } from './repositories';
 import { FormulaService } from './services';
 
 @Module({
-  imports: [AuthModule, UserModule],
+  imports: [AuthModule, UserModule, forwardRef(() => FormulaHistoryModule)],
   controllers: [
     FormulaRegistrationController,
     FormulaStatusController,

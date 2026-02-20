@@ -16,14 +16,28 @@
       ".read": false,
       ".write": false
     },
-    "history": {
+    "pigeon-history": {
       "$userId": {
         ".read": "auth != null && auth.uid === $userId",
         ".write": "auth != null && auth.uid === $userId",
-        ".indexOn": ["pigeonId"]
+        ".indexOn": [
+          "pigeonId"
+        ]
       }
     },
     "archivedPigeons": {
+      "$userId": {
+        ".read": "auth != null && auth.uid === $userId",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+    "formulas": {
+      "$userId": {
+        ".read": "auth != null && auth.uid === $userId",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+    "formula-history": {
       "$userId": {
         ".read": "auth != null && auth.uid === $userId",
         ".write": "auth != null && auth.uid === $userId"

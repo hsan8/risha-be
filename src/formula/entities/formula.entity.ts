@@ -1,10 +1,10 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsDate, IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
-import { FormulaActions, FormulaStatus } from '../enums';
+import { FormulaStatus } from '../enums';
 
 export class Parent {
   @IsOptional()
-  @IsUUID('4')
+  @IsString()
   id?: string;
 
   @IsString()
@@ -22,23 +22,12 @@ export class Egg {
   transformedToPigeonAt?: Date;
 
   @IsOptional()
-  @IsUUID('4')
+  @IsString()
   pigeonId?: string;
 }
 
-export class FormulaHistory {
-  @IsEnum(FormulaActions)
-  action: FormulaActions;
-
-  @IsString()
-  description: string;
-
-  @IsDate()
-  date: Date;
-}
-
 export class Formula {
-  @IsString()
+  @IsUUID('4')
   id: string;
 
   @ValidateNested()
@@ -59,16 +48,11 @@ export class Formula {
   eggs: Egg[];
 
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsString({ each: true })
   children: string[];
 
   @IsEnum(FormulaStatus)
   status: FormulaStatus;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => FormulaHistory)
-  history: FormulaHistory[];
 
   @IsString()
   yearOfFormula: string;

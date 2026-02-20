@@ -2,6 +2,7 @@ import { FirebaseService } from '@/core/services';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
+import moment from 'moment';
 import { HISTORY_CONSTANTS } from '../constants';
 import { HistoryEvent } from '../entities';
 import { HistoryEventType } from '../enums';
@@ -32,25 +33,28 @@ export class HistoryRepository {
   async create(data: CreateHistoryEventData): Promise<HistoryEvent> {
     const userHistoryRef = this.getUserHistoryRef(data.userId, data.pigeonId);
     const eventRef = userHistoryRef.push();
-    const id = eventRef.key;
+    const id = eventRef.key!;
 
-    const now = new Date();
-    const payload: Omit<HistoryEvent, 'eventDate' | 'createdAt'> & { eventDate: string; createdAt: Date } = {
-      id: id!,
+    const entity = this.dataToEntity(data, id);
+    const payload = {
+      ...entity,
+      eventDate: entity.eventDate.toISOString(),
+      createdAt: entity.createdAt.toISOString(),
+    };
+    await eventRef.set(payload);
+    return entity;
+  }
+
+  private dataToEntity(data: CreateHistoryEventData, id: string): HistoryEvent {
+    const now = moment().toDate();
+    return {
+      id,
       pigeonId: data.pigeonId,
       userId: data.userId,
       eventType: data.eventType,
-      eventDate: data.eventDate.toISOString(),
-      createdAt: now,
-      ...(data.note && { note: data.note }),
-    };
-
-    await eventRef.set({ ...payload, createdAt: payload.createdAt.toISOString() });
-
-    return {
-      ...payload,
       eventDate: data.eventDate,
       createdAt: now,
+      ...(data.note && { note: data.note }),
     } as HistoryEvent;
   }
 
@@ -68,8 +72,8 @@ export class HistoryRepository {
     >;
     return events.map((e) => ({
       ...e,
-      eventDate: new Date(e.eventDate),
-      createdAt: new Date(e.createdAt),
+      eventDate: moment(e.eventDate).toDate(),
+      createdAt: moment(e.createdAt).toDate(),
     })) as HistoryEvent[];
   }
 }

@@ -1,18 +1,17 @@
 import { VALIDATION_CONSTANTS } from '@/core/constants';
-import { IsFirebaseId } from '@/core/validators/firebase-id.validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID, Length, ValidateIf, ValidateNested } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class ParentDto {
-  @ApiProperty({ example: '-OV8mQOynkCqfL7wYRxN' })
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @Expose()
   @IsNotEmpty({
     message: i18n('validation.IsNotEmpty', { path: 'app', property: 'formula.parentId' }),
   })
-  @IsFirebaseId({
-    message: i18n('validation.IsFirebaseId', { path: 'app', property: 'formula.parentId' }),
+  @IsUUID('4', {
+    message: i18n('validation.IsUUID', { path: 'app', property: 'formula.parentId' }),
   })
   id!: string;
 
@@ -29,17 +28,35 @@ export class ParentDto {
 }
 
 export class CreateFormulaRequestDto {
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Father pigeon (use when not sending maleId)' })
   @Expose()
+  @ValidateIf((o) => !o.maleId)
   @ValidateNested()
   @Type(() => ParentDto)
-  father!: ParentDto;
+  father?: ParentDto;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Mother pigeon (use when not sending femaleId)' })
   @Expose()
+  @ValidateIf((o) => !o.femaleId)
   @ValidateNested()
   @Type(() => ParentDto)
-  mother!: ParentDto;
+  mother?: ParentDto;
+
+  @ApiPropertyOptional({ description: 'Male (father) pigeon ID; alternative to father object' })
+  @Expose()
+  @IsOptional()
+  @IsUUID('4', {
+    message: i18n('validation.IsUUID', { path: 'app', property: 'formula.maleId' }),
+  })
+  maleId?: string;
+
+  @ApiPropertyOptional({ description: 'Female (mother) pigeon ID; alternative to mother object' })
+  @Expose()
+  @IsOptional()
+  @IsUUID('4', {
+    message: i18n('validation.IsUUID', { path: 'app', property: 'formula.femaleId' }),
+  })
+  femaleId?: string;
 
   @ApiPropertyOptional({ example: 'CASE123' })
   @Expose()

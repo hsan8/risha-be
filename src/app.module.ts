@@ -11,6 +11,7 @@ import { buildConfigOptions, buildI18nOptions, buildPinoOptions } from './core/m
 import { MiddlewaresModule } from './core/modules';
 import { ServicesModule } from './core/modules/services/services.module';
 import { buildValidationPipe } from './core/pipes';
+import { FormulaHistoryModule } from './formula-history/formula-history.module';
 import { FormulaModule } from './formula/formula.module';
 import { HealthModule } from './health/health.module';
 import { HistoryModule } from './history/history.module';
@@ -42,6 +43,7 @@ import { UserModule } from './user/user.module';
     PigeonModule,
     ArchivedPigeonModule,
     HistoryModule,
+    FormulaHistoryModule,
     FormulaModule,
     HealthModule,
   ],

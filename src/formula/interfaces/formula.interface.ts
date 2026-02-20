@@ -1,4 +1,4 @@
-import { FormulaActions, FormulaStatus } from '../enums/formula.enum';
+import { FormulaStatus } from '../enums/formula.enum';
 
 export interface Parent {
   id?: string;
@@ -12,12 +12,6 @@ export interface Egg {
   pigeonId?: string;
 }
 
-export interface FormulaHistory {
-  action: FormulaActions;
-  description: string;
-  date: Date;
-}
-
 export interface Formula {
   id: string;
   father: Parent;
@@ -26,7 +20,6 @@ export interface Formula {
   eggs: Egg[];
   children: string[]; // Array of pigeon IDs
   status: FormulaStatus;
-  history: FormulaHistory[];
   yearOfFormula: string;
   createdAt: Date;
   updatedAt: Date;

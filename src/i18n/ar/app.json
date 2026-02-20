@@ -41,7 +41,8 @@
       "fatherMustBeAlive": "الحمامة الأب برقم {id} يجب أن تكون حية",
       "fatherMustBeMale": "الحمامة برقم {id} يجب أن تكون ذكر",
       "motherMustBeFemale": "الحمامة برقم {id} يجب أن تكون أنثى",
-      "motherMustBeAlive": "الحمامة الأم برقم {id} يجب أن تكون حية"
+      "motherMustBeAlive": "الحمامة الأم برقم {id} يجب أن تكون حية",
+      "formulaRequiresBothParents": "التركيبة تتطلب الأب والأم (أرسل father و mother أو maleId و femaleId)"
     }
   }
 }

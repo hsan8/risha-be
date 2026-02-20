@@ -41,7 +41,8 @@
       "fatherMustBeAlive": "Father pigeon with ID {id} must be alive",
       "fatherMustBeMale": "Pigeon with ID {id} must be male",
       "motherMustBeFemale": "Pigeon with ID {id} must be female",
-      "motherMustBeAlive": "Mother pigeon with ID {id} must be alive"
+      "motherMustBeAlive": "Mother pigeon with ID {id} must be alive",
+      "formulaRequiresBothParents": "Formula requires both father and mother (provide father and mother, or maleId and femaleId)"
     }
   }
 }

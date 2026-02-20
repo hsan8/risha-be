@@ -18,11 +18,22 @@ export class UserStatisticsRepository {
     return this.db.ref(`users/${userId}/statistics`);
   }
 
+  /** Ensure value is a non-NaN number for Firebase (default 0 if missing/invalid). */
+  private num(v: unknown): number {
+    const n = typeof v === 'number' && !Number.isNaN(v) ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   async initializeStatistics(userId: string): Promise<UserStatistics> {
     const statisticsRef = this.getUserStatisticsRef(userId);
+    const initialStatistics = this.buildInitialStatistics(userId);
+    await statisticsRef.set(initialStatistics);
+    return initialStatistics;
+  }
 
-    const now = new Date();
-    const initialStatistics: UserStatistics = {
+  private buildInitialStatistics(userId: string): UserStatistics {
+    const now = moment().toDate();
+    return {
       userId,
       pigeons: {
         maleCount: 0,
@@ -35,9 +46,6 @@ export class UserStatisticsRepository {
       createdAt: now,
       updatedAt: now,
     };
-
-    await statisticsRef.set(initialStatistics);
-    return initialStatistics;
   }
 
   async getStatistics(userId: string): Promise<UserStatistics | null> {
@@ -53,7 +61,7 @@ export class UserStatisticsRepository {
 
   async updatePigeonStatistics(userId: string, pigeonStats: Partial<PigeonStatistics>): Promise<void> {
     const statisticsRef = this.getUserStatisticsRef(userId);
-    const now = new Date();
+    const now = moment().toDate();
 
     await statisticsRef.update({
       pigeons: {
@@ -68,23 +76,21 @@ export class UserStatisticsRepository {
     const statistics = await this.getStatistics(userId);
     if (!statistics) return;
 
+    const p = statistics.pigeons;
     const updates: Partial<PigeonStatistics> = {
-      totalCount: statistics.pigeons.totalCount + 1,
-      lastUpdated: new Date(),
+      totalCount: this.num(p.totalCount) + 1,
+      lastUpdated: moment().toDate(),
     };
-
     if (gender === PigeonGender.MALE) {
-      updates.maleCount = statistics.pigeons.maleCount + 1;
+      updates.maleCount = this.num(p.maleCount) + 1;
     } else {
-      updates.femaleCount = statistics.pigeons.femaleCount + 1;
+      updates.femaleCount = this.num(p.femaleCount) + 1;
     }
-
     if (isAlive) {
-      updates.aliveCount = statistics.pigeons.aliveCount + 1;
+      updates.aliveCount = this.num(p.aliveCount) + 1;
     } else {
-      updates.deadCount = statistics.pigeons.deadCount + 1;
+      updates.deadCount = this.num(p.deadCount) + 1;
     }
-
     await this.updatePigeonStatistics(userId, updates);
   }
 
@@ -92,23 +98,21 @@ export class UserStatisticsRepository {
     const statistics = await this.getStatistics(userId);
     if (!statistics) return;
 
+    const p = statistics.pigeons;
     const updates: Partial<PigeonStatistics> = {
-      totalCount: Math.max(0, statistics.pigeons.totalCount - 1),
+      totalCount: Math.max(0, this.num(p.totalCount) - 1),
       lastUpdated: new Date(),
     };
-
     if (gender === PigeonGender.MALE) {
-      updates.maleCount = Math.max(0, statistics.pigeons.maleCount - 1);
+      updates.maleCount = Math.max(0, this.num(p.maleCount) - 1);
     } else {
-      updates.femaleCount = Math.max(0, statistics.pigeons.femaleCount - 1);
+      updates.femaleCount = Math.max(0, this.num(p.femaleCount) - 1);
     }
-
     if (wasAlive) {
-      updates.aliveCount = Math.max(0, statistics.pigeons.aliveCount - 1);
+      updates.aliveCount = Math.max(0, this.num(p.aliveCount) - 1);
     } else {
-      updates.deadCount = Math.max(0, statistics.pigeons.deadCount - 1);
+      updates.deadCount = Math.max(0, this.num(p.deadCount) - 1);
     }
-
     await this.updatePigeonStatistics(userId, updates);
   }
 
@@ -118,18 +122,15 @@ export class UserStatisticsRepository {
     const statistics = await this.getStatistics(userId);
     if (!statistics) return;
 
-    const updates: Partial<PigeonStatistics> = {
-      lastUpdated: moment().toDate(),
-    };
-
+    const p = statistics.pigeons;
+    const updates: Partial<PigeonStatistics> = { lastUpdated: moment().toDate() };
     if (fromAlive && !toAlive) {
-      updates.aliveCount = Math.max(0, statistics.pigeons.aliveCount - 1);
-      updates.deadCount = statistics.pigeons.deadCount + 1;
+      updates.aliveCount = Math.max(0, this.num(p.aliveCount) - 1);
+      updates.deadCount = this.num(p.deadCount) + 1;
     } else if (!fromAlive && toAlive) {
-      updates.aliveCount = statistics.pigeons.aliveCount + 1;
-      updates.deadCount = Math.max(0, statistics.pigeons.deadCount - 1);
+      updates.aliveCount = this.num(p.aliveCount) + 1;
+      updates.deadCount = Math.max(0, this.num(p.deadCount) - 1);
     }
-
     await this.updatePigeonStatistics(userId, updates);
   }
 

@@ -25,9 +25,17 @@ export class ArchivedPigeonRepository {
   async create(data: ICreateArchivedPigeonData): Promise<ArchivedPigeon> {
     const ref = this.getUserRef(data.userId).push();
     const id = ref.key!;
-    const now = moment().toDate();
 
-    const payload = {
+    const payload = this.buildCreatePayload(data, id);
+    await ref.set(payload);
+
+    const entity = this.dataToEntity(data, id);
+    return entity;
+  }
+
+  private buildCreatePayload(data: ICreateArchivedPigeonData, id: string): Record<string, unknown> {
+    const now = moment().toDate();
+    return {
       id,
       originalPigeonId: data.originalPigeonId,
       userId: data.userId,
@@ -37,10 +45,15 @@ export class ArchivedPigeonRepository {
       note: data.note ?? null,
       newOwnerId: data.newOwnerId ?? null,
     };
-    await ref.set(payload);
+  }
 
+  private dataToEntity(data: ICreateArchivedPigeonData, id: string): ArchivedPigeon {
+    const now = moment().toDate();
     return {
-      ...payload,
+      id,
+      originalPigeonId: data.originalPigeonId,
+      userId: data.userId,
+      archiveReason: data.archiveReason,
       archivedAt: now,
       pigeonSnapshot: data.pigeonSnapshot,
       note: data.note,

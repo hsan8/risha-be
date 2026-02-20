@@ -55,7 +55,7 @@ export class FormulaController {
   async transformEggToPigeon(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('eggId', ParseUUIDPipe) eggId: string,
-    @Body('pigeonId', ParseUUIDPipe) pigeonId: string,
+    @Body('pigeonId') pigeonId: string,
     @UserId() userId: string,
   ): Promise<DataResponseDto<FormulaResponseDto>> {
     const formula = await this.formulaService.transformEggToPigeon(id, eggId, pigeonId, userId);
