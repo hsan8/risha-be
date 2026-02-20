@@ -14,6 +14,7 @@ import { buildValidationPipe } from './core/pipes';
 import { FormulaModule } from './formula/formula.module';
 import { HealthModule } from './health/health.module';
 import { HistoryModule } from './history/history.module';
+import { ArchivedPigeonModule } from './archived-pigeon/archived-pigeon.module';
 import { PigeonModule } from './pigeon/pigeon.module';
 import { UserModule } from './user/user.module';
 
@@ -39,6 +40,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     UserModule,
     PigeonModule,
+    ArchivedPigeonModule,
     HistoryModule,
     FormulaModule,
     HealthModule,

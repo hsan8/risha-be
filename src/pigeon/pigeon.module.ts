@@ -36,6 +36,13 @@ import {
     PigeonStatusService,
     DocumentationNumberService,
   ],
-  exports: [PigeonService, PigeonSearchService, PigeonParentService, PigeonStatusService, DocumentationNumberService],
+  exports: [
+    PigeonService,
+    PigeonSearchService,
+    PigeonParentService,
+    PigeonStatusService,
+    DocumentationNumberService,
+    PigeonRepository,
+  ],
 })
 export class PigeonModule {}

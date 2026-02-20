@@ -1,16 +1,20 @@
 import { UserLocale } from '@/core/enums';
 import { PigeonService } from '@/pigeon/services';
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import moment from 'moment';
 import { HISTORY_EVENT_LABELS_I18N } from '../constants';
 import { CreateHistoryEventRequestDto } from '../dto/requests';
 import { HistoryEvent } from '../entities';
 import { HistoryRepository } from '../repositories';
+
 @Injectable()
 export class HistoryService {
   private readonly logger = new Logger(HistoryService.name);
 
-  constructor(private readonly historyRepository: HistoryRepository, private readonly pigeonService: PigeonService) {}
+  constructor(
+    private readonly historyRepository: HistoryRepository,
+    @Inject(forwardRef(() => PigeonService)) private readonly pigeonService: PigeonService,
+  ) {}
 
   async create(pigeonId: string, userId: string, dto: CreateHistoryEventRequestDto): Promise<HistoryEvent> {
     await this.pigeonService.findOne(pigeonId, userId);
