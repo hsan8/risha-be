@@ -1,6 +1,6 @@
 import { JwtAuthGuard } from '@/auth/guards';
 import { ApiDataArrayResponse, ApiDataResponse } from '@/core/decorators';
-import { DataResponseDto, PageOptionsRequestDto } from '@/core/dtos';
+import { DataResponseDto } from '@/core/dtos';
 import { ResponseFactory } from '@/core/utils';
 import { CreateFormulaRequestDto } from '@/formula/dto/requests';
 import { FormulaResponseDto } from '@/formula/dto/responses';
@@ -30,15 +30,9 @@ export class FormulaRegistrationController {
   @Get()
   @ApiOperation({ summary: 'Get all formulas' })
   @ApiDataArrayResponse(FormulaResponseDto)
-  async getFormulas(
-    @Body() pageOptions: PageOptionsRequestDto,
-    @UserId() userId: string,
-  ): Promise<DataResponseDto<{ items: FormulaResponseDto[]; total: number }>> {
-    const { items, total } = await this.formulaService.getFormulas(pageOptions, userId);
-    return ResponseFactory.data({
-      items: items.map((formula) => new FormulaResponseDto(formula)),
-      total,
-    });
+  async getFormulas(@UserId() userId: string) {
+    const formulas = await this.formulaService.getFormulas(userId);
+    return ResponseFactory.data(formulas.map((formula) => new FormulaResponseDto(formula)));
   }
 
   @Get(':id')

@@ -1,17 +1,15 @@
-import { PageOptionsRequestDto } from '@/core/dtos';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
+import { FormulaHistoryService } from '@/formula-history/services';
 import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
 import { PigeonRepository } from '@/pigeon/repositories';
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
 import { FORMULA_MESSAGES } from '../constants';
 import { CreateFormulaRequestDto } from '../dto';
 import { Formula } from '../entities';
 import { FormulaActions, FormulaStatus } from '../enums';
-import { FormulaHistoryService } from '@/formula-history/services';
 import { FormulaRepository } from '../repositories';
-import { forwardRef, Inject } from '@nestjs/common';
 
 const MAX_EGGS_PER_FORMULA = 2;
 
@@ -65,44 +63,32 @@ export class FormulaService {
   ): Promise<void> {
     const father = await this.pigeonRepository.findById(createFormulaDto.father!.id, userId);
     if (!father) {
-      throw new BadRequestException(
-        I18nMessage.error('fatherNotFound', { id: createFormulaDto.father!.id }),
-      );
+      throw new BadRequestException(I18nMessage.error('fatherNotFound', { id: createFormulaDto.father!.id }));
     }
     if (father.gender !== PigeonGender.MALE) {
-      throw new BadRequestException(
-        I18nMessage.error('fatherMustBeMale', { id: createFormulaDto.father!.id }),
-      );
+      throw new BadRequestException(I18nMessage.error('fatherMustBeMale', { id: createFormulaDto.father!.id }));
     }
     if (father.status !== PigeonStatus.ALIVE) {
-      throw new BadRequestException(
-        I18nMessage.error('fatherMustBeAlive', { id: createFormulaDto.father!.id }),
-      );
+      throw new BadRequestException(I18nMessage.error('fatherMustBeAlive', { id: createFormulaDto.father!.id }));
     }
     createFormulaDto.father!.name = createFormulaDto.father!.name ?? father.name;
 
     const mother = await this.pigeonRepository.findById(createFormulaDto.mother!.id, userId);
     if (!mother) {
-      throw new BadRequestException(
-        I18nMessage.error('motherNotFound', { id: createFormulaDto.mother!.id }),
-      );
+      throw new BadRequestException(I18nMessage.error('motherNotFound', { id: createFormulaDto.mother!.id }));
     }
     if (mother.gender !== PigeonGender.FEMALE) {
-      throw new BadRequestException(
-        I18nMessage.error('motherMustBeFemale', { id: createFormulaDto.mother!.id }),
-      );
+      throw new BadRequestException(I18nMessage.error('motherMustBeFemale', { id: createFormulaDto.mother!.id }));
     }
     if (mother.status !== PigeonStatus.ALIVE) {
-      throw new BadRequestException(
-        I18nMessage.error('motherMustBeAlive', { id: createFormulaDto.mother!.id }),
-      );
+      throw new BadRequestException(I18nMessage.error('motherMustBeAlive', { id: createFormulaDto.mother!.id }));
     }
     createFormulaDto.mother!.name = createFormulaDto.mother!.name ?? mother.name;
   }
 
-  async getFormulas(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Formula[]; total: number }> {
+  async getFormulas(userId: string): Promise<Formula[]> {
     this.logger.log('Getting all formulas');
-    return await this.formulaRepository.findAll(pageOptions, userId);
+    return await this.formulaRepository.findAll(userId);
   }
 
   async getFormulaById(formulaId: string, userId: string): Promise<Formula> {
