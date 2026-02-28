@@ -40,7 +40,7 @@ export class Formula {
 
   @IsOptional()
   @IsString()
-  caseNumber?: string;
+  boxNumber?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

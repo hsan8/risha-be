@@ -56,16 +56,16 @@ export class CreateFormulaRequestDto {
   })
   femaleId?: string;
 
-  @ApiPropertyOptional({ example: 'CASE123' })
+  @ApiPropertyOptional({ example: 'BOX123' })
   @Expose()
   @IsOptional()
   @IsString({
-    message: i18n('validation.IsString', { path: 'app', property: 'formula.caseNumber' }),
+    message: i18n('validation.IsString', { path: 'app', property: 'formula.boxNumber' }),
   })
   @Length(VALIDATION_CONSTANTS.MIN_CASE_LENGTH, VALIDATION_CONSTANTS.MAX_CASE_LENGTH, {
-    message: i18n('validation.Length', { path: 'app', property: 'formula.caseNumber' }),
+    message: i18n('validation.Length', { path: 'app', property: 'formula.boxNumber' }),
   })
-  caseNumber?: string;
+  boxNumber?: string;
 
   @ApiProperty({ example: '2024' })
   @Expose()

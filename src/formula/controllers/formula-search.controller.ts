@@ -3,7 +3,7 @@ import { ApiDataArrayResponse } from '@/core/decorators/api';
 import { DataResponseDto } from '@/core/dtos/responses';
 import { ResponseFactory } from '@/core/utils';
 import { UserId } from '@/user/decorators';
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FormulaResponseDto } from '../dto/responses';
 import { FormulaService } from '../services';
@@ -26,14 +26,14 @@ export class FormulaSearchController {
     return ResponseFactory.data(formulas.map((formula) => new FormulaResponseDto(formula)));
   }
 
-  @Get('case/:caseNumber')
-  @ApiOperation({ summary: 'Get formula by case number' })
+  @Get('box/:boxNumber')
+  @ApiOperation({ summary: 'Get formula by box number' })
   @ApiDataArrayResponse(FormulaResponseDto)
-  async getFormulasByCaseNumber(
-    @Query('caseNumber') caseNumber: string,
+  async getFormulasByBoxNumber(
+    @Param('boxNumber') boxNumber: string,
     @UserId() userId: string,
   ): Promise<DataResponseDto<FormulaResponseDto[]>> {
-    const formulas = await this.formulaService.searchFormulas(caseNumber, userId);
+    const formulas = await this.formulaService.searchFormulas(boxNumber, userId);
     return ResponseFactory.data(formulas.map((formula) => new FormulaResponseDto(formula)));
   }
 

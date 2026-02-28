@@ -78,7 +78,8 @@ export class FormulaRepository {
     snapshot.forEach((childSnapshot) => {
       const formula = childSnapshot.val() as Formula;
       if (formula) {
-        const searchFields = [formula.father?.name, formula.mother?.name, formula.caseNumber, formula.yearOfFormula]
+        const raw = formula as Formula & { boxNumber?: string };
+        const searchFields = [raw.father?.name, raw.mother?.name, raw.boxNumber, raw.yearOfFormula]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -114,7 +115,6 @@ export class FormulaRepository {
     return count;
   }
 
-  /** Maps DTO to entity. Formula id is UUID v4 (not Firebase push key). */
   private dtoToEntity(createFormulaDto: CreateFormulaRequestDto): Formula {
     const now = moment().toDate();
     const father = createFormulaDto.father!;
@@ -130,7 +130,7 @@ export class FormulaRepository {
         id: mother.id,
         name: mother.name ?? '',
       },
-      caseNumber: createFormulaDto.caseNumber,
+      boxNumber: createFormulaDto.boxNumber,
       yearOfFormula: createFormulaDto.yearOfFormula,
       status: FormulaStatus.INITIATED,
       eggs: [],

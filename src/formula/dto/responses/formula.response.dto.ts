@@ -19,7 +19,7 @@ export class FormulaResponseDto {
   id: string;
 
   @ApiProperty({ example: 'سمارين', nullable: true })
-  caseNumber: string;
+  boxNumber: string;
 
   @ApiProperty({ type: () => FormulaParentResponseDto })
   father: FormulaParentResponseDto;
@@ -44,7 +44,7 @@ export class FormulaResponseDto {
 
   constructor(formula: Formula) {
     this.id = formula.id;
-    this.caseNumber = formula.caseNumber ?? undefined;
+    this.boxNumber = formula.boxNumber;
     this.father = new FormulaParentResponseDto(formula.father);
     this.mother = new FormulaParentResponseDto(formula.mother);
     this.status = formula.status;

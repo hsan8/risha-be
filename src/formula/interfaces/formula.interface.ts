@@ -16,7 +16,7 @@ export interface Formula {
   id: string;
   father: Parent;
   mother: Parent;
-  caseNumber?: string;
+  boxNumber?: string;
   eggs: Egg[];
   children: string[]; // Array of pigeon IDs
   status: FormulaStatus;
