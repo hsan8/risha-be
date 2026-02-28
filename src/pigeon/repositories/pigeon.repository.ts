@@ -5,10 +5,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 import { PIGEON_CONSTANTS } from '../constants';
 import { CreatePigeonRequestDto } from '../dto/requests';
 import { PigeonGender, PigeonStatus } from '../enums';
 import { IVaccinationRecord } from '../interfaces';
+import { normalizeRingNo } from '../utils/normalize-ring-no.util';
 
 @Injectable()
 export class PigeonRepository {
@@ -27,9 +29,9 @@ export class PigeonRepository {
 
   async create(data: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
     const userPigeonsRef = this.getUserPigeonsRef(userId);
-    const pigeonRef = userPigeonsRef.push();
-    const id = pigeonRef.key!;
 
+    const id = uuidv4();
+    const pigeonRef = userPigeonsRef.child(id);
     const pigeon = this.dtoToEntity(data, id);
     await pigeonRef.set(pigeon);
     return pigeon;
@@ -42,14 +44,16 @@ export class PigeonRepository {
       name: data.name,
       gender: data.gender,
       status: data.status || PigeonStatus.ALIVE,
-      documentationNo: data.documentationNo,
-      ringNo: data.ringNo,
+      yearOfRegistration: data.yearOfRegistration,
+      letterOfRegistration: data.letterOfRegistration,
+      ringNo: normalizeRingNo(data.ringNo),
       ringColor: data.ringColor,
       fatherName: data.fatherName,
       motherName: data.motherName,
-      yearOfBirth: data.yearOfBirth,
       createdAt: now,
       updatedAt: now,
+      ...(data.fatherId !== undefined && { fatherId: data.fatherId }),
+      ...(data.motherId !== undefined && { motherId: data.motherId }),
       ...(data.ownerId && { ownerId: data.ownerId }),
       ...(data.caseNumber && { caseNumber: data.caseNumber }),
       ...(data.deadAt && { deadAt: moment(data.deadAt).toDate() }),
@@ -105,24 +109,48 @@ export class PigeonRepository {
     return pigeon;
   }
 
+  /**
+   * Finds pigeons by exact name and gender for the user.
+   * Returns the first match or null. Use when resolving formula parent by name.
+   */
+  async findByNameAndGender(name: string, gender: PigeonGender, userId: string): Promise<Pigeon[]> {
+    const userPigeonsRef = this.getUserPigeonsRef(userId);
+    const snapshot = await userPigeonsRef.once('value');
+    const pigeons: Pigeon[] = [];
+    const nameLower = (name ?? '').trim().toLowerCase();
+
+    if (!nameLower) {
+      return pigeons;
+    }
+
+    snapshot.forEach((childSnapshot) => {
+      const pigeon = childSnapshot.val() as Pigeon;
+      if (pigeon && (pigeon.name ?? '').trim().toLowerCase() === nameLower && pigeon.gender === gender) {
+        pigeons.push(pigeon);
+      }
+    });
+
+    return pigeons;
+  }
+
   async update(id: string, data: Partial<Pigeon>, userId: string): Promise<Pigeon> {
     const userPigeonsRef = this.getUserPigeonsRef(userId).child(id);
 
     const updatedPigeon: Partial<Pigeon> = {
-      ...data,
-      ...(data.name && { name: data.name }),
-      ...(data.gender && { gender: data.gender }),
-      ...(data.status && { status: data.status }),
+      ...(data.name != null && data.name !== '' && { name: data.name }),
+      ...(data.gender != null && { gender: data.gender }),
+      ...(data.status != null && { status: data.status }),
       ...(data.ownerId !== undefined && { ownerId: data.ownerId }),
-      ...(data.documentationNo && { documentationNo: data.documentationNo }),
-      ...(data.ringNo && { ringNo: data.ringNo }),
-      ...(data.ringColor && { ringColor: data.ringColor }),
-      ...(data.caseNumber !== undefined && { caseNumber: data.caseNumber }),
-      ...(data.fatherName && { fatherName: data.fatherName }),
-      ...(data.motherName && { motherName: data.motherName }),
-      ...(data.yearOfBirth && { yearOfBirth: data.yearOfBirth }),
-      ...(data.deadAt && { deadAt: moment(data.deadAt).toDate() }),
-      ...(data.vaccinationDates && {
+      ...(data.yearOfRegistration != null && { yearOfRegistration: data.yearOfRegistration }),
+      ...(data.letterOfRegistration != null && { letterOfRegistration: data.letterOfRegistration }),
+      ...(data.ringNo != null && { ringNo: normalizeRingNo(data.ringNo) }),
+      ...(data.ringColor != null && { ringColor: data.ringColor }),
+      ...(data.fatherName != null && { fatherName: data.fatherName }),
+      ...(data.fatherId !== undefined && { fatherId: data.fatherId }),
+      ...(data.motherName != null && { motherName: data.motherName }),
+      ...(data.motherId !== undefined && { motherId: data.motherId }),
+      ...(data.deadAt != null && { deadAt: moment(data.deadAt).toDate() }),
+      ...(data.vaccinationDates != null && {
         vaccinationDates:
           data.vaccinationDates?.map((vaccinationRecord: IVaccinationRecord) => ({
             date: vaccinationRecord.date ?? moment().toDate(),
@@ -133,8 +161,12 @@ export class PigeonRepository {
       updatedAt: moment().toDate(),
     };
 
-    await userPigeonsRef.update(updatedPigeon);
-    return updatedPigeon as Pigeon;
+    const payload = Object.fromEntries(
+      Object.entries(updatedPigeon).filter(([, v]) => v !== undefined),
+    ) as Partial<Pigeon>;
+
+    await userPigeonsRef.update(payload);
+    return payload as Pigeon;
   }
 
   async delete(id: string, userId: string): Promise<void> {
@@ -162,9 +194,9 @@ export class PigeonRepository {
           pigeon.name,
           pigeon.fatherName,
           pigeon.motherName,
-          pigeon.documentationNo,
+          pigeon.yearOfRegistration,
+          pigeon.letterOfRegistration,
           pigeon.ringNo,
-          pigeon.caseNumber,
         ]
           .filter(Boolean)
           .join(' ')
@@ -180,13 +212,14 @@ export class PigeonRepository {
   }
 
   async findByRingNo(ringNo: string, userId: string): Promise<Pigeon | null> {
+    const normalized = normalizeRingNo(ringNo);
     const userPigeonsRef = this.getUserPigeonsRef(userId);
     const snapshot = await userPigeonsRef.once('value');
     let foundPigeon: Pigeon | null = null;
 
     snapshot.forEach((childSnapshot) => {
       const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon && pigeon.ringNo === ringNo) {
+      if (pigeon && normalizeRingNo(pigeon.ringNo) === normalized) {
         foundPigeon = pigeon;
         return true;
       }
@@ -195,14 +228,24 @@ export class PigeonRepository {
     return foundPigeon;
   }
 
-  async findByDocumentationNo(documentationNo: string, userId: string): Promise<Pigeon | null> {
+  /** Ring number is unique per user per yearOfRegistration. ١٢٣ and 123 are treated as the same. */
+  async findByRingNoAndYearOfRegistration(
+    ringNo: string,
+    yearOfRegistration: string,
+    userId: string,
+  ): Promise<Pigeon | null> {
+    const normalized = normalizeRingNo(ringNo);
     const userPigeonsRef = this.getUserPigeonsRef(userId);
     const snapshot = await userPigeonsRef.once('value');
     let foundPigeon: Pigeon | null = null;
 
     snapshot.forEach((childSnapshot) => {
       const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon && pigeon.documentationNo === documentationNo) {
+      if (
+        pigeon &&
+        normalizeRingNo(pigeon.ringNo) === normalized &&
+        pigeon.yearOfRegistration === yearOfRegistration
+      ) {
         foundPigeon = pigeon;
         return true;
       }
@@ -211,18 +254,29 @@ export class PigeonRepository {
     return foundPigeon;
   }
 
-  async findByYearOfBirth(yearOfBirth: string): Promise<Pigeon[]> {
-    const snapshot = await this.collectionRef.once('value');
-    const pigeons: Pigeon[] = [];
+  async findByYearOfRegistrationAndLetter(
+    yearOfRegistration: string,
+    letterOfRegistration: string,
+    userId: string,
+  ): Promise<Pigeon | null> {
+    const userPigeonsRef = this.getUserPigeonsRef(userId);
+    const snapshot = await userPigeonsRef.once('value');
+    let foundPigeon: Pigeon | null = null;
+    const letter = (letterOfRegistration ?? '').trim().toUpperCase();
 
     snapshot.forEach((childSnapshot) => {
       const pigeon = childSnapshot.val() as Pigeon;
-      if (pigeon && pigeon.yearOfBirth === yearOfBirth) {
-        pigeons.push(pigeon);
+      if (
+        pigeon &&
+        pigeon.yearOfRegistration === yearOfRegistration &&
+        (pigeon.letterOfRegistration ?? '').trim().toUpperCase() === letter
+      ) {
+        foundPigeon = pigeon;
+        return true;
       }
     });
 
-    return pigeons;
+    return foundPigeon;
   }
 
   async findAllByUserId(userId: string): Promise<Pigeon[]> {
@@ -235,6 +289,22 @@ export class PigeonRepository {
     }
 
     return _.compact(_.values(data)) as Pigeon[];
+  }
+
+  /** Pigeons where fatherId or motherId equals the given parent pigeon id. */
+  async findByParentId(userId: string, parentPigeonId: string): Promise<Pigeon[]> {
+    const userPigeonsRef = this.getUserPigeonsRef(userId);
+    const snapshot = await userPigeonsRef.once('value');
+    const pigeons: Pigeon[] = [];
+
+    snapshot.forEach((childSnapshot) => {
+      const pigeon = childSnapshot.val() as Pigeon;
+      if (pigeon && (pigeon.fatherId === parentPigeonId || pigeon.motherId === parentPigeonId)) {
+        pigeons.push(pigeon);
+      }
+    });
+
+    return pigeons;
   }
 
   async countByStatus(status: PigeonStatus, userId: string): Promise<number> {

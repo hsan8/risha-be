@@ -145,7 +145,10 @@ export class UserRepository {
     });
   }
 
-  async updateProfile(id: string, data: Partial<Pick<User, 'name' | 'phone' | 'avatar'>>): Promise<User> {
+  async updateProfile(
+    id: string,
+    data: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar' | 'country' | 'address'>>,
+  ): Promise<User> {
     const userRef = this.collectionRef.child(id);
     const snapshot = await userRef.once('value');
     const existingUser = snapshot.val() as User;
@@ -154,9 +157,13 @@ export class UserRepository {
       throw new Error(`User with ID ${id} not found`);
     }
 
+    const payload = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== undefined),
+    ) as Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar' | 'country' | 'address'>>;
+
     const updatedUser: User = {
       ...existingUser,
-      ...data,
+      ...payload,
       updatedAt: moment().toDate(),
     };
 

@@ -27,6 +27,8 @@ export class FormulaService {
     this.logger.log('Creating new formula');
 
     this.normalizeParentIds(createFormulaDto);
+    this.ensureBothParentsSpecified(createFormulaDto);
+    await this.resolveParentsByName(createFormulaDto, userId);
     this.ensureBothParents(createFormulaDto);
     await this.validateAndEnrichParentPigeons(createFormulaDto, userId);
 
@@ -48,6 +50,49 @@ export class FormulaService {
     }
     if (dto.femaleId && !dto.mother) {
       dto.mother = { id: dto.femaleId };
+    }
+  }
+
+  /** Requires each parent to have at least id or name. */
+  private ensureBothParentsSpecified(dto: CreateFormulaRequestDto): void {
+    const hasFather = dto.father && (dto.father.id || (dto.father.name && dto.father.name.trim()));
+    const hasMother = dto.mother && (dto.mother.id || (dto.mother.name && dto.mother.name.trim()));
+    if (!hasFather || !hasMother) {
+      throw new BadRequestException(I18nMessage.error('formulaRequiresBothParents', {}));
+    }
+  }
+
+  /** Resolves father/mother id from name when only name is provided. */
+  private async resolveParentsByName(dto: CreateFormulaRequestDto, userId: string): Promise<void> {
+    if (dto.father?.name && !dto.father.id) {
+      const males = await this.pigeonRepository.findByNameAndGender(
+        dto.father.name.trim(),
+        PigeonGender.MALE,
+        userId,
+      );
+      if (males.length === 0) {
+        throw new BadRequestException(I18nMessage.error('fatherNotFoundByName', { name: dto.father.name.trim() }));
+      }
+      if (males.length > 1) {
+        throw new BadRequestException(I18nMessage.error('multipleMalesNamed', { name: dto.father.name.trim() }));
+      }
+      dto.father.id = males[0].id;
+      dto.father.name = dto.father.name ?? males[0].name;
+    }
+    if (dto.mother?.name && !dto.mother.id) {
+      const females = await this.pigeonRepository.findByNameAndGender(
+        dto.mother.name.trim(),
+        PigeonGender.FEMALE,
+        userId,
+      );
+      if (females.length === 0) {
+        throw new BadRequestException(I18nMessage.error('motherNotFoundByName', { name: dto.mother.name.trim() }));
+      }
+      if (females.length > 1) {
+        throw new BadRequestException(I18nMessage.error('multipleFemalesNamed', { name: dto.mother.name.trim() }));
+      }
+      dto.mother.id = females[0].id;
+      dto.mother.name = dto.mother.name ?? females[0].name;
     }
   }
 

@@ -46,17 +46,29 @@ export class UpdatePigeonRequestDto {
   })
   ownerId?: string;
 
-  @ApiPropertyOptional({ example: '2024-A-001' })
+  @ApiPropertyOptional({ example: '2026-2025' })
   @Expose()
   @IsOptional()
   @Transform(({ value }) => value?.trim?.() ?? value)
   @IsString({
-    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.documentationNo' }),
+    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
-  @Length(VALIDATION_CONSTANTS.MIN_DOCUMENTATION_LENGTH, VALIDATION_CONSTANTS.MAX_DOCUMENTATION_LENGTH, {
-    message: i18n('validation.Length', { path: 'app', property: 'pigeon.documentationNo' }),
+  @Length(9, 9, {
+    message: i18n('validation.Length', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
-  documentationNo?: string;
+  yearOfRegistration?: string;
+
+  @ApiPropertyOptional({ example: 'A' })
+  @Expose()
+  @IsOptional()
+  @Transform(({ value }) => value?.trim?.() ?? value)
+  @IsString({
+    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.letterOfRegistration' }),
+  })
+  @Length(1, 1, {
+    message: i18n('validation.Length', { path: 'app', property: 'pigeon.letterOfRegistration' }),
+  })
+  letterOfRegistration?: string;
 
   @ApiPropertyOptional({ example: 'RN123' })
   @Expose()
@@ -133,18 +145,6 @@ export class UpdatePigeonRequestDto {
     message: i18n('validation.IsUUID', { path: 'app', property: 'pigeon.motherId' }),
   })
   motherId?: string;
-
-  @ApiPropertyOptional({ example: '2023' })
-  @Expose()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim?.() ?? value)
-  @IsString({
-    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.yearOfBirth' }),
-  })
-  @Length(VALIDATION_CONSTANTS.YEAR_LENGTH, VALIDATION_CONSTANTS.YEAR_LENGTH, {
-    message: i18n('validation.Length', { path: 'app', property: 'pigeon.yearOfBirth' }),
-  })
-  yearOfBirth?: string;
 
   @ApiPropertyOptional()
   @Expose()

@@ -86,6 +86,18 @@ export class UserService {
     return this.userRepository.updateForRegistration(userId, data);
   }
 
+  async updateProfile(
+    userId: string,
+    data: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar' | 'country' | 'address'>>,
+    userLocale: UserLocale,
+  ): Promise<User> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
+    }
+    return this.userRepository.updateProfile(userId, data);
+  }
+
   async markEmailAsVerified(userId: string, userLocale: UserLocale): Promise<User> {
     await this.updateEmailVerification(userId, true);
 

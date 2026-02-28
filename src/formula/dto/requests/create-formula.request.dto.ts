@@ -5,17 +5,15 @@ import { IsNotEmpty, IsOptional, IsString, IsUUID, Length, ValidateIf, ValidateN
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class ParentDto {
-  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'Parent pigeon ID (optional if name is provided)' })
   @Expose()
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'formula.parentId' }),
-  })
+  @IsOptional()
   @IsUUID('4', {
     message: i18n('validation.IsUUID', { path: 'app', property: 'formula.parentId' }),
   })
-  id!: string;
+  id?: string;
 
-  @ApiPropertyOptional({ example: 'Thunder Sr.' })
+  @ApiPropertyOptional({ example: 'Thunder Sr.', description: 'Parent pigeon name (optional if id is provided)' })
   @Expose()
   @IsOptional()
   @IsString({

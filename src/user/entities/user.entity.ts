@@ -26,6 +26,11 @@ export class User {
   @IsString()
   country?: string;
 
+  @ApiProperty({ description: 'User address', required: false })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
   @ApiProperty({ description: 'User avatar URL', required: false })
   @IsOptional()
   @IsString()

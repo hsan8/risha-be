@@ -9,8 +9,8 @@ export const PIGEON_CONSTANTS = {
   MAX_RING_COLOR_LENGTH: 30,
   MAX_CASE_NUMBER_LENGTH: 50,
   MAX_OWNER_ID_LENGTH: 100,
-  YEAR_OF_BIRTH_PATTERN: /^\d{4}$/,
-  DOCUMENTATION_NO_PATTERN: /^\d{4}-[A-Z]-\d{3}$/,
+  /** Year of registration format: e.g. 2026-2025 */
+  YEAR_OF_REGISTRATION_PATTERN: /^\d{4}-\d{4}$/,
   RING_NO_PATTERN: /^[A-Z0-9]+$/,
 } as const;
 

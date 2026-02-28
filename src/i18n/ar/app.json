@@ -1,4 +1,9 @@
 {
+  "news": {
+    "type": "النوع",
+    "dateTime": "التاريخ والوقت",
+    "description": "الوصف"
+  },
   "pigeon": {
     "name": "الاسم",
     "gender": "الجنس",
@@ -29,7 +34,8 @@
       "deadPigeonCannotChangeStatus": "لا يمكن تغيير حالة الحمامة الميتة",
       "soldPigeonCannotBeAlive": "لا يمكن تغيير حالة الحمامة المباعة إلى حية",
       "deadAtRequired": "تاريخ الوفاة مطلوب عند تغيير الحالة إلى ميتة",
-      "duplicateRingNumber": "يوجد حمامة برقم الحلقة {ringNo}",
+      "duplicateRingNumber": "يوجد حمامة برقم الحجل {ringNo}",
+      "duplicateRingNumberForYear": "يوجد حمامة برقم الحجل {ringNo} لنفس سنة التسجيل {yearOfRegistration}",
       "duplicateDocumentationNumber": "يوجد حمامة برقم التوثيق {docNo}",
       "fatherNotFound": "الحمامة الأب برقم {id} غير موجودة",
       "notMalePigeon": "الحمامة برقم {id} ليست ذكر",
@@ -42,7 +48,11 @@
       "fatherMustBeMale": "الحمامة برقم {id} يجب أن تكون ذكر",
       "motherMustBeFemale": "الحمامة برقم {id} يجب أن تكون أنثى",
       "motherMustBeAlive": "الحمامة الأم برقم {id} يجب أن تكون حية",
-      "formulaRequiresBothParents": "التركيبة تتطلب الأب والأم (أرسل father و mother أو maleId و femaleId)"
+      "formulaRequiresBothParents": "التركيبة تتطلب الأب والأم (أرسل father و mother أو maleId و femaleId)",
+      "fatherNotFoundByName": "لا توجد حمامة ذكر بالاسم \"{name}\"",
+      "motherNotFoundByName": "لا توجد حمامة أنثى بالاسم \"{name}\"",
+      "multipleMalesNamed": "يوجد أكثر من حمامة ذكر بالاسم \"{name}\". يرجى تحديد رقم الأب.",
+      "multipleFemalesNamed": "يوجد أكثر من حمامة أنثى بالاسم \"{name}\". يرجى تحديد رقم الأم."
     }
   }
 }

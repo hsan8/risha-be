@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 import { HISTORY_CONSTANTS } from '../constants';
 import { HistoryEvent } from '../entities';
 import { HistoryEventType } from '../enums';
@@ -32,8 +33,8 @@ export class HistoryRepository {
 
   async create(data: CreateHistoryEventData): Promise<HistoryEvent> {
     const userHistoryRef = this.getUserHistoryRef(data.userId, data.pigeonId);
-    const eventRef = userHistoryRef.push();
-    const id = eventRef.key!;
+    const id = uuidv4();
+    const eventRef = userHistoryRef.child(id);
 
     const entity = this.dataToEntity(data, id);
     const payload = {

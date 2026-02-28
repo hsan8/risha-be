@@ -2,7 +2,7 @@ import { VALIDATION_CONSTANTS } from '@/core/constants';
 import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Length, Matches } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class CreatePigeonRequestDto {
@@ -42,19 +42,36 @@ export class CreatePigeonRequestDto {
   @Expose()
   ownerId: string;
 
-  @ApiProperty({ example: '2024-A-001' })
+  @ApiProperty({ example: '2026-2025', description: 'Year of registration (e.g. 2026-2025)' })
   @Expose()
   @Transform(({ value }) => value?.trim?.() ?? value)
   @IsString({
-    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.documentationNo' }),
+    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
   @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.documentationNo' }),
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
-  @Length(VALIDATION_CONSTANTS.MIN_DOCUMENTATION_LENGTH, VALIDATION_CONSTANTS.MAX_DOCUMENTATION_LENGTH, {
-    message: i18n('validation.Length', { path: 'app', property: 'pigeon.documentationNo' }),
+  @Length(9, 9, {
+    message: i18n('validation.Length', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
-  documentationNo!: string;
+  @Matches(/^\d{4}-\d{4}$/, {
+    message: i18n('validation.Matches', { path: 'app', property: 'pigeon.yearOfRegistration' }),
+  })
+  yearOfRegistration!: string;
+
+  @ApiProperty({ example: 'A', description: 'Letter of registration (single letter)' })
+  @Expose()
+  @Transform(({ value }) => value?.trim?.() ?? value)
+  @IsString({
+    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.letterOfRegistration' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.letterOfRegistration' }),
+  })
+  @Length(1, 1, {
+    message: i18n('validation.Length', { path: 'app', property: 'pigeon.letterOfRegistration' }),
+  })
+  letterOfRegistration!: string;
 
   @ApiProperty({ example: 'RN123' })
   @Expose()
@@ -139,20 +156,6 @@ export class CreatePigeonRequestDto {
     message: i18n('validation.IsUUID', { path: 'app', property: 'pigeon.motherId' }),
   })
   motherId?: string;
-
-  @ApiProperty({ example: '2023' })
-  @Expose()
-  @Transform(({ value }) => value?.trim?.() ?? value)
-  @IsString({
-    message: i18n('validation.IsString', { path: 'app', property: 'pigeon.yearOfBirth' }),
-  })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.yearOfBirth' }),
-  })
-  @Length(VALIDATION_CONSTANTS.YEAR_LENGTH, VALIDATION_CONSTANTS.YEAR_LENGTH, {
-    message: i18n('validation.Length', { path: 'app', property: 'pigeon.yearOfBirth' }),
-  })
-  yearOfBirth!: string;
 
   @ApiPropertyOptional({ example: '2024-12-01T10:30:00Z' })
   @Expose()

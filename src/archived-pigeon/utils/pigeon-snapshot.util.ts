@@ -11,7 +11,6 @@ export function toFirebaseSnapshot(pigeon: Pigeon): Record<string, unknown> {
     deadAt: toIso(pigeon.deadAt),
     vaccinationDates:
       pigeon.vaccinationDates?.map((r) => ({ date: toIso(r.date), vaccine: r.vaccine, note: r.note ?? null })) ?? null,
-    caseNumber: pigeon.caseNumber ?? null,
     ownerId: pigeon.ownerId ?? null,
   };
 }

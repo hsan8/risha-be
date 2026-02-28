@@ -42,6 +42,10 @@
         ".read": "auth != null && auth.uid === $userId",
         ".write": "auth != null && auth.uid === $userId"
       }
+    },
+    "news": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

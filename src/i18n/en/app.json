@@ -1,4 +1,9 @@
 {
+  "news": {
+    "type": "Type",
+    "dateTime": "Date & time",
+    "description": "Description"
+  },
   "pigeon": {
     "name": "Name",
     "gender": "Gender",
@@ -30,6 +35,7 @@
       "soldPigeonCannotBeAlive": "Sold pigeon cannot be changed to alive",
       "deadAtRequired": "Dead date is required when changing status to DEAD",
       "duplicateRingNumber": "Pigeon with ring number {ringNo} already exists",
+      "duplicateRingNumberForYear": "Pigeon with ring number {ringNo} already exists for year of registration {yearOfRegistration}",
       "duplicateDocumentationNumber": "Pigeon with documentation number {docNo} already exists",
       "fatherNotFound": "Father pigeon with ID {id} not found",
       "notMalePigeon": "Pigeon with ID {id} is not a male pigeon",
@@ -42,7 +48,11 @@
       "fatherMustBeMale": "Pigeon with ID {id} must be male",
       "motherMustBeFemale": "Pigeon with ID {id} must be female",
       "motherMustBeAlive": "Mother pigeon with ID {id} must be alive",
-      "formulaRequiresBothParents": "Formula requires both father and mother (provide father and mother, or maleId and femaleId)"
+      "formulaRequiresBothParents": "Formula requires both father and mother (provide father and mother, or maleId and femaleId)",
+      "fatherNotFoundByName": "No male pigeon found with name \"{name}\"",
+      "motherNotFoundByName": "No female pigeon found with name \"{name}\"",
+      "multipleMalesNamed": "Multiple male pigeons named \"{name}\". Please specify the father ID.",
+      "multipleFemalesNamed": "Multiple female pigeons named \"{name}\". Please specify the mother ID."
     }
   }
 }

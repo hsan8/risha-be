@@ -37,9 +37,13 @@ export class Pigeon {
   @IsString()
   ownerId?: string;
 
-  @ApiProperty({ description: 'Documentation number of the pigeon' })
+  @ApiProperty({ description: 'Year of registration (e.g. 2026-2025)' })
   @IsString()
-  documentationNo: string;
+  yearOfRegistration: string;
+
+  @ApiProperty({ description: 'Letter of registration (single letter)' })
+  @IsString()
+  letterOfRegistration: string;
 
   @ApiProperty({ description: 'Ring number of the pigeon' })
   @IsString()
@@ -49,30 +53,23 @@ export class Pigeon {
   @IsString()
   ringColor: string;
 
-  @ApiProperty({ description: 'Case number of the pigeon', required: false })
-  @IsOptional()
-  @IsString()
-  caseNumber?: string;
-
   @ApiProperty({ description: 'Father name of the pigeon' })
   @IsString()
   fatherName: string;
 
-  @ApiProperty({ description: 'Father pigeon object', required: false })
+  @ApiProperty({ description: 'Father pigeon ID (UUID)', required: false })
   @IsOptional()
-  father?: Pigeon;
+  @IsString()
+  fatherId?: string;
 
   @ApiProperty({ description: 'Mother name of the pigeon' })
   @IsString()
   motherName: string;
 
-  @ApiProperty({ description: 'Mother pigeon object', required: false })
+  @ApiProperty({ description: 'Mother pigeon ID (UUID)', required: false })
   @IsOptional()
-  mother?: Pigeon;
-
-  @ApiProperty({ description: 'Year of birth of the pigeon' })
   @IsString()
-  yearOfBirth: string;
+  motherId?: string;
 
   @ApiProperty({ description: 'Date when the pigeon died', required: false })
   @IsOptional()

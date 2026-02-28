@@ -24,6 +24,10 @@ export class UserProfileResponseDto {
   @Expose()
   country?: string;
 
+  @ApiProperty({ example: 'ميدان حولي', nullable: true })
+  @Expose()
+  address?: string;
+
   @ApiProperty({ example: 'https://avatar.url/user.jpg', nullable: true })
   @Expose()
   avatar?: string;
@@ -54,6 +58,7 @@ export class UserProfileResponseDto {
     this.email = user.email;
     this.phone = user.phone;
     this.country = user.country;
+    this.address = user.address;
     this.avatar = user.avatar;
     this.status = user.status;
     this.role = user.role;

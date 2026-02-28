@@ -9,7 +9,6 @@ import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests'
 import { Pigeon } from '../entities';
 import { PigeonGender, PigeonStatus } from '../enums';
 import { PigeonRepository } from '../repositories';
-import { DocumentationNumberService } from './documentation-number.service';
 
 @Injectable()
 export class PigeonService {
@@ -17,50 +16,29 @@ export class PigeonService {
 
   constructor(
     private readonly pigeonRepository: PigeonRepository,
-    private readonly documentationNumberService: DocumentationNumberService,
     private readonly userStatisticsService: UserStatisticsService,
     private readonly historyRepository: HistoryRepository,
   ) {}
 
   async create(createPigeonDto: CreatePigeonRequestDto, userId: string): Promise<Pigeon> {
     try {
-      // Check if ring number already exists
-      const existingPigeonWithRing = await this.pigeonRepository.findByRingNo(createPigeonDto.ringNo, userId);
-      if (existingPigeonWithRing) {
-        throw new ConflictException(I18nMessage.error('duplicateRingNumber', { ringNo: createPigeonDto.ringNo }));
-      }
-
-      // Check if documentation number already exists
-      const existingPigeonWithDoc = await this.pigeonRepository.findByDocumentationNo(
-        createPigeonDto.documentationNo,
+      // Ring number must be unique per yearOfRegistration for this user
+      const existingPigeonWithRing = await this.pigeonRepository.findByRingNoAndYearOfRegistration(
+        createPigeonDto.ringNo,
+        createPigeonDto.yearOfRegistration,
         userId,
       );
-      if (existingPigeonWithDoc) {
+      if (existingPigeonWithRing) {
         throw new ConflictException(
-          I18nMessage.error('duplicateDocumentationNumber', { docNo: createPigeonDto.documentationNo }),
+          I18nMessage.error('duplicateRingNumberForYear', {
+            ringNo: createPigeonDto.ringNo,
+            yearOfRegistration: createPigeonDto.yearOfRegistration,
+          }),
         );
-      }
-
-      // Validate documentation number format
-      if (!this.documentationNumberService.validateDocumentationNo(createPigeonDto.documentationNo)) {
-        throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
 
       // Validate parent relationships
       await this.validateParentRelationships(createPigeonDto, userId);
-
-      // Generate documentation number if not provided
-      if (!createPigeonDto.documentationNo) {
-        createPigeonDto.documentationNo = await this.documentationNumberService.generateDocumentationNo(
-          parseInt(createPigeonDto.yearOfBirth, 10),
-          userId,
-        );
-      } else {
-        // Validate provided documentation number format
-        if (!this.documentationNumberService.validateDocumentationNo(createPigeonDto.documentationNo)) {
-          throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
-        }
-      }
 
       // Set deadAt date if status is DEAD
       if (createPigeonDto.status === PigeonStatus.DEAD && !createPigeonDto.deadAt) {
@@ -137,6 +115,14 @@ export class PigeonService {
     }
   }
 
+  async getChildren(pigeonId: string, userId: string): Promise<Pigeon[]> {
+    const pigeon = await this.pigeonRepository.findById(pigeonId, userId);
+    if (!pigeon) {
+      throw new NotFoundException(I18nMessage.error('notFound'));
+    }
+    return this.pigeonRepository.findByParentId(userId, pigeonId);
+  }
+
   async update(id: string, updatePigeonDto: UpdatePigeonRequestDto, userId: string): Promise<Pigeon> {
     try {
       // Check if pigeon exists
@@ -145,23 +131,18 @@ export class PigeonService {
         throw new NotFoundException(I18nMessage.error('notFound'));
       }
 
-      // Check if ring number already exists (if being updated)
-      if (updatePigeonDto.ringNo && updatePigeonDto.ringNo !== existingPigeon.ringNo) {
-        const existingPigeonWithRing = await this.pigeonRepository.findByRingNo(updatePigeonDto.ringNo, userId);
-        if (existingPigeonWithRing) {
-          throw new ConflictException(I18nMessage.error('duplicateRingNumber', { ringNo: updatePigeonDto.ringNo }));
-        }
-      }
-
-      // Check if documentation number already exists (if being updated)
-      if (updatePigeonDto.documentationNo && updatePigeonDto.documentationNo !== existingPigeon.documentationNo) {
-        const existingPigeonWithDoc = await this.pigeonRepository.findByDocumentationNo(
-          updatePigeonDto.documentationNo,
+      // Ring number must be unique per yearOfRegistration (if ring or year of registration is being updated)
+      const yearOfReg = updatePigeonDto.yearOfRegistration ?? existingPigeon.yearOfRegistration;
+      const ringNo = updatePigeonDto.ringNo ?? existingPigeon.ringNo;
+      if (yearOfReg && ringNo && (updatePigeonDto.ringNo || updatePigeonDto.yearOfRegistration)) {
+        const existingWithSameRing = await this.pigeonRepository.findByRingNoAndYearOfRegistration(
+          ringNo,
+          yearOfReg,
           userId,
         );
-        if (existingPigeonWithDoc) {
+        if (existingWithSameRing && existingWithSameRing.id !== id) {
           throw new ConflictException(
-            I18nMessage.error('duplicateDocumentationNumber', { docNo: updatePigeonDto.documentationNo }),
+            I18nMessage.error('duplicateRingNumberForYear', { ringNo, yearOfRegistration: yearOfReg }),
           );
         }
       }
@@ -180,14 +161,6 @@ export class PigeonService {
       // Handle status changes
       if (updatePigeonDto.status) {
         this.handleStatusChange(existingPigeon, updatePigeonDto.status, updatePigeonDto.deadAt);
-      }
-
-      // Validate documentation number format if provided
-      if (
-        updatePigeonDto.documentationNo &&
-        !this.documentationNumberService.validateDocumentationNo(updatePigeonDto.documentationNo)
-      ) {
-        throw new BadRequestException(I18nMessage.error('invalidDocumentationNumberFormat'));
       }
 
       const updatedPigeon = await this.pigeonRepository.update(

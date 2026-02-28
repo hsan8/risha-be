@@ -18,7 +18,13 @@ export class PigeonDetailsResponseDto {
   @ApiProperty({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07', nullable: true })
   ownerId: string | null;
 
-  @ApiProperty({ example: '2024-A-001' })
+  @ApiProperty({ example: '2026-2025' })
+  yearOfRegistration: string;
+
+  @ApiProperty({ example: 'A' })
+  letterOfRegistration: string;
+
+  @ApiProperty({ example: '2026-2025-A', description: 'Computed: yearOfRegistration + letter' })
   documentationNo: string;
 
   @ApiProperty({ example: 'NL-2024-1234567' })
@@ -42,9 +48,6 @@ export class PigeonDetailsResponseDto {
   @ApiProperty({ example: 'BED2423E-F36B-1410-8DF1-0022B5E2BA07', nullable: true })
   motherId: string | null;
 
-  @ApiProperty({ example: '2024' })
-  yearOfBirth: string;
-
   @ApiProperty({ example: '2024-12-01T10:30:00Z', nullable: true })
   deadAt: Date | null;
 
@@ -60,15 +63,17 @@ export class PigeonDetailsResponseDto {
     this.gender = pigeon.gender;
     this.status = pigeon.status;
     this.ownerId = pigeon.ownerId;
-    this.documentationNo = pigeon.documentationNo;
+    this.yearOfRegistration = pigeon.yearOfRegistration;
+    this.letterOfRegistration = pigeon.letterOfRegistration;
+    this.documentationNo =
+      (pigeon as Pigeon & { documentationNo?: string }).documentationNo ??
+      `${pigeon.yearOfRegistration}-${(pigeon.letterOfRegistration ?? '').trim().toUpperCase()}`;
     this.ringNo = pigeon.ringNo;
     this.ringColor = pigeon.ringColor;
-    this.caseNumber = pigeon.caseNumber;
     this.fatherName = pigeon.fatherName;
-    this.fatherId = pigeon.father?.id || null;
+    this.fatherId = pigeon.fatherId ?? null;
     this.motherName = pigeon.motherName;
-    this.motherId = pigeon.mother?.id || null;
-    this.yearOfBirth = pigeon.yearOfBirth;
+    this.motherId = pigeon.motherId ?? null;
     this.deadAt = pigeon.deadAt;
     this.createdAt = pigeon.createdAt;
     this.updatedAt = pigeon.updatedAt;

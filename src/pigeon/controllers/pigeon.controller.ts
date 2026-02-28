@@ -1,6 +1,6 @@
 import { JwtAuthGuard } from '@/auth/guards';
-import { ApiDataPageResponse, ApiDataResponse } from '@/core/decorators/api';
-import { DataPageResponseDto, DataResponseDto, PageOptionsRequestDto } from '@/core/dtos';
+import { ApiDataArrayResponse, ApiDataPageResponse, ApiDataResponse } from '@/core/decorators/api';
+import { DataArrayResponseDto, DataPageResponseDto, DataResponseDto, PageOptionsRequestDto } from '@/core/dtos';
 import { ResponseFactory } from '@/core/utils';
 import { UserId } from '@/user/decorators';
 import {
@@ -12,14 +12,14 @@ import {
   HttpStatus,
   Logger,
   Param,
-  Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
-import { PigeonResponseDto } from '../dto/responses';
+import { PigeonChildResponseDto, PigeonResponseDto } from '../dto/responses';
 import { PigeonService } from '../services';
 
 @ApiTags('Pigeons')
@@ -62,6 +62,18 @@ export class PigeonController {
     return response;
   }
 
+  @Get(':id/children')
+  @ApiOperation({ summary: 'Get children of a pigeon (pigeons where this pigeon is father or mother)' })
+  @ApiParam({ name: 'id', description: 'Pigeon ID', type: String })
+  @ApiDataArrayResponse(PigeonChildResponseDto)
+  async getChildren(
+    @Param('id') id: string,
+    @UserId() userId: string,
+  ): Promise<DataArrayResponseDto<PigeonChildResponseDto>> {
+    const children = await this.pigeonService.getChildren(id, userId);
+    return ResponseFactory.dataArray(children.map((p) => new PigeonChildResponseDto(p)));
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a pigeon by ID' })
   @ApiParam({
@@ -75,7 +87,7 @@ export class PigeonController {
     return ResponseFactory.data(new PigeonResponseDto(pigeon));
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiOperation({ summary: 'Update a pigeon' })
   @ApiParam({
     name: 'id',
