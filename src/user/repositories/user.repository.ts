@@ -6,6 +6,7 @@ import { ICreateUserData, IUpdateForRegistrationData } from '@/user/interfaces';
 import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserRepository {
@@ -19,8 +20,8 @@ export class UserRepository {
   }
 
   async create(data: ICreateUserData): Promise<User> {
-    const userRef = this.collectionRef.push();
-    const id = userRef.key;
+    const id = uuidv4();
+    const userRef = this.collectionRef.child(id);
 
     const user = this.dataToEntity(data, id);
     await userRef.set(user);

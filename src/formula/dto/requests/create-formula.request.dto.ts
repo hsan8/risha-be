@@ -1,4 +1,5 @@
 import { VALIDATION_CONSTANTS } from '@/core/constants';
+import { FORMULA_CONSTANTS } from '@/formula/constants';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, IsUUID, Length, ValidateIf, ValidateNested } from 'class-validator';
@@ -56,13 +57,13 @@ export class CreateFormulaRequestDto {
   })
   femaleId?: string;
 
-  @ApiPropertyOptional({ example: 'BOX123' })
+  @ApiPropertyOptional({ example: 'BOX123', description: 'Box number (1–10 characters)' })
   @Expose()
   @IsOptional()
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'formula.boxNumber' }),
   })
-  @Length(VALIDATION_CONSTANTS.MIN_CASE_LENGTH, VALIDATION_CONSTANTS.MAX_CASE_LENGTH, {
+  @Length(FORMULA_CONSTANTS.MIN_BOX_NUMBER_LENGTH, FORMULA_CONSTANTS.MAX_BOX_NUMBER_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'formula.boxNumber' }),
   })
   boxNumber?: string;

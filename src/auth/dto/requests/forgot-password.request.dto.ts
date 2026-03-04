@@ -1,7 +1,7 @@
 import { AUTH_CONSTANTS } from '@/auth/constants';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, IsUUID, Length, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { i18nValidationMessage as i18n } from 'nestjs-i18n';
 
 export class ForgotPasswordRequestDto {
@@ -21,13 +21,13 @@ export class ForgotPasswordRequestDto {
 }
 
 export class VerifyOTPRequestDto {
-  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'User ID (UUID or Firebase key)' })
   @Expose()
   @IsNotEmpty({
     message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.userId' }),
   })
-  @IsUUID('4', {
-    message: i18n('validation.IsUUID', { path: 'app', property: 'auth.userId' }),
+  @IsString({
+    message: i18n('validation.IsString', { path: 'app', property: 'auth.userId' }),
   })
   userId!: string;
 
@@ -46,13 +46,13 @@ export class VerifyOTPRequestDto {
 }
 
 export class ResendOTPRequestDto {
-  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'User ID (UUID or Firebase key)' })
   @Expose()
   @IsNotEmpty({
     message: i18n('validation.IsNotEmpty', { path: 'app', property: 'auth.userId' }),
   })
-  @IsUUID('4', {
-    message: i18n('validation.IsUUID', { path: 'app', property: 'auth.userId' }),
+  @IsString({
+    message: i18n('validation.IsString', { path: 'app', property: 'auth.userId' }),
   })
   userId!: string;
 }

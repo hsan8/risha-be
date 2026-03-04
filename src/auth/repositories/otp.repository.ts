@@ -6,6 +6,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface CreateOTPData {
   email: string;
@@ -27,8 +28,8 @@ export class OTPRepository {
   }
 
   async create(data: CreateOTPData): Promise<OTP> {
-    const otpRef = this.collectionRef.push();
-    const id = otpRef.key;
+    const id = uuidv4();
+    const otpRef = this.collectionRef.child(id);
 
     const entity = this.dataToEntity(data, id);
     const payload = {
@@ -74,7 +75,7 @@ export class OTPRepository {
       return [];
     }
 
-    return _.values(data) as OTP[];
+    return Object.entries(data).map(([id, val]) => ({ ...(val as object), id })) as OTP[];
   }
 
   deleteUsedOTPs(otps: OTP[]): Promise<void[]> {

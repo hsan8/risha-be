@@ -2,9 +2,11 @@ import { AUTH_CONSTANTS } from '@/auth/constants';
 import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
 import { FirebaseService } from '@/core/services';
 import { User } from '@/user/entities';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
+import _ from 'lodash';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ICreateUserData {
   name: string;
@@ -23,7 +25,6 @@ export interface ICreateUserData {
 
 @Injectable()
 export class UserRepository {
-  private readonly logger = new Logger(UserRepository.name);
   private readonly db: Database;
   private readonly collectionRef: Reference;
 
@@ -33,8 +34,8 @@ export class UserRepository {
   }
 
   async create(data: ICreateUserData): Promise<User> {
-    const userRef = this.collectionRef.push();
-    const id = userRef.key;
+    const id = uuidv4();
+    const userRef = this.collectionRef.child(id);
 
     const user = this.dataToEntity(data, id);
     await userRef.set(user);
@@ -72,7 +73,7 @@ export class UserRepository {
     }
 
     const users = snapshot.val();
-    const userId = Object.keys(users)[0];
+    const userId = _.first(Object.keys(users));
     return users[userId] as User;
   }
 

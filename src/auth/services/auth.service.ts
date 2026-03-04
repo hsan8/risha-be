@@ -48,8 +48,16 @@ export class AuthService {
   }
 
   async register(dto: RegisterRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
-    // Check if user already exists
-    const existingUser = await this.userService.findByEmail(dto.email, locale);
+    // Check if user already exists (treat NotFound as \"no existing user\")
+    let existingUser: User | null = null;
+    try {
+      existingUser = await this.userService.findByEmail(dto.email, locale);
+    } catch (error) {
+      if (!(error instanceof NotFoundException)) {
+        throw error;
+      }
+    }
+
     if (existingUser) {
       if (existingUser.emailVerified) {
         throw new ConflictException(AUTH_MESSAGES_I18N.EMAIL_ALREADY_EXISTS[locale]);
@@ -232,26 +240,35 @@ export class AuthService {
     }
 
     const otps = await this.getAllOTPs(user.email);
-    const otp = this.findByEmailAndType(dto.otp, otps, OTPType.EMAIL_VERIFICATION);
+    // Accept both PASSWORD_RESET (forgot-password flow) and EMAIL_VERIFICATION (registration flow)
+    const otp = this.findValidOTPByCodeAndTypes(dto.otp, otps, [OTPType.PASSWORD_RESET, OTPType.EMAIL_VERIFICATION]);
 
     if (!otp) {
-      throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_OTP[DEFAULT_LOCALE]);
+      throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_OTP[locale]);
     }
 
-    // Mark OTP as used
+    if (otp.id) {
+      await this.otpRepository.markAsUsed(otp.id);
+    }
     await this.otpRepository.deleteUsedOTPs(otps);
 
-    // Mark user's email as verified and update status to ACTIVE
-    const updatedUser = await this.userService.markEmailAsVerifiedAndActivate(user.id, locale);
+    // For email verification (registration): mark email verified and activate
+    if (otp.type === OTPType.EMAIL_VERIFICATION) {
+      const updatedUser = await this.userService.markEmailAsVerifiedAndActivate(user.id, locale);
+      const tokens = await this.generateTokens(updatedUser);
+      this.logger.log(`OTP verified (email verification): ${user.email}`);
+      return new AuthResponseDto({
+        ...tokens,
+        user: new UserResponseDto(updatedUser),
+      });
+    }
 
-    // Generate tokens
-    const tokens = await this.generateTokens(updatedUser);
-
-    this.logger.log(`OTP verified successfully: ${user.email}`);
-
+    // For password reset: just return tokens (user already active)
+    const tokens = await this.generateTokens(user);
+    this.logger.log(`OTP verified (password reset): ${user.email}`);
     return new AuthResponseDto({
       ...tokens,
-      user: new UserResponseDto(updatedUser),
+      user: new UserResponseDto(user),
     });
   }
 
@@ -338,14 +355,6 @@ export class AuthService {
     }
   }
 
-  private async findValidOTPByEmail(otps: OTP[], code: string): Promise<OTP | null> {
-    const now = moment();
-
-    const validOTP = _.find(otps, (otp) => otp.code === code && !otp.used && moment(otp.expiresAt).isAfter(now));
-
-    return validOTP || null;
-  }
-
   private findByEmailAndType(otp: string, otps: OTP[], type: OTPType): OTP | null {
     const list = _.values(otps);
 
@@ -357,6 +366,25 @@ export class AuthService {
     }
 
     return filteredOtpByType;
+  }
+
+  /**
+   * Find a valid (not used, not expired) OTP by code and allowed types.
+   * Normalizes code to string for comparison (Firebase may return number).
+   */
+  private findValidOTPByCodeAndTypes(code: string, otps: OTP[], types: OTPType[]): OTP | null {
+    const now = moment();
+    const codeStr = String(code).trim();
+
+    const valid = _.find(otps, (otp) => {
+      const matchCode = String(otp.code).trim() === codeStr;
+      const matchType = types.includes(otp.type);
+      const notUsed = !otp.used;
+      const notExpired = otp.expiresAt && moment(otp.expiresAt).isAfter(now);
+      return matchCode && matchType && notUsed && notExpired;
+    });
+
+    return valid ?? null;
   }
 
   private canSendOTP(otps: OTP[]): boolean {
