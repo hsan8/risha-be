@@ -1,5 +1,5 @@
 export interface IVaccinationRecord {
   date: Date;
-  vaccine: string;
+  vaccine?: string;
   note?: string;
 }

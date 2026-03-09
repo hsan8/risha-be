@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { HistoryEvent } from '@/history/entities';
 import { Pigeon } from '@/pigeon/entities';
 import { ArchiveReason } from '../enums';
 
@@ -26,6 +27,10 @@ export class ArchivedPigeon {
 
   @ApiProperty({ description: 'Snapshot of the pigeon at archive time' })
   pigeonSnapshot: Pigeon;
+
+  @ApiProperty({ description: 'History events for this pigeon at archive time', type: [Object] })
+  @IsArray()
+  historyRecords: HistoryEvent[];
 
   @ApiPropertyOptional({ description: 'Optional note' })
   @IsOptional()

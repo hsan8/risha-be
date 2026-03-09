@@ -211,6 +211,24 @@ export class PigeonService {
   }
 
   private async validateParentRelationships(pigeonDto: CreatePigeonRequestDto, userId: string): Promise<void> {
+    const childRegistrationYear = pigeonDto.yearOfRegistration?.trim() ?? '';
+
+    // Extract actual birth year from format "YYYY-YYYY" (the second part)
+    const extractBirthYear = (yearString: string): number | null => {
+      if (!yearString) return null;
+
+      const parts = yearString.split('-');
+      // Based on our discussion: format is "REGISTRATION_YEAR-BIRTH_YEAR"
+      // Example: "2026-2025" means registered in 2026, born in 2025
+      if (parts.length === 2) {
+        return parseInt(parts[1], 10); // Return birth year
+      }
+      // Fallback for simple format like "2025"
+      return parseInt(parts[0], 10);
+    };
+
+    const childBirthYear = extractBirthYear(childRegistrationYear);
+
     // Validate father if provided
     if (pigeonDto.fatherId) {
       const father = await this.pigeonRepository.findById(pigeonDto.fatherId, userId);
@@ -226,19 +244,52 @@ export class PigeonService {
       if (father.status !== PigeonStatus.ALIVE) {
         throw new BadRequestException(I18nMessage.error('fatherNotAlive', { id: pigeonDto.fatherId }));
       }
+
+      // Extract father's birth year
+      if (childBirthYear && father.yearOfRegistration) {
+        const fatherBirthYear = extractBirthYear(father.yearOfRegistration);
+
+        if (fatherBirthYear && childBirthYear < fatherBirthYear) {
+          throw new BadRequestException(I18nMessage.error('yearOfRegistrationOlderThanParent', { parent: 'father' }));
+        }
+
+        // Optional: Add validation for same year with month consideration
+        if (fatherBirthYear && childBirthYear === fatherBirthYear) {
+          // You might want to check months here if you have that data
+          // For now, just a warning or allow it with additional validation
+          console.log(`Warning: Child and father have same birth year ${childBirthYear}`);
+        }
+      }
     }
 
-    // Validate mother if provided
+    // Validate mother if provided (similar logic)
     if (pigeonDto.motherId) {
       const mother = await this.pigeonRepository.findById(pigeonDto.motherId, userId);
+
       if (!mother) {
         throw new BadRequestException(I18nMessage.error('motherNotFound', { id: pigeonDto.motherId }));
       }
+
       if (mother.gender !== PigeonGender.FEMALE) {
         throw new BadRequestException(I18nMessage.error('notFemalePigeon', { id: pigeonDto.motherId }));
       }
+
       if (mother.status !== PigeonStatus.ALIVE) {
         throw new BadRequestException(I18nMessage.error('motherNotAlive', { id: pigeonDto.motherId }));
+      }
+
+      // Extract mother's birth year
+      if (childBirthYear && mother.yearOfRegistration) {
+        const motherBirthYear = extractBirthYear(mother.yearOfRegistration);
+
+        if (motherBirthYear && childBirthYear < motherBirthYear) {
+          throw new BadRequestException(I18nMessage.error('yearOfRegistrationOlderThanParent', { parent: 'mother' }));
+        }
+
+        // Optional: Same year validation
+        if (motherBirthYear && childBirthYear === motherBirthYear) {
+          console.log(`Warning: Child and mother have same birth year ${childBirthYear}`);
+        }
       }
     }
   }

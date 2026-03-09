@@ -1,3 +1,6 @@
+import { ARCHIVED_FORMULA_REASON } from '@/archived-formula/constants';
+import { ArchivedFormula } from '@/archived-formula/entities';
+import { ArchivedFormulaRepository } from '@/archived-formula/repositories';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { FormulaHistoryService } from '@/formula-history/services';
 import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
@@ -6,12 +9,14 @@ import { BadRequestException, forwardRef, Inject, Injectable, Logger, NotFoundEx
 import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
 import { FORMULA_MESSAGES } from '../constants';
-import { CreateFormulaRequestDto } from '../dto';
+import { CreateFormulaRequestDto, DestroyEggsRequestDto, UpdateFormulaRequestDto } from '../dto';
 import { Formula } from '../entities';
 import { FormulaActions, FormulaStatus } from '../enums';
 import { FormulaRepository } from '../repositories';
 
 const MAX_EGGS_PER_FORMULA = 2;
+
+export type DestroyEggsResult = { formula: Formula } | { archived: ArchivedFormula };
 
 @Injectable()
 export class FormulaService {
@@ -21,6 +26,7 @@ export class FormulaService {
     private readonly formulaRepository: FormulaRepository,
     @Inject(forwardRef(() => FormulaHistoryService)) private readonly formulaHistoryService: FormulaHistoryService,
     private readonly pigeonRepository: PigeonRepository,
+    private readonly archivedFormulaRepository: ArchivedFormulaRepository,
   ) {}
 
   async createFormula(createFormulaDto: CreateFormulaRequestDto, userId: string): Promise<Formula> {
@@ -65,11 +71,7 @@ export class FormulaService {
   /** Resolves father/mother id from name when only name is provided. */
   private async resolveParentsByName(dto: CreateFormulaRequestDto, userId: string): Promise<void> {
     if (dto.father?.name && !dto.father.id) {
-      const males = await this.pigeonRepository.findByNameAndGender(
-        dto.father.name.trim(),
-        PigeonGender.MALE,
-        userId,
-      );
+      const males = await this.pigeonRepository.findByNameAndGender(dto.father.name.trim(), PigeonGender.MALE, userId);
       if (males.length === 0) {
         throw new BadRequestException(I18nMessage.error('fatherNotFoundByName', { name: dto.father.name.trim() }));
       }
@@ -150,7 +152,8 @@ export class FormulaService {
   async addEgg(formulaId: string, userId: string): Promise<Formula> {
     this.logger.log(`Adding egg to formula with ID: ${formulaId}`);
     const formula = await this.getFormulaById(formulaId, userId);
-    if (formula.eggs.length >= MAX_EGGS_PER_FORMULA) {
+    const eggs = formula.eggs ?? [];
+    if (eggs.length >= MAX_EGGS_PER_FORMULA) {
       throw new BadRequestException(`Formula already has maximum number of eggs (${MAX_EGGS_PER_FORMULA})`);
     }
 
@@ -159,6 +162,7 @@ export class FormulaService {
       deliveredAt: moment().toDate(),
     };
 
+    if (!formula.eggs) formula.eggs = [];
     formula.eggs.push(egg);
     formula.status = formula.eggs.length === 1 ? FormulaStatus.HAS_ONE_EGG : FormulaStatus.HAS_TWO_EGG;
     const date = moment().toDate();
@@ -173,9 +177,16 @@ export class FormulaService {
     return this.formulaRepository.update(formulaId, formula, userId);
   }
 
-  async transformEggToPigeon(formulaId: string, eggId: string, pigeonId: string, userId: string): Promise<Formula> {
+  async transformEggToPigeon(
+    formulaId: string,
+    eggId: string,
+    pigeonId: string,
+    userId: string,
+  ): Promise<DestroyEggsResult> {
     this.logger.log(`Transforming egg ${eggId} to pigeon ${pigeonId} in formula ${formulaId}`);
     const formula = await this.getFormulaById(formulaId, userId);
+    if (!formula.eggs) formula.eggs = [];
+    if (!formula.children) formula.children = [];
 
     const eggIndex = formula.eggs.findIndex((egg) => egg.id === eggId);
     if (eggIndex === -1) {
@@ -186,11 +197,9 @@ export class FormulaService {
       throw new BadRequestException('Egg already transformed to pigeon');
     }
 
-    formula.eggs[eggIndex].transformedToPigeonAt = moment().toDate();
-    formula.eggs[eggIndex].pigeonId = pigeonId;
-    formula.children.push(pigeonId);
-
     const isFirstEgg = eggIndex === 0;
+    formula.eggs.splice(eggIndex, 1);
+    (formula.children ??= []).push(pigeonId);
     formula.status = formula.children.length === 1 ? FormulaStatus.HAS_ONE_PIGEON : FormulaStatus.HAS_TWO_PIGEON;
     const date = moment().toDate();
     const action = isFirstEgg
@@ -199,7 +208,71 @@ export class FormulaService {
     const description = `Egg ${eggIndex + 1} has been transformed to pigeon with ID: ${pigeonId}`;
     await this.formulaHistoryService.create({ formulaId, userId, action, description, date });
 
-    return this.formulaRepository.update(formulaId, formula, userId);
+    if (formula.eggs.length === 0) {
+      const archived = await this.archivedFormulaRepository.create({
+        originalFormulaId: formulaId,
+        userId,
+        archiveReason: ARCHIVED_FORMULA_REASON.ALL_CHICKS_REGISTERED,
+        formulaSnapshot: { ...formula },
+      });
+      await this.formulaRepository.delete(formulaId, userId);
+      this.logger.log(`Formula ${formulaId} archived (all chicks registered)`);
+      return { archived };
+    }
+
+    const updated = await this.formulaRepository.update(formulaId, formula, userId);
+    return { formula: updated };
+  }
+
+  async destroyEggs(formulaId: string, dto: DestroyEggsRequestDto, userId: string): Promise<DestroyEggsResult> {
+    this.logger.log(`Destroying eggs for formula ${formulaId}: ${dto.eggIds.join(', ')}`);
+    const formula = await this.getFormulaById(formulaId, userId);
+    if (!formula.eggs) formula.eggs = [];
+
+    const eggIdsSet = new Set(dto.eggIds);
+    const notFound = dto.eggIds.filter((id) => !formula.eggs.some((e) => e.id === id));
+    if (notFound.length > 0) {
+      throw new BadRequestException(I18nMessage.error('formulaEggNotFound', { ids: notFound.join(', ') }));
+    }
+
+    formula.eggs = formula.eggs.filter((e) => !eggIdsSet.has(e.id));
+
+    const date = moment().toDate();
+    const destroyedCount = dto.eggIds.length;
+    await this.formulaHistoryService.create({
+      formulaId,
+      userId,
+      action: FormulaActions.EGGS_DESTROYED,
+      description:
+        destroyedCount === 1 ? '1 egg destroyed' : `${destroyedCount} eggs destroyed`,
+      date,
+    });
+
+    if (formula.eggs.length === 0) {
+      formula.status = FormulaStatus.TERMINATED;
+      await this.formulaHistoryService.create({
+        formulaId,
+        userId,
+        action: FormulaActions.FORMULA_GOT_TERMINATED,
+        description: 'All eggs destroyed – formula ended and archived',
+        date,
+      });
+
+      const archived = await this.archivedFormulaRepository.create({
+        originalFormulaId: formulaId,
+        userId,
+        archiveReason: ARCHIVED_FORMULA_REASON.EGGS_DESTROYED,
+        formulaSnapshot: { ...formula },
+      });
+      await this.formulaRepository.delete(formulaId, userId);
+
+      this.logger.log(`Formula ${formulaId} archived (all eggs destroyed)`);
+      return { archived };
+    }
+
+    formula.status = formula.eggs.length === 1 ? FormulaStatus.HAS_ONE_EGG : FormulaStatus.HAS_TWO_EGG;
+    const updated = await this.formulaRepository.update(formulaId, formula, userId);
+    return { formula: updated };
   }
 
   async terminateFormula(formulaId: string, reason: string, userId: string): Promise<Formula> {
@@ -234,6 +307,37 @@ export class FormulaService {
 
   async getFormulaCountByStatus(status: FormulaStatus, userId: string): Promise<number> {
     return await this.formulaRepository.countByStatus(status, userId);
+  }
+
+  async updateFormula(formulaId: string, dto: UpdateFormulaRequestDto, userId: string): Promise<Formula> {
+    const formula = await this.getFormulaById(formulaId, userId);
+    if (dto.boxNumber !== undefined) {
+      const previousBoxNumber = formula.boxNumber ?? '';
+      formula.boxNumber = dto.boxNumber;
+      await this.formulaHistoryService.create({
+        formulaId,
+        userId,
+        action: FormulaActions.BOX_NUMBER_UPDATED,
+        description: `from "${previousBoxNumber}" to "${dto.boxNumber}"`,
+        date: moment().toDate(),
+        params: { previousBoxNumber, newBoxNumber: dto.boxNumber },
+      });
+    }
+    if (dto.yearOfFormula !== undefined) formula.yearOfFormula = dto.yearOfFormula;
+    return this.formulaRepository.update(formulaId, formula, userId);
+  }
+
+  async archiveFormula(formulaId: string, userId: string): Promise<ArchivedFormula> {
+    const formula = await this.getFormulaById(formulaId, userId);
+    const archived = await this.archivedFormulaRepository.create({
+      originalFormulaId: formulaId,
+      userId,
+      archiveReason: ARCHIVED_FORMULA_REASON.ARCHIVED_BY_USER,
+      formulaSnapshot: { ...formula },
+    });
+    await this.formulaRepository.delete(formulaId, userId);
+    this.logger.log(`Formula ${formulaId} archived`);
+    return archived;
   }
 
   updateFormulaStatus(formula: Formula, newStatus: FormulaStatus): Formula {

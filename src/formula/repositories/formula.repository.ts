@@ -49,8 +49,13 @@ export class FormulaRepository {
     const userFormulasRef = this.getUserFormulasRef(userId);
     const snapshot = await userFormulasRef.child(id).once('value');
 
-    const formula = snapshot.val() as Formula;
-    return formula ?? null;
+    const raw = snapshot.val();
+    if (raw == null) return null;
+
+    const formula = raw as Formula;
+    if (!Array.isArray(formula.eggs)) formula.eggs = [];
+    if (!Array.isArray(formula.children)) formula.children = [];
+    return formula;
   }
 
   async create(createFormulaDto: CreateFormulaRequestDto, userId: string): Promise<Formula> {
@@ -68,6 +73,12 @@ export class FormulaRepository {
     await formulaRef.update(formula);
     this.logger.log(`Updated formula with ID: ${id}`);
     return formula;
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    const formulaRef = this.getUserFormulasRef(userId).child(id);
+    await formulaRef.remove();
+    this.logger.log(`Deleted formula with ID: ${id}`);
   }
 
   async search(query: string, userId: string): Promise<Formula[]> {

@@ -1,3 +1,4 @@
+import { ArchivedFormulaResponseDto } from '@/archived-formula/dto/archived-formula-response.dto';
 import { JwtAuthGuard } from '@/auth/guards';
 import { ApiDataResponse } from '@/core/decorators/api';
 import { DataResponseDto } from '@/core/dtos/responses';
@@ -5,7 +6,7 @@ import { ResponseFactory } from '@/core/utils';
 import { UserId } from '@/user/decorators';
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreateFormulaRequestDto } from '../dto/requests';
+import { CreateFormulaRequestDto, DestroyEggsRequestDto } from '../dto/requests';
 import { FormulaResponseDto } from '../dto/responses';
 import { FormulaService } from '../services';
 
@@ -49,17 +50,19 @@ export class FormulaController {
     return ResponseFactory.data(new FormulaResponseDto(formula));
   }
 
-  @Put(':id/egg/:eggId/transform')
-  @ApiOperation({ summary: 'Transform an egg to a pigeon' })
+  @Put(':id/eggs/destroy')
+  @ApiOperation({ summary: 'Destroy one or two eggs; if all eggs destroyed, formula is ended and archived' })
   @ApiDataResponse(FormulaResponseDto)
-  async transformEggToPigeon(
+  async destroyEggs(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('eggId', ParseUUIDPipe) eggId: string,
-    @Body('pigeonId') pigeonId: string,
+    @Body() dto: DestroyEggsRequestDto,
     @UserId() userId: string,
-  ): Promise<DataResponseDto<FormulaResponseDto>> {
-    const formula = await this.formulaService.transformEggToPigeon(id, eggId, pigeonId, userId);
-    return ResponseFactory.data(new FormulaResponseDto(formula));
+  ): Promise<DataResponseDto<FormulaResponseDto | ArchivedFormulaResponseDto>> {
+    const result = await this.formulaService.destroyEggs(id, dto, userId);
+    if ('archived' in result) {
+      return ResponseFactory.data(new ArchivedFormulaResponseDto(result.archived));
+    }
+    return ResponseFactory.data(new FormulaResponseDto(result.formula));
   }
 
   @Put(':id/terminate')

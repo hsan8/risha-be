@@ -73,7 +73,7 @@ export class CreatePigeonRequestDto {
   })
   letterOfRegistration!: string;
 
-  @ApiProperty({ example: 'RN123' })
+  @ApiProperty({ example: '12', minLength: 1, maxLength: 3 })
   @Expose()
   @Transform(({ value }) => value?.trim?.() ?? value)
   @IsString({
@@ -96,7 +96,7 @@ export class CreatePigeonRequestDto {
   @IsNotEmpty({
     message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.ringColor' }),
   })
-  @Length(VALIDATION_CONSTANTS.MIN_RING_LENGTH, VALIDATION_CONSTANTS.MAX_RING_LENGTH, {
+  @Length(VALIDATION_CONSTANTS.MIN_RING_COLOR_LENGTH, VALIDATION_CONSTANTS.MAX_RING_COLOR_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.ringColor' }),
   })
   ringColor!: string;

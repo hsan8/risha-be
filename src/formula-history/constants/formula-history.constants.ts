@@ -4,7 +4,10 @@ export const FORMULA_HISTORY_CONSTANTS = {
   COLLECTION_NAME: 'formula-history',
 } as const;
 
-export const FORMULA_ACTION_LABELS_I18N: Record<string, Record<UserLocale, string>> = {
+export const FORMULA_ACTION_LABELS_I18N: Record<
+  string,
+  Record<UserLocale, string | ((previousBoxNumber: string, newBoxNumber: string) => string)>
+> = {
   FORMULA_INITIATED: {
     [UserLocale.ARABIC]: 'تم انشاء التركيبة بتاريخ:',
     [UserLocale.ENGLISH]: 'Formula initiated on:',
@@ -28,5 +31,15 @@ export const FORMULA_ACTION_LABELS_I18N: Record<string, Record<UserLocale, strin
   FORMULA_GOT_TERMINATED: {
     [UserLocale.ARABIC]: 'تم إنهاء التركيبة بتاريخ:',
     [UserLocale.ENGLISH]: 'Formula terminated on:',
+  },
+  EGGS_DESTROYED: {
+    [UserLocale.ARABIC]: 'تم إتلاف البيض/البيضة بتاريخ:',
+    [UserLocale.ENGLISH]: 'Egg(s) destroyed on:',
+  },
+  BOX_NUMBER_UPDATED: {
+    [UserLocale.ARABIC]: (previousBoxNumber: string, newBoxNumber: string): string =>
+      ` نقل البيض من خانة "${previousBoxNumber}" إلى خانة "${newBoxNumber}" بتاريخ:`,
+    [UserLocale.ENGLISH]: (previousBoxNumber: string, newBoxNumber: string): string =>
+      `Eggs transferred from box "${previousBoxNumber}" to box "${newBoxNumber}" on:`,
   },
 };

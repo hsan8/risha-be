@@ -3,7 +3,32 @@ import { Pigeon } from '@/pigeon/entities';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import moment from 'moment';
 import { ArchivedPigeon } from '../../entities';
-import { IArchivedPigeonRaw } from '../../interfaces';
+import { IArchivedHistoryEventRaw, IArchivedPigeonRaw } from '../../interfaces';
+
+export class ArchivedHistoryEventResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  eventType: string;
+
+  @ApiProperty({ example: '2025-02-01T12:00:00.000Z' })
+  eventDate: Date;
+
+  @ApiPropertyOptional()
+  note?: string;
+
+  @ApiProperty({ example: '2025-02-01T12:00:00.000Z' })
+  createdAt: Date;
+
+  constructor(raw: IArchivedHistoryEventRaw) {
+    this.id = raw.id;
+    this.eventType = raw.eventType;
+    this.eventDate = moment(raw.eventDate).toDate();
+    this.note = raw.note ?? undefined;
+    this.createdAt = moment(raw.createdAt).toDate();
+  }
+}
 
 export class ArchivedPigeonResponseDto {
   @ApiProperty()
@@ -21,6 +46,9 @@ export class ArchivedPigeonResponseDto {
   @ApiProperty({ type: () => PigeonResponseDto })
   pigeonSnapshot: PigeonResponseDto;
 
+  @ApiProperty({ type: [ArchivedHistoryEventResponseDto], description: 'History events bundled with this archive' })
+  historyRecords: ArchivedHistoryEventResponseDto[];
+
   @ApiPropertyOptional()
   note?: string;
 
@@ -37,6 +65,18 @@ export class ArchivedPigeonResponseDto {
     this.archiveReason = archived.archiveReason;
     this.archivedAt = isRaw ? moment(raw.archivedAt).toDate() : entity.archivedAt;
     this.pigeonSnapshot = new PigeonResponseDto((isRaw ? raw.pigeonSnapshot : entity.pigeonSnapshot) as Pigeon);
+    const historyRaw: IArchivedHistoryEventRaw[] = isRaw
+      ? (raw.historyRecords ?? [])
+      : (entity.historyRecords ?? []).map((e) => ({
+          id: e.id,
+          pigeonId: e.pigeonId,
+          userId: e.userId,
+          eventType: e.eventType,
+          eventDate: moment(e.eventDate).toISOString(),
+          note: e.note ?? null,
+          createdAt: moment(e.createdAt).toISOString(),
+        }));
+    this.historyRecords = historyRaw.map((e) => new ArchivedHistoryEventResponseDto(e));
     this.note = isRaw ? raw.note ?? undefined : entity.note;
     this.newOwnerId = isRaw ? raw.newOwnerId ?? undefined : entity.newOwnerId;
   }

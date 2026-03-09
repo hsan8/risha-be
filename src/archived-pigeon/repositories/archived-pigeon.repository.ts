@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
 import _ from 'lodash';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 import { ARCHIVED_PIGEON_CONSTANTS } from '../constants';
 import { ArchivedPigeon } from '../entities';
 import { IArchivedPigeonRaw, ICreateArchivedPigeonData } from '../interfaces';
@@ -23,8 +24,8 @@ export class ArchivedPigeonRepository {
   }
 
   async create(data: ICreateArchivedPigeonData): Promise<ArchivedPigeon> {
-    const ref = this.getUserRef(data.userId).push();
-    const id = ref.key!;
+    const id = uuidv4();
+    const ref = this.getUserRef(data.userId).child(id);
 
     const payload = this.buildCreatePayload(data, id);
     await ref.set(payload);
@@ -35,6 +36,15 @@ export class ArchivedPigeonRepository {
 
   private buildCreatePayload(data: ICreateArchivedPigeonData, id: string): Record<string, unknown> {
     const now = moment().toDate();
+    const historyRecords = (data.historyRecords ?? []).map((e) => ({
+      id: e.id,
+      pigeonId: e.pigeonId,
+      userId: e.userId,
+      eventType: e.eventType,
+      eventDate: moment(e.eventDate).toISOString(),
+      note: e.note ?? null,
+      createdAt: moment(e.createdAt).toISOString(),
+    }));
     return {
       id,
       originalPigeonId: data.originalPigeonId,
@@ -42,6 +52,7 @@ export class ArchivedPigeonRepository {
       archiveReason: data.archiveReason,
       archivedAt: moment(now).toISOString(),
       pigeonSnapshot: toFirebaseSnapshot(data.pigeonSnapshot),
+      historyRecords,
       note: data.note ?? null,
       newOwnerId: data.newOwnerId ?? null,
     };
@@ -56,6 +67,7 @@ export class ArchivedPigeonRepository {
       archiveReason: data.archiveReason,
       archivedAt: now,
       pigeonSnapshot: data.pigeonSnapshot,
+      historyRecords: data.historyRecords ?? [],
       note: data.note,
       newOwnerId: data.newOwnerId,
     } as ArchivedPigeon;

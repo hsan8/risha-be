@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FormulaActions } from '@/formula/enums';
 import { FormulaHistoryEvent } from '../../entities';
 
@@ -18,6 +18,12 @@ export class FormulaHistoryEventResponseDto {
   @ApiProperty()
   description: string;
 
+  @ApiPropertyOptional({ description: 'Previous box number; present when action is BOX_NUMBER_UPDATED' })
+  previousBoxNumber?: string;
+
+  @ApiPropertyOptional({ description: 'New box number; present when action is BOX_NUMBER_UPDATED' })
+  newBoxNumber?: string;
+
   @ApiProperty()
   date: Date;
 
@@ -30,6 +36,8 @@ export class FormulaHistoryEventResponseDto {
     this.action = event.action;
     this.label = label;
     this.description = event.description;
+    this.previousBoxNumber = event.params?.previousBoxNumber;
+    this.newBoxNumber = event.params?.newBoxNumber;
     this.date = event.date;
     this.createdAt = event.createdAt;
   }

@@ -1,5 +1,5 @@
 import { FirebaseService } from '@/core/services';
-import { FormulaHistoryEvent } from '@/formula-history/entities';
+import { BoxNumberUpdateParams, FormulaHistoryEvent } from '@/formula-history/entities';
 import { FormulaActions } from '@/formula/enums';
 import { Injectable } from '@nestjs/common';
 import { Database, Reference } from 'firebase-admin/database';
@@ -13,6 +13,8 @@ export interface CreateFormulaHistoryEventData {
   action: FormulaActions;
   description: string;
   date: Date;
+  /** Set when action is BOX_NUMBER_UPDATED */
+  params?: BoxNumberUpdateParams;
 }
 
 @Injectable()
@@ -52,6 +54,7 @@ export class FormulaHistoryRepository {
       description: data.description,
       date: data.date,
       createdAt: now,
+      ...(data.params && { params: data.params }),
     };
   }
 

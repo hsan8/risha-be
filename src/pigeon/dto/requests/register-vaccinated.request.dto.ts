@@ -17,12 +17,10 @@ export class RegisterVaccinatedRequestDto {
   })
   vaccinatedAt!: string;
 
-  @ApiProperty({ example: 'Newcastle', description: 'Vaccine name' })
+  @ApiPropertyOptional({ example: 'Newcastle', description: 'Vaccine name' })
   @Expose()
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.vaccineName' }),
-  })
   vaccineName?: string;
 
   @ApiPropertyOptional({ example: 'First dose', description: 'Vaccine note' })

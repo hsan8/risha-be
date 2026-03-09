@@ -10,9 +10,13 @@ export const VALIDATION_CONSTANTS = {
   MIN_DOCUMENTATION_LENGTH: 8,
   MAX_DOCUMENTATION_LENGTH: 20,
 
-  // Ring validation
-  MIN_RING_LENGTH: 2,
-  MAX_RING_LENGTH: 20,
+  // Ring number validation (ringNo length)
+  MIN_RING_LENGTH: 1,
+  MAX_RING_LENGTH: 3,
+
+  // Ring color validation
+  MIN_RING_COLOR_LENGTH: 2,
+  MAX_RING_COLOR_LENGTH: 20,
 
   // Case validation
   MIN_CASE_LENGTH: 5,

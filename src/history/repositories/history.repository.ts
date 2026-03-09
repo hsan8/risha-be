@@ -77,4 +77,10 @@ export class HistoryRepository {
       createdAt: moment(e.createdAt).toDate(),
     })) as HistoryEvent[];
   }
+
+  /** Removes all history events for a pigeon (e.g. when archiving). */
+  async deleteByPigeonId(userId: string, pigeonId: string): Promise<void> {
+    const userHistoryRef = this.getUserHistoryRef(userId, pigeonId);
+    await userHistoryRef.remove();
+  }
 }

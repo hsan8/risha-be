@@ -31,9 +31,14 @@ export class FormulaHistoryService {
     return events;
   }
 
-  getEventLabel(action: string, locale: UserLocale): string {
+  getEventLabel(event: FormulaHistoryEvent, locale: UserLocale): string {
+    const { action, params } = event;
     const labels = FORMULA_ACTION_LABELS_I18N[action];
     if (!labels) return action;
-    return labels[locale] ?? labels[UserLocale.ARABIC];
+    const label = labels[locale] ?? labels[UserLocale.ARABIC];
+    if (typeof label === 'function' && params?.previousBoxNumber !== undefined && params?.newBoxNumber !== undefined) {
+      return label(params.previousBoxNumber, params.newBoxNumber);
+    }
+    return typeof label === 'string' ? label : action;
   }
 }

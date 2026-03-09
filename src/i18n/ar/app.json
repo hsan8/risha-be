@@ -52,7 +52,10 @@
       "fatherNotFoundByName": "لا توجد حمامة ذكر بالاسم \"{name}\"",
       "motherNotFoundByName": "لا توجد حمامة أنثى بالاسم \"{name}\"",
       "multipleMalesNamed": "يوجد أكثر من حمامة ذكر بالاسم \"{name}\". يرجى تحديد رقم الأب.",
-      "multipleFemalesNamed": "يوجد أكثر من حمامة أنثى بالاسم \"{name}\". يرجى تحديد رقم الأم."
+      "multipleFemalesNamed": "يوجد أكثر من حمامة أنثى بالاسم \"{name}\". يرجى تحديد رقم الأم.",
+      "yearOfRegistrationOlderThanParent": "سنة التسجيل يجب ألا تكون أقدم من سنة تسجيل الأب/الأم",
+      "formulaNotFound": "التركيبة غير موجودة",
+      "formulaEggNotFound": "البيضة/البيض غير موجود في التركيبة: {ids}"
     }
   }
 }

@@ -1,3 +1,4 @@
+import { HistoryRepository } from '@/history/repositories';
 import { PigeonStatus } from '@/pigeon/enums';
 import { PigeonRepository } from '@/pigeon/repositories';
 import { PigeonService } from '@/pigeon/services';
@@ -16,17 +17,20 @@ export class ArchivedPigeonService {
     private readonly archivedPigeonRepository: ArchivedPigeonRepository,
     private readonly pigeonService: PigeonService,
     private readonly pigeonRepository: PigeonRepository,
+    private readonly historyRepository: HistoryRepository,
     private readonly userStatisticsService: UserStatisticsService,
   ) {}
 
   async archivePigeon(pigeonId: string, userId: string, dto: ArchivePigeonRequestDto): Promise<ArchivedPigeon> {
     const pigeon = await this.pigeonService.findOne(pigeonId, userId);
+    const historyRecords = await this.historyRepository.findByPigeonId(userId, pigeonId);
 
     const archived = await this.archivedPigeonRepository.create({
       originalPigeonId: pigeonId,
       userId,
       archiveReason: dto.reason,
       pigeonSnapshot: pigeon,
+      historyRecords,
       note: dto.note,
       newOwnerId: dto.newOwnerId,
     });
@@ -35,6 +39,7 @@ export class ArchivedPigeonService {
     await this.userStatisticsService.decrementPigeonCount(userId, pigeon.gender, wasAlive);
 
     await this.pigeonRepository.delete(pigeonId, userId);
+    await this.historyRepository.deleteByPigeonId(userId, pigeonId);
 
     this.logger.log(`Pigeon ${pigeonId} archived (${dto.reason}) for user ${userId}`);
     return archived;

@@ -28,7 +28,7 @@ export class FormulaHistoryController {
   ): Promise<DataArrayResponseDto<FormulaHistoryEventResponseDto>> {
     const events = await this.formulaHistoryService.findByFormulaId(userId, formulaId);
     const labels = events.map(
-      (e) => new FormulaHistoryEventResponseDto(e, this.formulaHistoryService.getEventLabel(e.action, locale)),
+      (e) => new FormulaHistoryEventResponseDto(e, this.formulaHistoryService.getEventLabel(e, locale)),
     );
     return ResponseFactory.dataArray(labels);
   }
