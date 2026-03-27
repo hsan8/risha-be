@@ -82,4 +82,14 @@ export class ArchivedPigeonRepository {
     list.sort((a, b) => (b.archivedAt as string).localeCompare(a.archivedAt as string));
     return list;
   }
+
+  async findById(userId: string, archivedPigeonId: string): Promise<IArchivedPigeonRaw | null> {
+    const snapshot = await this.getUserRef(userId).child(archivedPigeonId).once('value');
+    if (!snapshot.exists()) return null;
+    return snapshot.val() as IArchivedPigeonRaw;
+  }
+
+  async delete(userId: string, archivedPigeonId: string): Promise<void> {
+    await this.getUserRef(userId).child(archivedPigeonId).remove();
+  }
 }

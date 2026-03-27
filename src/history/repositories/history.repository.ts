@@ -83,4 +83,26 @@ export class HistoryRepository {
     const userHistoryRef = this.getUserHistoryRef(userId, pigeonId);
     await userHistoryRef.remove();
   }
+
+  /** Replace all events for a pigeon (e.g. when rolling back an archive). */
+  async replaceAllForPigeon(userId: string, pigeonId: string, events: HistoryEvent[]): Promise<void> {
+    const userHistoryRef = this.getUserHistoryRef(userId, pigeonId);
+    if (events.length === 0) {
+      await userHistoryRef.remove();
+      return;
+    }
+    const payload: Record<string, unknown> = {};
+    for (const e of events) {
+      payload[e.id] = {
+        id: e.id,
+        pigeonId: e.pigeonId,
+        userId: e.userId,
+        eventType: e.eventType,
+        eventDate: moment(e.eventDate).toISOString(),
+        createdAt: moment(e.createdAt).toISOString(),
+        ...(e.note != null && e.note !== '' ? { note: e.note } : {}),
+      };
+    }
+    await userHistoryRef.set(payload);
+  }
 }

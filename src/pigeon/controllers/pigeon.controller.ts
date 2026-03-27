@@ -1,6 +1,8 @@
 import { JwtAuthGuard } from '@/auth/guards';
-import { ApiDataArrayResponse, ApiDataPageResponse, ApiDataResponse } from '@/core/decorators/api';
-import { DataArrayResponseDto, DataPageResponseDto, DataResponseDto, PageOptionsRequestDto } from '@/core/dtos';
+import { Language } from '@/core/decorators';
+import { ApiDataArrayResponse, ApiDataResponse, ApiXLanguageHeader } from '@/core/decorators/api';
+import { DataArrayResponseDto, DataResponseDto } from '@/core/dtos';
+import { UserLocale } from '@/core/enums';
 import { ResponseFactory } from '@/core/utils';
 import { UserId } from '@/user/decorators';
 import {
@@ -8,19 +10,21 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Logger,
   Param,
   Post,
   Put,
-  Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiProduces, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CreatePigeonRequestDto, UpdatePigeonRequestDto } from '../dto/requests';
 import { PigeonChildResponseDto, PigeonResponseDto } from '../dto/responses';
-import { PigeonService } from '../services';
+import { PigeonService, PigeonShareCardService } from '../services';
 
 @ApiTags('Pigeons')
 @ApiBearerAuth()
@@ -29,7 +33,10 @@ import { PigeonService } from '../services';
 export class PigeonController {
   private readonly logger = new Logger(PigeonController.name);
 
-  constructor(private readonly pigeonService: PigeonService) {}
+  constructor(
+    private readonly pigeonService: PigeonService,
+    private readonly pigeonShareCardService: PigeonShareCardService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new pigeon' })
@@ -44,22 +51,10 @@ export class PigeonController {
 
   @Get()
   @ApiOperation({ summary: 'Get all pigeons' })
-  @ApiDataPageResponse(PigeonResponseDto)
-  async findAll(
-    @Query() pageOptions: PageOptionsRequestDto,
-    @UserId() userId: string,
-  ): Promise<DataPageResponseDto<PigeonResponseDto>> {
-    const { items, total } = await this.pigeonService.findAll(pageOptions, userId);
-
-    const response = ResponseFactory.dataPage(
-      items.map((pigeon) => new PigeonResponseDto(pigeon)),
-      {
-        page: pageOptions.page,
-        size: pageOptions.size,
-        itemCount: total,
-      },
-    );
-    return response;
+  @ApiDataArrayResponse(PigeonResponseDto)
+  async findAll(@UserId() userId: string): Promise<DataArrayResponseDto<PigeonResponseDto>> {
+    const items = await this.pigeonService.findAllPigeonsByUserId(userId);
+    return ResponseFactory.dataArray(items.map((pigeon) => new PigeonResponseDto(pigeon)));
   }
 
   @Get(':id/children')
@@ -72,6 +67,27 @@ export class PigeonController {
   ): Promise<DataArrayResponseDto<PigeonChildResponseDto>> {
     const children = await this.pigeonService.getChildren(id, userId);
     return ResponseFactory.dataArray(children.map((p) => new PigeonChildResponseDto(p)));
+  }
+
+  @Get(':id/share-card')
+  @ApiXLanguageHeader()
+  @ApiOperation({ summary: 'HTML share card for a pigeon (for sharing details)' })
+  @ApiProduces('text/html')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async shareCard(
+    @Param('id') id: string,
+    @UserId() userId: string,
+    @Language() locale: UserLocale,
+    @Res() res: Response,
+  ): Promise<void> {
+    const pigeon = await this.pigeonService.findOne(id, userId);
+    const children = await this.pigeonService.getChildren(id, userId);
+    const html = this.pigeonShareCardService.generateHtml(pigeon, children, locale);
+    res.set({
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Language': locale,
+    });
+    res.send(Buffer.from(html, 'utf8'));
   }
 
   @Get(':id')

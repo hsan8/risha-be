@@ -25,8 +25,8 @@ export * from './paci-limiter.service';
 // ✅ Correct - Organized with comments
 // Services
 export * from './user.service';
-export * from './paci.service';
-export * from './paci-limiter.service';
+export * from './abc.service';
+export * from './abc-limiter.service';
 
 // Types
 export * from './types';
@@ -60,11 +60,11 @@ src/users/
 │   └── user-status.enum.ts
 ├── interfaces/
 │   ├── index.ts
-│   └── paci-callback.interface.ts
+│   └── abc.interface.ts
 ├── services/
 │   ├── index.ts
 │   ├── user.service.ts
-│   └── paci.service.ts
+│   └── abc.service.ts
 └── index.ts
 ```
 
@@ -111,7 +111,7 @@ src/core/
 // constants/index.ts
 export * from './paci.constant';
 export * from './auth-regex-validation-rules.constant';
-export * from './rmq-patterns.constant';
+export * from './abc.constant';
 ```
 
 #### DTOs
@@ -139,8 +139,8 @@ export * from './data-page.response.dto';
 ```typescript
 // services/index.ts
 export * from './user.service';
-export * from './paci.service';
-export * from './paci-limiter.service';
+export * from './abc.service';
+export * from './abc-limiter.service';
 ```
 
 #### Entities
@@ -148,8 +148,8 @@ export * from './paci-limiter.service';
 ```typescript
 // entities/index.ts
 export * from './user.entity';
-export * from './beneficiary.entity';
-export * from './transfer.entity';
+export * from './abc.entity';
+export * from './xyz.entity';
 ```
 
 #### Enums
@@ -165,7 +165,7 @@ export * from './auth-role.enum';
 
 ```typescript
 // interfaces/index.ts
-export * from './paci-callback.interface';
+export * from './abc.interface';
 export * from './authenticated-user.interface';
 export * from './user-profile.interface';
 ```
@@ -191,7 +191,7 @@ import { UserLocale } from '~/core/enums/user-locale.enum';
 
 ```typescript
 // ✅ Correct - Relative imports for same module
-import { PACI_CALLBACK_PATTERN } from '../constants';
+import { ABC } from '../constants';
 import { CreateUserRequestDto } from '../dtos/requests';
 import { UserService } from '../services';
 
@@ -238,78 +238,12 @@ export * from './enums';
 export * from './interfaces';
 ```
 
-#### Common Dependencies Index
-
-```typescript
-// src/common/dependencies/index.ts
-export * from './eg-bank-http';
-export * from './profile-ms';
-export * from './rabbitmq-internal-module';
-```
-
-### 8. Lookups Module Index
-
-#### Lookups Structure
-
 ```typescript
 // src/lookups/index.ts
 export * from './constants';
 export * from './entities';
 export * from './services';
 ```
-
-#### Country-Specific Lookups
-
-```typescript
-// src/lookups/constants/country-trans/egy-banks/index.ts
-import EgyBanksAR from './egy-banks-ar.json';
-import EgyBanksEN from './egy-banks-en.json';
-
-export { EgyBanksAR, EgyBanksEN };
-```
-
-### 9. Transfer Methods Module Index
-
-#### Transfer Methods Structure
-
-```typescript
-// src/transfer-methods/index.ts
-export * from './common';
-export * from './bank-transfer-method';
-export * from './cash-pickup-transfer-method';
-export * from './wallet-transfer-method';
-```
-
-#### Common Transfer Methods
-
-```typescript
-// src/transfer-methods/common/index.ts
-export * from './constants';
-export * from './enums';
-export * from './interfaces';
-export * from './services';
-```
-
-### 10. Transfers Module Index
-
-#### Transfers Structure
-
-```typescript
-// src/transfers/index.ts
-export * from './country-trans-transfers';
-export * from './entities';
-export * from './services';
-```
-
-#### Country-Specific Transfers
-
-```typescript
-// src/transfers/country-trans-transfers/index.ts
-export * from './common';
-export * from './egbank';
-```
-
-### 11. Testing Index Files
 
 #### Test Mocks Index
 
@@ -359,11 +293,11 @@ export * from './service-c';
 ```typescript
 // ✅ Correct - Export specific items
 export { UserService } from './user.service';
-export { PaciService } from './paci.service';
+export { PaciService } from './abc.service';
 
 // ✅ Correct - Export all
 export * from './user.service';
-export * from './paci.service';
+export * from './abc.service';
 ```
 
 #### Maintain Export Order

@@ -10,7 +10,11 @@
         "include": "config",
         "exclude": "**/*.md"
       },
-      "i18n"
+      "i18n",
+      {
+        "include": "assets/**/*",
+        "watchAssets": false
+      }
     ]
   }
 }

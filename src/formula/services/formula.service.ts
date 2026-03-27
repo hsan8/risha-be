@@ -1,5 +1,5 @@
-import { ARCHIVED_FORMULA_REASON } from '@/archived-formula/constants';
 import { ArchivedFormula } from '@/archived-formula/entities';
+import { ArchivedFormulaReason } from '@/archived-formula/enums';
 import { ArchivedFormulaRepository } from '@/archived-formula/repositories';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { FormulaHistoryService } from '@/formula-history/services';
@@ -211,8 +211,8 @@ export class FormulaService {
     if (formula.eggs.length === 0) {
       const archived = await this.archivedFormulaRepository.create({
         originalFormulaId: formulaId,
+        archiveReason: ArchivedFormulaReason.ALL_CHICKS_REGISTERED,
         userId,
-        archiveReason: ARCHIVED_FORMULA_REASON.ALL_CHICKS_REGISTERED,
         formulaSnapshot: { ...formula },
       });
       await this.formulaRepository.delete(formulaId, userId);
@@ -243,8 +243,7 @@ export class FormulaService {
       formulaId,
       userId,
       action: FormulaActions.EGGS_DESTROYED,
-      description:
-        destroyedCount === 1 ? '1 egg destroyed' : `${destroyedCount} eggs destroyed`,
+      description: destroyedCount === 1 ? '1 egg destroyed' : `${destroyedCount} eggs destroyed`,
       date,
     });
 
@@ -261,7 +260,7 @@ export class FormulaService {
       const archived = await this.archivedFormulaRepository.create({
         originalFormulaId: formulaId,
         userId,
-        archiveReason: ARCHIVED_FORMULA_REASON.EGGS_DESTROYED,
+        archiveReason: ArchivedFormulaReason.EGGS_DESTROYED,
         formulaSnapshot: { ...formula },
       });
       await this.formulaRepository.delete(formulaId, userId);
@@ -332,7 +331,7 @@ export class FormulaService {
     const archived = await this.archivedFormulaRepository.create({
       originalFormulaId: formulaId,
       userId,
-      archiveReason: ARCHIVED_FORMULA_REASON.ARCHIVED_BY_USER,
+      archiveReason: ArchivedFormulaReason.ARCHIVED_BY_USER,
       formulaSnapshot: { ...formula },
     });
     await this.formulaRepository.delete(formulaId, userId);

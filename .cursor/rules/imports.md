@@ -20,10 +20,10 @@
 
 ```typescript
 // ✅ Correct
-import { PACI_CALLBACK_PATTERN } from '../constants';
+import { ABC } from '../constants';
 
 // ❌ Incorrect
-import { PACI_CALLBACK_PATTERN } from '../constants/paci.constant';
+import { ABC } from '../constants/paci.constant';
 ```
 
 #### Services
@@ -34,7 +34,7 @@ import { UserService, PaciService } from '../services';
 
 // ❌ Incorrect
 import { UserService } from '../services/user.service';
-import { PaciService } from '../services/paci.service';
+import { AbcService } from '../services/abc.service';
 ```
 
 #### DTOs
@@ -96,7 +96,7 @@ import { ThrottlerBehindProxyGuard } from '~/core/guards';
 import { ResponseFactory } from '~/core/utils';
 
 // Same module imports (relative paths)
-import { PACI_CALLBACK_PATTERN } from '../constants';
+import { ABC } from '../constants';
 import { CreateUserProfileRequestDto } from '../dtos/requests';
 import { UserDetailsResponseDto } from '../dtos/responses';
 import { UserService } from '../services';

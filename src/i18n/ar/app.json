@@ -55,7 +55,9 @@
       "multipleFemalesNamed": "يوجد أكثر من حمامة أنثى بالاسم \"{name}\". يرجى تحديد رقم الأم.",
       "yearOfRegistrationOlderThanParent": "سنة التسجيل يجب ألا تكون أقدم من سنة تسجيل الأب/الأم",
       "formulaNotFound": "التركيبة غير موجودة",
-      "formulaEggNotFound": "البيضة/البيض غير موجود في التركيبة: {ids}"
+      "formulaEggNotFound": "البيضة/البيض غير موجود في التركيبة: {ids}",
+      "archivedRecordNotFound": "الحمامة المؤرشفة غير موجودة",
+      "cannotRestoreActivePigeon": "الحمامة موجودة بالفعل في المزرعة ولا يمكن استرجاعها من الأرشيف"
     }
   }
 }

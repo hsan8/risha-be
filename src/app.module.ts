@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { I18nModule } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
+import { ArchivedFormulaModule } from './archived-formula/archived-formula.module';
+import { ArchivedPigeonModule } from './archived-pigeon/archived-pigeon.module';
 import { AuthModule } from './auth/auth.module';
 import { Environment } from './core/enums';
 import { AllExceptionsFilter, buildI18nValidationExceptionFilter } from './core/filters';
@@ -15,7 +17,6 @@ import { FormulaHistoryModule } from './formula-history/formula-history.module';
 import { FormulaModule } from './formula/formula.module';
 import { HealthModule } from './health/health.module';
 import { HistoryModule } from './history/history.module';
-import { ArchivedPigeonModule } from './archived-pigeon/archived-pigeon.module';
 import { NewsModule } from './news/news.module';
 import { PigeonModule } from './pigeon/pigeon.module';
 import { UserModule } from './user/user.module';
@@ -46,6 +47,7 @@ import { UserModule } from './user/user.module';
     HistoryModule,
     FormulaHistoryModule,
     FormulaModule,
+    ArchivedFormulaModule,
     NewsModule,
     HealthModule,
   ],

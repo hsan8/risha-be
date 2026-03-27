@@ -182,6 +182,39 @@ export class PigeonRepository {
     await pigeonRef.remove();
   }
 
+  /** Writes a full pigeon node (e.g. restore from archived snapshot). */
+  async restoreFullPigeon(userId: string, pigeon: Pigeon): Promise<void> {
+    const ref = this.getUserPigeonsRef(userId).child(pigeon.id);
+    const caseNumber = (pigeon as Pigeon & { caseNumber?: string }).caseNumber;
+    const payload: Record<string, unknown> = {
+      id: pigeon.id,
+      name: pigeon.name,
+      gender: pigeon.gender,
+      status: pigeon.status,
+      yearOfRegistration: pigeon.yearOfRegistration,
+      letterOfRegistration: pigeon.letterOfRegistration,
+      ringNo: normalizeRingNo(pigeon.ringNo),
+      ringColor: pigeon.ringColor,
+      fatherName: pigeon.fatherName,
+      motherName: pigeon.motherName,
+      createdAt: moment(pigeon.createdAt).toISOString(),
+      updatedAt: moment().toISOString(),
+    };
+    if (pigeon.fatherId) payload.fatherId = pigeon.fatherId;
+    if (pigeon.motherId) payload.motherId = pigeon.motherId;
+    if (pigeon.ownerId) payload.ownerId = pigeon.ownerId;
+    if (caseNumber) payload.caseNumber = caseNumber;
+    if (pigeon.deadAt) payload.deadAt = moment(pigeon.deadAt).toISOString();
+    if (pigeon.vaccinationDates?.length) {
+      payload.vaccinationDates = pigeon.vaccinationDates.map((r) => ({
+        date: moment(r.date).toISOString(),
+        vaccine: r.vaccine,
+        note: r.note ?? null,
+      }));
+    }
+    await ref.set(payload);
+  }
+
   async search(query: string, userId: string): Promise<Pigeon[]> {
     const userPigeonsRef = this.getUserPigeonsRef(userId);
     const snapshot = await userPigeonsRef.once('value');

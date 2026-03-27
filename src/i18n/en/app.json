@@ -55,7 +55,9 @@
       "multipleFemalesNamed": "Multiple female pigeons named \"{name}\". Please specify the mother ID.",
       "yearOfRegistrationOlderThanParent": "Year of registration must not be older than the {parent}'s year of registration",
       "formulaNotFound": "Formula not found",
-      "formulaEggNotFound": "Egg(s) not found in formula: {ids}"
+      "formulaEggNotFound": "Egg(s) not found in formula: {ids}",
+      "archivedRecordNotFound": "Archived pigeon not found",
+      "cannotRestoreActivePigeon": "This pigeon already exists in your loft and cannot be restored from the archive"
     }
   }
 }

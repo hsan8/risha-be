@@ -72,7 +72,7 @@ export class PigeonService {
     }
   }
 
-  async findAll(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Pigeon[]; total: number }> {
+  async findAll(pageOptions: PageOptionsRequestDto, userId: string): Promise<{ items: Pigeon[] }> {
     try {
       this.logger.log('🐦 PigeonService.findAll - Starting with options:', pageOptions);
       const result = await this.pigeonRepository.findAll(pageOptions, userId);

@@ -25,7 +25,6 @@ export class FormulaHistoryService {
   }
 
   async findByFormulaId(userId: string, formulaId: string): Promise<FormulaHistoryEvent[]> {
-    await this.formulaService.getFormulaById(formulaId, userId);
     const events = await this.formulaHistoryRepository.findByFormulaId(userId, formulaId);
     events.sort((a, b) => moment(b.date).valueOf() - moment(a.date).valueOf());
     return events;

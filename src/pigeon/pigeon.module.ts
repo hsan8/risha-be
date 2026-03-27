@@ -16,6 +16,7 @@ import {
   PigeonParentService,
   PigeonSearchService,
   PigeonService,
+  PigeonShareCardService,
   PigeonStatusService,
 } from './services';
 
@@ -31,6 +32,7 @@ import {
   providers: [
     PigeonRepository,
     PigeonService,
+    PigeonShareCardService,
     PigeonSearchService,
     PigeonParentService,
     PigeonStatusService,
