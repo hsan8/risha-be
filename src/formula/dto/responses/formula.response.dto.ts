@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Child, Egg, Formula, Parent } from '../../entities';
 import { FormulaStatus } from '../../enums';
-import { Egg, Formula, Parent } from '../../entities';
 
 export class FormulaParentResponseDto {
   @ApiProperty({ example: '486ce47e-831f-4f4e-b310-34ab3104c7ac' })
@@ -36,6 +36,19 @@ export class FormulaEggResponseDto {
   }
 }
 
+export class FormulaChildResponseDto {
+  @ApiProperty({ example: 'e26d790b-4e79-4a08-8564-590bf5e7f52e' })
+  id: string;
+
+  @ApiProperty({ example: 'ريو الصغير' })
+  name: string;
+
+  constructor(child: Child) {
+    this.id = child.id;
+    this.name = child.name;
+  }
+}
+
 export class FormulaResponseDto {
   @ApiProperty({ example: 'e26d790b-4e79-4a08-8564-590bf5e7f52e' })
   id: string;
@@ -55,11 +68,17 @@ export class FormulaResponseDto {
   @ApiProperty({ type: () => [FormulaEggResponseDto] })
   eggs: FormulaEggResponseDto[];
 
-  @ApiProperty({ type: () => [String], example: ['pigeon-id-1', 'pigeon-id-2'] })
-  children: string[];
+  @ApiProperty({
+    type: () => [FormulaChildResponseDto],
+    description: 'Pigeon children born from this formula',
+  })
+  children: FormulaChildResponseDto[];
 
   @ApiProperty({ example: '2026' })
   yearOfFormula: string;
+
+  @ApiProperty({ example: 'ملاحظة', nullable: true })
+  notes: string | null;
 
   @ApiProperty({ example: new Date('2023-10-01T10:30:00Z') })
   createdAt: Date;
@@ -74,8 +93,9 @@ export class FormulaResponseDto {
     this.mother = new FormulaParentResponseDto(formula.mother);
     this.status = formula.status;
     this.eggs = (formula.eggs ?? []).map((egg) => new FormulaEggResponseDto(egg));
-    this.children = formula.children ?? [];
+    this.children = (formula.children ?? []).map((c) => new FormulaChildResponseDto(c));
     this.yearOfFormula = formula.yearOfFormula;
+    this.notes = formula.notes ?? null;
     this.createdAt = formula.createdAt;
     this.updatedAt = formula.updatedAt;
   }

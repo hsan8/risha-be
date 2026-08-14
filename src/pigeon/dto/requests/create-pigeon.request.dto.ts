@@ -12,11 +12,11 @@ export class CreatePigeonRequestDto {
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.name' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.name' }),
-  })
   @Length(VALIDATION_CONSTANTS.MIN_NAME_LENGTH, VALIDATION_CONSTANTS.MAX_NAME_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.name' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.name' }),
   })
   name!: string;
 
@@ -48,14 +48,14 @@ export class CreatePigeonRequestDto {
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.yearOfRegistration' }),
-  })
   @Length(9, 9, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
   @Matches(/^\d{4}-\d{4}$/, {
     message: i18n('validation.Matches', { path: 'app', property: 'pigeon.yearOfRegistration' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.yearOfRegistration' }),
   })
   yearOfRegistration!: string;
 
@@ -65,11 +65,11 @@ export class CreatePigeonRequestDto {
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.letterOfRegistration' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.letterOfRegistration' }),
-  })
   @Length(1, 1, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.letterOfRegistration' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.letterOfRegistration' }),
   })
   letterOfRegistration!: string;
 
@@ -79,25 +79,24 @@ export class CreatePigeonRequestDto {
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.ringNo' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.ringNo' }),
-  })
   @Length(VALIDATION_CONSTANTS.MIN_RING_LENGTH, VALIDATION_CONSTANTS.MAX_RING_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.ringNo' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.ringNo' }),
   })
   ringNo!: string;
 
   @ApiProperty({ example: 'Blue' })
-  @Expose()
   @Transform(({ value }) => value?.trim?.() ?? value)
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.ringColor' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.ringColor' }),
-  })
   @Length(VALIDATION_CONSTANTS.MIN_RING_COLOR_LENGTH, VALIDATION_CONSTANTS.MAX_RING_COLOR_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.ringColor' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.ringColor' }),
   })
   ringColor!: string;
 
@@ -119,11 +118,11 @@ export class CreatePigeonRequestDto {
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.fatherName' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.fatherName' }),
-  })
   @Length(VALIDATION_CONSTANTS.MIN_PARENT_NAME_LENGTH, VALIDATION_CONSTANTS.MAX_PARENT_NAME_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.fatherName' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.fatherName' }),
   })
   fatherName!: string;
 
@@ -141,11 +140,11 @@ export class CreatePigeonRequestDto {
   @IsString({
     message: i18n('validation.IsString', { path: 'app', property: 'pigeon.motherName' }),
   })
-  @IsNotEmpty({
-    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.motherName' }),
-  })
   @Length(VALIDATION_CONSTANTS.MIN_PARENT_NAME_LENGTH, VALIDATION_CONSTANTS.MAX_PARENT_NAME_LENGTH, {
     message: i18n('validation.Length', { path: 'app', property: 'pigeon.motherName' }),
+  })
+  @IsNotEmpty({
+    message: i18n('validation.IsNotEmpty', { path: 'app', property: 'pigeon.motherName' }),
   })
   motherName!: string;
 

@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { I18nModule } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
+import { LegalModule } from './legal/legal.module';
+import { AdminModule } from './admin/admin.module';
 import { ArchivedFormulaModule } from './archived-formula/archived-formula.module';
 import { ArchivedPigeonModule } from './archived-pigeon/archived-pigeon.module';
 import { AuthModule } from './auth/auth.module';
@@ -40,6 +42,7 @@ import { UserModule } from './user/user.module';
     ServicesModule, // Global services module
 
     // Service modules
+    AdminModule,
     AuthModule,
     UserModule,
     PigeonModule,
@@ -50,6 +53,7 @@ import { UserModule } from './user/user.module';
     ArchivedFormulaModule,
     NewsModule,
     HealthModule,
+    LegalModule,
   ],
   providers: [
     // Global Interceptors (resolve language from x-language / Accept-Language / query)

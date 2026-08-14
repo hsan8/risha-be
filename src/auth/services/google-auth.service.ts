@@ -1,6 +1,14 @@
+import { AuthResponseDto } from '@/auth/dto/responses';
+import { AuthProvider, UserStatus } from '@/auth/enums';
+import { UserResponseDto } from '@/user/dto/responses';
+import { UserService } from '@/user/services';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { OAuth2Client } from 'google-auth-library';
-import { AUTH_CONSTANTS } from '../constants';
+import { AUTH_CONSTANTS, TOKEN_EXPIRY_SECONDS } from '../constants';
+import { User } from '@/user/entities';
+import { UserLocale } from '@/core/enums';
+import { GoogleAuthRequestDto } from '@/auth/dto/requests';
 
 export interface GoogleUserInfo {
   sub: string;
@@ -15,7 +23,10 @@ export class GoogleAuthService {
   private readonly logger = new Logger(GoogleAuthService.name);
   private readonly client: OAuth2Client;
 
-  constructor() {
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {
     this.client = new OAuth2Client();
   }
 
@@ -92,6 +103,41 @@ export class GoogleAuthService {
   }
 
   /**
+   * Exchange serverAuthCode (from @react-native-google-signin) for tokens and return user info.
+   * Uses the web client credentials; no PKCE verifier or redirect URI needed.
+   */
+  async exchangeServerAuthCodeForUserInfo(serverAuthCode: string): Promise<GoogleUserInfo> {
+    const webClientId = AUTH_CONSTANTS.GOOGLE_CLIENT_ID;
+    const clientSecret = AUTH_CONSTANTS.GOOGLE_CLIENT_SECRET;
+
+    if (!clientSecret) {
+      this.logger.error('GOOGLE_CLIENT_SECRET is required for serverAuthCode exchange.');
+      throw new UnauthorizedException('Server configuration error: GOOGLE_CLIENT_SECRET is required.');
+    }
+
+    const oauth2Client = new OAuth2Client(webClientId, clientSecret);
+
+    try {
+      const { tokens } = await oauth2Client.getToken({ code: serverAuthCode });
+
+      const idToken = tokens.id_token;
+      const accessToken = tokens.access_token;
+
+      if (idToken) {
+        return this.verifyIdToken(idToken);
+      }
+      if (accessToken) {
+        return this.getUserInfo(accessToken);
+      }
+      throw new UnauthorizedException('No id_token or access_token in serverAuthCode response');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error_description || err?.message;
+      this.logger.error(`serverAuthCode exchange failed: ${msg}`);
+      throw new UnauthorizedException('Invalid or expired serverAuthCode');
+    }
+  }
+
+  /**
    * Exchange authorization code (from PKCE flow) for tokens and return user info.
    * Used when mobile/SPA sends { code, codeVerifier, redirectUri } instead of idToken.
    * Web client requires client_secret for server-side token exchange.
@@ -142,5 +188,68 @@ export class GoogleAuthService {
       }
       throw new UnauthorizedException('Invalid or expired authorization code');
     }
+  }
+
+  async authenticate(dto: GoogleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
+    let googleUser: GoogleUserInfo;
+
+    if (dto.idToken) {
+      googleUser = await this.verifyIdToken(dto.idToken);
+    } else if (dto.serverAuthCode) {
+      googleUser = await this.exchangeServerAuthCodeForUserInfo(dto.serverAuthCode);
+    } else if (dto.code && dto.codeVerifier && dto.redirectUri) {
+      googleUser = await this.exchangeCodeForUserInfo(dto.code, dto.codeVerifier, dto.redirectUri);
+    } else {
+      throw new UnauthorizedException('Provide one of: idToken, serverAuthCode, or code+codeVerifier+redirectUri');
+    }
+
+    return this.authenticateGoogleUser(googleUser, locale);
+  }
+
+  private async authenticateGoogleUser(googleUser: GoogleUserInfo, locale: UserLocale): Promise<AuthResponseDto> {
+    let user = await this.userService
+      .findByEmailOrProviderId(googleUser.email, googleUser.sub, locale)
+      .catch(() => null);
+
+    if (!user) {
+      const name = googleUser.name || googleUser.email.split('@')[0];
+      user = await this.userService.create({
+        name,
+        email: googleUser.email,
+        avatar: googleUser.picture,
+        provider: AuthProvider.GOOGLE,
+        providerId: googleUser.sub,
+        emailVerified: true,
+        status: UserStatus.ACTIVE,
+      });
+    } else {
+      await this.userService.updateLastLogin(user.id);
+    }
+
+    const tokens = await this.generateTokens(user);
+    this.logger.log(`Google auth successful: ${user.email}`);
+
+    return new AuthResponseDto({
+      ...tokens,
+      user: new UserResponseDto(user),
+    });
+  }
+
+  private async generateTokens(
+    user: User,
+  ): Promise<{ accessToken: string; refreshToken: string; tokenType: string; expiresIn: number }> {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, { expiresIn: AUTH_CONSTANTS.JWT_ACCESS_TOKEN_EXPIRY }),
+      this.jwtService.signAsync(payload, { expiresIn: AUTH_CONSTANTS.JWT_REFRESH_TOKEN_EXPIRY }),
+    ]);
+
+    return { accessToken, refreshToken, tokenType: 'Bearer', expiresIn: TOKEN_EXPIRY_SECONDS };
   }
 }

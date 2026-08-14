@@ -1,5 +1,5 @@
 import { AUTH_CONSTANTS } from '@/auth/constants';
-import { UserStatus } from '@/auth/enums';
+import { UserRole, UserStatus } from '@/auth/enums';
 import { FirebaseService } from '@/core/services';
 import { User } from '@/user/entities';
 import { ICreateUserData, IUpdateForRegistrationData } from '@/user/interfaces';
@@ -83,6 +83,18 @@ export class UserRepository {
     return null;
   }
 
+  async findByProviderId(providerId: string): Promise<User | null> {
+    const snapshot = await this.collectionRef.orderByChild('providerId').equalTo(providerId).once('value');
+
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    const users = snapshot.val();
+    const userId = Object.keys(users)[0];
+    return users[userId] as User;
+  }
+
   async findById(id: string): Promise<User | null> {
     const snapshot = await this.collectionRef.child(id).once('value');
     const user = snapshot.val() as User;
@@ -146,6 +158,33 @@ export class UserRepository {
     });
   }
 
+  async updateRoleAndStatus(
+    id: string,
+    data: { role?: UserRole; status?: UserStatus },
+  ): Promise<User> {
+    const userRef = this.collectionRef.child(id);
+    const snapshot = await userRef.once('value');
+    const existingUser = snapshot.val() as User;
+    if (!existingUser) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    const payload: Record<string, unknown> = {
+      updatedAt: moment().toDate(),
+    };
+    if (data.role !== undefined) {
+      payload.role = data.role;
+    }
+    if (data.status !== undefined) {
+      payload.status = data.status;
+    }
+    await userRef.update(payload);
+    const updated = await this.findById(id);
+    if (!updated) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    return updated;
+  }
+
   async updateProfile(
     id: string,
     data: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar' | 'country' | 'address'>>,
@@ -173,6 +212,14 @@ export class UserRepository {
   }
 
   async delete(id: string): Promise<void> {
+    await this.deleteAccount(id);
+  }
+
+  /**
+   * Permanently delete the account: remove the user, strip personal data,
+   * and delete user-owned app data. A non-identifying tombstone is kept for audit.
+   */
+  async deleteAccount(id: string): Promise<void> {
     const userRef = this.collectionRef.child(id);
     const snapshot = await userRef.once('value');
     const user = snapshot.val() as User;
@@ -181,11 +228,29 @@ export class UserRepository {
       throw new Error(`User with ID ${id} not found`);
     }
 
-    await userRef.update({
-      status: UserStatus.INACTIVE,
-      deletedAt: moment().toDate(),
-      updatedAt: moment().toDate(),
+    const tombstone = {
+      id,
+      deletedAt: moment().toISOString(),
+      provider: user.provider ?? null,
+    };
+
+    await this.db.ref().update({
+      [`deletedUsers/${id}`]: tombstone,
+      [`users/${id}`]: null,
+      [`pigeons/${id}`]: null,
+      [`formulas/${id}`]: null,
+      [`archivedPigeons/${id}`]: null,
+      [`archivedFormulas/${id}`]: null,
+      [`pigeon-history/${id}`]: null,
+      [`formula-history/${id}`]: null,
+      [`blockedUsers/${id}`]: null,
     });
+
+    this.logger.log(`User ${id} permanently deleted`);
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await this.deleteAccount(id);
   }
 
   async findAll(): Promise<User[]> {

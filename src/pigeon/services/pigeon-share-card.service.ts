@@ -19,25 +19,13 @@ export class PigeonShareCardService {
     const logoHtml = this.getLogoHtml();
 
     const rows: Array<{ label: string; value: string }> = [
-      { label: L.documentationNo, value: docNo },
-      { label: L.ringNo, value: pigeon.ringNo },
-      { label: L.ringColor, value: pigeon.ringColor },
-      { label: L.gender, value: genderLabel },
-      { label: L.status, value: statusLabel },
-    ];
-    if (caseNo) {
-      rows.push({ label: L.caseNumber, value: caseNo });
-    }
-    rows.push(
       { label: L.father, value: pigeon.fatherName || '—' },
       { label: L.mother, value: pigeon.motherName || '—' },
-    );
-    if (pigeon.deadAt) {
-      rows.push({
-        label: L.deadAt,
-        value: moment(pigeon.deadAt).format('YYYY/MM/DD'),
-      });
-    }
+      { label: L.gender, value: genderLabel },
+      { label: L.ringNo, value: pigeon.ringNo },
+      { label: L.ringColor, value: pigeon.ringColor },
+      { label: L.documentationNo, value: docNo },
+    ];
 
     const rowsHtml = rows
       .map(

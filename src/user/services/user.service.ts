@@ -1,9 +1,11 @@
-import { AUTH_MESSAGES_I18N } from '@/auth/constants';
-import { UserRole, UserStatus } from '@/auth/enums';
+import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N } from '@/auth/constants';
+import { AuthProvider, UserRole, UserStatus } from '@/auth/enums';
+import { PageOptionsRequestDto } from '@/core/dtos';
 import { UserLocale } from '@/core/enums';
 import { User } from '@/user/entities';
 import { ICreateUserParams, IUpdateForRegistrationData } from '@/user/interfaces';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { UserRepository } from '../repositories';
 
 @Injectable()
@@ -39,6 +41,16 @@ export class UserService {
     return user;
   }
 
+  async findByProviderId(providerId: string, userLocale: UserLocale): Promise<User> {
+    const user = await this.userRepository.findByProviderId(providerId);
+
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
+    }
+
+    return user;
+  }
+
   async findByEmailOrProviderId(email: string, providerId: string, userLocale: UserLocale): Promise<User> {
     const user = await this.userRepository.findByEmailOrProviderId(email, providerId);
 
@@ -59,9 +71,9 @@ export class UserService {
       passwordHash: params.passwordHash,
       provider: params.provider,
       providerId: params.providerId,
-      status: UserStatus.PENDING_VERIFICATION,
+      status: params.status ?? UserStatus.PENDING_VERIFICATION,
       role: UserRole.USER,
-      emailVerified: false,
+      emailVerified: params.emailVerified ?? false,
       twoFactorEnabled: false,
     });
   }
@@ -116,5 +128,59 @@ export class UserService {
       throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
     }
     return user;
+  }
+
+  async listUsersForAdmin(
+    pageOptions: PageOptionsRequestDto,
+    searchQuery?: string,
+  ): Promise<{ items: User[]; total: number }> {
+    const all = searchQuery?.trim()
+      ? await this.userRepository.search(searchQuery.trim())
+      : await this.userRepository.findAll();
+    const total = all.length;
+    const start = (pageOptions.page - 1) * pageOptions.size;
+    const items = all.slice(start, start + pageOptions.size);
+    return { items, total };
+  }
+
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+    userLocale: UserLocale,
+  ): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException(AUTH_MESSAGES_I18N.USER_NOT_FOUND[userLocale]);
+    }
+
+    if (user.provider !== AuthProvider.EMAIL || !user.passwordHash) {
+      throw new BadRequestException(AUTH_MESSAGES_I18N.INVALID_CREDENTIALS[userLocale]);
+    }
+
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isOldPasswordValid) {
+      throw new UnauthorizedException(AUTH_MESSAGES_I18N.INVALID_CREDENTIALS[userLocale]);
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, AUTH_CONSTANTS.SALT_ROUNDS);
+    await this.userRepository.updatePassword(userId, passwordHash);
+  }
+
+  async updateUserAsAdmin(
+    userId: string,
+    data: { role?: UserRole; status?: UserStatus },
+    userLocale: UserLocale,
+  ): Promise<User> {
+    await this.findById(userId, userLocale);
+    return this.userRepository.updateRoleAndStatus(userId, data);
+  }
+
+  async deleteUser(userId: string, userLocale: UserLocale): Promise<void> {
+    const user = await this.findById(userId, userLocale);
+    if (user.role === UserRole.ADMIN) {
+      return;
+    }
+    await this.userRepository.deleteAccount(userId);
   }
 }

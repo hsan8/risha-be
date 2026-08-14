@@ -1,6 +1,6 @@
 import { GoogleAuthRequestDto } from '@/auth/dto/requests';
 import { AuthResponseDto } from '@/auth/dto/responses';
-import { AuthService } from '@/auth/services';
+import { GoogleAuthService } from '@/auth/services/google-auth.service';
 import { ApiDataResponse, Language } from '@/core/decorators';
 import { DataResponseDto } from '@/core/dtos';
 import { UserLocale } from '@/core/enums';
@@ -11,9 +11,9 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 @ApiTags('Google Authentication')
 @Controller('google-auth')
 export class GoogleAuthController {
-  logger = new Logger(GoogleAuthController.name);
+  private readonly logger = new Logger(GoogleAuthController.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly googleAuthService: GoogleAuthService) {}
 
   @Post('callback')
   @ApiOperation({ summary: 'Google auth callback (POST)' })
@@ -23,10 +23,8 @@ export class GoogleAuthController {
     @Body() body: GoogleAuthRequestDto,
     @Language() locale: UserLocale,
   ): Promise<DataResponseDto<AuthResponseDto>> {
-    this.logger.log(`----> Google auth callback POST`);
-    this.logger.log(body);
-
-    const result = await this.authService.googleAuth(body, locale);
+    this.logger.log('Google auth callback POST');
+    const result = await this.googleAuthService.authenticate(body, locale);
     return ResponseFactory.data(result);
   }
 }

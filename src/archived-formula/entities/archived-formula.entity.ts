@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsString } from 'class-validator';
-import { Formula } from '@/formula/entities';
+import { FormulaSnapshot } from './formula-snapshot.entity';
 
 export class ArchivedFormula {
   @ApiProperty({ description: 'Unique identifier for the archived record' })
@@ -23,6 +23,6 @@ export class ArchivedFormula {
   @IsDate()
   archivedAt: Date;
 
-  @ApiProperty({ description: 'Snapshot of the formula at archive time' })
-  formulaSnapshot: Formula;
+  @ApiProperty({ description: 'Full pigeon snapshot captured at archive time' })
+  formulaSnapshot: FormulaSnapshot;
 }

@@ -55,6 +55,10 @@ export class FormulaRepository {
     const formula = raw as Formula;
     if (!Array.isArray(formula.eggs)) formula.eggs = [];
     if (!Array.isArray(formula.children)) formula.children = [];
+    // Migrate legacy records where children were stored as plain ID strings
+    formula.children = formula.children.map((c) =>
+      typeof c === 'string' ? { id: c as string, name: '' } : c,
+    );
     return formula;
   }
 
@@ -124,6 +128,21 @@ export class FormulaRepository {
     });
 
     return count;
+  }
+
+  /** Total formula records across all users (admin metrics). */
+  async countAllAcrossUsers(): Promise<number> {
+    const rootRef = this.db.ref(FORMULA_CONSTANTS.COLLECTION_NAME);
+    const snapshot = await rootRef.once('value');
+    let total = 0;
+    snapshot.forEach((userSnap) => {
+      userSnap.forEach(() => {
+        total++;
+        return false;
+      });
+      return false;
+    });
+    return total;
   }
 
   private dtoToEntity(createFormulaDto: CreateFormulaRequestDto): Formula {

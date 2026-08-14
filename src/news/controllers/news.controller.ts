@@ -2,6 +2,7 @@ import { JwtAuthGuard } from '@/auth/guards';
 import { ApiDataArrayResponse, ApiDataResponse } from '@/core/decorators/api';
 import { DataArrayResponseDto, DataResponseDto } from '@/core/dtos';
 import { ResponseFactory } from '@/core/utils';
+import { UserId } from '@/user/decorators';
 import {
   Body,
   Controller,
@@ -16,7 +17,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { CreateNewsItemRequestDto, UpdateNewsItemRequestDto } from '../dto/requests';
+import { CreateNewsItemRequestDto, ReportNewsItemRequestDto, UpdateNewsItemRequestDto } from '../dto/requests';
 import { NewsItemResponseDto } from '../dto/responses';
 import { NewsService } from '../services';
 
@@ -40,8 +41,8 @@ export class NewsController {
   @Get()
   @ApiOperation({ summary: 'Get all news items' })
   @ApiDataArrayResponse(NewsItemResponseDto)
-  async findAll(): Promise<DataArrayResponseDto<NewsItemResponseDto>> {
-    const items = await this.newsService.findAll();
+  async findAll(@UserId() userId: string): Promise<DataArrayResponseDto<NewsItemResponseDto>> {
+    const items = await this.newsService.findAll(userId);
     return ResponseFactory.dataArray(items.map((i) => new NewsItemResponseDto(i)));
   }
 
@@ -74,5 +75,18 @@ export class NewsController {
   @ApiParam({ name: 'id', description: 'News item UUID', type: String })
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.newsService.remove(id);
+  }
+
+  @Post(':id/report')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Report a news item for inappropriate content' })
+  @ApiParam({ name: 'id', description: 'News item UUID', type: String })
+  async report(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReportNewsItemRequestDto,
+    @UserId() userId: string,
+  ): Promise<DataResponseDto<null>> {
+    await this.newsService.report(id, userId, dto.reason);
+    return ResponseFactory.data(null);
   }
 }

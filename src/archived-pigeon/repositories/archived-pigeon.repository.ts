@@ -92,4 +92,18 @@ export class ArchivedPigeonRepository {
   async delete(userId: string, archivedPigeonId: string): Promise<void> {
     await this.getUserRef(userId).child(archivedPigeonId).remove();
   }
+
+  /** Total archived pigeon records across all users (admin metrics). */
+  async countAllAcrossUsers(): Promise<number> {
+    const snapshot = await this.collectionRef.once('value');
+    let total = 0;
+    snapshot.forEach((userSnap) => {
+      userSnap.forEach(() => {
+        total++;
+        return false;
+      });
+      return false;
+    });
+    return total;
+  }
 }

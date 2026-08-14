@@ -45,8 +45,8 @@ export class ArchivedFormulaPdfService {
       const formula = archived.formulaSnapshot;
       if (formula.father?.id) allPigeonIds.add(formula.father.id);
       if (formula.mother?.id) allPigeonIds.add(formula.mother.id);
-      for (const childId of formula.children ?? []) {
-        if (childId) allPigeonIds.add(childId);
+      for (const child of formula.children ?? []) {
+        if (child?.id) allPigeonIds.add(child.id);
       }
     }
 
@@ -486,12 +486,19 @@ export class ArchivedFormulaPdfService {
         </div>`
         : '';
 
-    // Pigeon card: name, ring no, ring color only
-    const makePigeonItem = (id: string | undefined, fallback: string | undefined, role: string): string => {
-      const meta = id ? pigeonMap.get(id) : undefined;
-      const name = meta?.name ?? fallback ?? '-';
-      const ringNo = meta?.ringNo ?? '-';
-      const ringColor = meta?.ringColor ?? '-';
+    // Pigeon card: name, ring no, ring color
+    // Prefers data frozen in the snapshot; falls back to pigeonMap for legacy records.
+    const makePigeonItem = (
+      snapshotId: string | undefined,
+      snapshotName: string | undefined,
+      snapshotRingNo: string | undefined,
+      snapshotRingColor: string | undefined,
+      role: string,
+    ): string => {
+      const meta = snapshotId ? pigeonMap.get(snapshotId) : undefined;
+      const name = snapshotName || meta?.name || '-';
+      const ringNo = snapshotRingNo || meta?.ringNo || '-';
+      const ringColor = snapshotRingColor || meta?.ringColor || '-';
       return `<div class="pigeon-item">
   <div class="pigeon-role-label">${this.escapeHtml(role)}</div>
   <div class="pigeon-field">
@@ -511,10 +518,11 @@ export class ArchivedFormulaPdfService {
 
     const sons = formula.children ?? [];
     const pigeonCards = [
-      makePigeonItem(formula.father?.id, formula.father?.name, L.father),
-      makePigeonItem(formula.mother?.id, formula.mother?.name, L.mother),
-      ...(sons?.map((childId, idx) => makePigeonItem(childId, pigeonMap.get(childId)?.name, `${L.child} ${idx + 1}`)) ??
-        []),
+      makePigeonItem(formula.father?.id, formula.father?.name, formula.father?.ringNo, formula.father?.ringColor, L.father),
+      makePigeonItem(formula.mother?.id, formula.mother?.name, formula.mother?.ringNo, formula.mother?.ringColor, L.mother),
+      ...(sons.map((child, idx) =>
+        makePigeonItem(child.id, child.name, child.ringNo, child.ringColor, `${L.child} ${idx + 1}`),
+      )),
     ];
     const pigeonsHtml = `<div class="children-list">${pigeonCards.join('')}</div>`;
 

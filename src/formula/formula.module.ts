@@ -24,6 +24,6 @@ import { FormulaService } from './services';
     FormulaParentController,
   ],
   providers: [FormulaService, FormulaRepository, PigeonRepository],
-  exports: [FormulaService],
+  exports: [FormulaService, FormulaRepository],
 })
 export class FormulaModule {}

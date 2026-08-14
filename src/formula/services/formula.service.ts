@@ -1,8 +1,9 @@
-import { ArchivedFormula } from '@/archived-formula/entities';
+import { ArchivedFormula, FormulaSnapshot, PigeonSnapshot } from '@/archived-formula/entities';
 import { ArchivedFormulaReason } from '@/archived-formula/enums';
 import { ArchivedFormulaRepository } from '@/archived-formula/repositories';
 import { I18nMessage } from '@/core/utils/i18n-message.util';
 import { FormulaHistoryService } from '@/formula-history/services';
+import { Pigeon } from '@/pigeon/entities';
 import { PigeonGender, PigeonStatus } from '@/pigeon/enums';
 import { PigeonRepository } from '@/pigeon/repositories';
 import { BadRequestException, forwardRef, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -197,9 +198,14 @@ export class FormulaService {
       throw new BadRequestException('Egg already transformed to pigeon');
     }
 
+    const childPigeon = await this.pigeonRepository.findById(pigeonId, userId);
+    if (!childPigeon) {
+      throw new NotFoundException(`Pigeon with ID ${pigeonId} not found`);
+    }
+
     const isFirstEgg = eggIndex === 0;
     formula.eggs.splice(eggIndex, 1);
-    (formula.children ??= []).push(pigeonId);
+    (formula.children ??= []).push({ id: pigeonId, name: childPigeon.name });
     formula.status = formula.children.length === 1 ? FormulaStatus.HAS_ONE_PIGEON : FormulaStatus.HAS_TWO_PIGEON;
     const date = moment().toDate();
     const action = isFirstEgg
@@ -213,7 +219,7 @@ export class FormulaService {
         originalFormulaId: formulaId,
         archiveReason: ArchivedFormulaReason.ALL_CHICKS_REGISTERED,
         userId,
-        formulaSnapshot: { ...formula },
+        formulaSnapshot: await this.buildEnrichedSnapshot(formula, userId),
       });
       await this.formulaRepository.delete(formulaId, userId);
       this.logger.log(`Formula ${formulaId} archived (all chicks registered)`);
@@ -239,6 +245,7 @@ export class FormulaService {
 
     const date = moment().toDate();
     const destroyedCount = dto.eggIds.length;
+
     await this.formulaHistoryService.create({
       formulaId,
       userId,
@@ -261,7 +268,7 @@ export class FormulaService {
         originalFormulaId: formulaId,
         userId,
         archiveReason: ArchivedFormulaReason.EGGS_DESTROYED,
-        formulaSnapshot: { ...formula },
+        formulaSnapshot: await this.buildEnrichedSnapshot(formula, userId),
       });
       await this.formulaRepository.delete(formulaId, userId);
 
@@ -332,23 +339,53 @@ export class FormulaService {
       originalFormulaId: formulaId,
       userId,
       archiveReason: ArchivedFormulaReason.ARCHIVED_BY_USER,
-      formulaSnapshot: { ...formula },
+      formulaSnapshot: await this.buildEnrichedSnapshot(formula, userId),
     });
     await this.formulaRepository.delete(formulaId, userId);
     this.logger.log(`Formula ${formulaId} archived`);
     return archived;
   }
 
-  updateFormulaStatus(formula: Formula, newStatus: FormulaStatus): Formula {
-    formula.status = newStatus;
-    formula.updatedAt = moment().toDate();
-    // TODO: Save to database
-    return formula;
-  }
+  /**
+   * Fetches full pigeon records for father, mother, and each child,
+   * then builds a FormulaSnapshot with complete data frozen at archive time.
+   */
+  private async buildEnrichedSnapshot(formula: Formula, userId: string): Promise<FormulaSnapshot> {
+    const toPigeonSnapshot = (pigeon: Pigeon | null): PigeonSnapshot => ({
+      id: pigeon?.id,
+      name: pigeon?.name,
+      ringNo: pigeon?.ringNo,
+      ringColor: pigeon?.ringColor,
+      yearOfRegistration: pigeon?.yearOfRegistration,
+      letterOfRegistration: pigeon?.letterOfRegistration,
+      gender: pigeon?.gender,
+      status: pigeon?.status,
+    });
 
-  addHistoryEntry(formula: Formula, action: FormulaActions, description: string): Formula {
-    formula.updatedAt = moment().toDate();
-    // Use formulaHistoryService.create() when persisting formula history
-    return formula;
+    const [fatherPigeon, motherPigeon] = await Promise.all([
+      formula.father?.id ? this.pigeonRepository.findById(formula.father.id, userId) : Promise.resolve(null),
+      formula.mother?.id ? this.pigeonRepository.findById(formula.mother.id, userId) : Promise.resolve(null),
+    ]);
+
+    const childSnapshots: PigeonSnapshot[] = await Promise.all(
+      (formula.children ?? []).map(async (child) => {
+        const pigeon = await this.pigeonRepository.findById(child.id, userId);
+        return toPigeonSnapshot(pigeon);
+      }),
+    );
+
+    return {
+      id: formula.id,
+      father: toPigeonSnapshot(fatherPigeon),
+      mother: toPigeonSnapshot(motherPigeon),
+      boxNumber: formula.boxNumber,
+      eggs: formula.eggs ?? [],
+      children: childSnapshots,
+      status: formula.status,
+      yearOfFormula: formula.yearOfFormula,
+      notes: formula.notes,
+      createdAt: formula.createdAt,
+      updatedAt: formula.updatedAt,
+    };
   }
 }

@@ -1,8 +1,8 @@
-import { Formula } from '@/formula/entities';
+import { FormulaSnapshot } from '../entities/formula-snapshot.entity';
 
 export interface ICreateArchivedFormulaData {
   originalFormulaId: string;
   userId: string;
   archiveReason: string;
-  formulaSnapshot: Formula;
+  formulaSnapshot: FormulaSnapshot;
 }

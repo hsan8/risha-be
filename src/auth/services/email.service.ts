@@ -105,6 +105,31 @@ export class EmailService {
     }
   }
 
+  async sendContentModerationAlert(opts: {
+    newsItemId: string;
+    reportedByUserId: string;
+    reason: string;
+  }): Promise<void> {
+    const to = this.configService.get<string>('MODERATION_EMAIL') || 'legal@risha-app.com';
+    const subject = 'Risha content report — action required within 24 hours';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Content report received</h2>
+        <p>A user reported a news post. Please review and remove objectionable content or eject the abusive user within 24 hours.</p>
+        <ul>
+          <li><strong>News item ID:</strong> ${opts.newsItemId}</li>
+          <li><strong>Reported by:</strong> ${opts.reportedByUserId}</li>
+          <li><strong>Reason:</strong> ${opts.reason}</li>
+        </ul>
+      </div>
+    `;
+    try {
+      await this.sendEmail(to, subject, html);
+    } catch (error) {
+      this.logger.error(`Failed to send moderation alert to ${to}:`, error);
+    }
+  }
+
   private async sendEmail(to: string, subject: string, html: string): Promise<void> {
     if (!this.transporter) {
       this.logger.warn(`Email not configured. Would send to ${to}: ${subject}`);

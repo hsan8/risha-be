@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AUTH_CONSTANTS } from './constants/auth.constants';
-import { GoogleAuthController } from './controllers';
+import { AppleAuthController, GoogleAuthController } from './controllers';
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OTPRepository } from './repositories/otp.repository';
@@ -27,7 +27,7 @@ import { JwtService as CustomJwtService } from './services/jwt.service';
     }),
     UserModule,
   ],
-  controllers: [AuthController, GoogleAuthController],
+  controllers: [AuthController, GoogleAuthController, AppleAuthController],
   providers: [
     AuthService,
     CustomJwtService,
@@ -38,6 +38,6 @@ import { JwtService as CustomJwtService } from './services/jwt.service';
     OTPRepository,
     JwtAuthGuard,
   ],
-  exports: [AuthService, CustomJwtService, OTPRepository, JwtModule, JwtAuthGuard, UserModule],
+  exports: [AuthService, CustomJwtService, OTPRepository, JwtModule, JwtAuthGuard, UserModule, EmailService],
 })
 export class AuthModule {}

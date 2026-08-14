@@ -1,7 +1,7 @@
 import { AUTH_CONSTANTS, AUTH_MESSAGES_I18N, TOKEN_EXPIRY_SECONDS } from '@/auth/constants';
 import {
+  AppleAuthRequestDto,
   ForgotPasswordRequestDto,
-  GoogleAuthRequestDto,
   LoginRequestDto,
   RegisterRequestDto,
   ResendOTPRequestDto,
@@ -28,8 +28,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import _ from 'lodash';
 import moment from 'moment';
+import { AppleAuthService } from './apple-auth.service';
 import { EmailService } from './email.service';
-import { GoogleAuthService } from './google-auth.service';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +40,7 @@ export class AuthService {
     private readonly otpRepository: OTPRepository,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
-    private readonly googleAuthService: GoogleAuthService,
+    private readonly appleAuthService: AppleAuthService,
   ) {}
 
   async getAllOTPs(email: string): Promise<OTP[]> {
@@ -147,36 +147,45 @@ export class AuthService {
     });
   }
 
-  async googleAuth(dto: GoogleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
-    // Verify Google ID token
-    const googleUser = await this.googleAuthService.exchangeCodeForUserInfo(
-      dto.code,
-      dto.codeVerifier,
-      dto.redirectUri,
-    );
-    return this.authenticateGoogleUser(googleUser, locale);
+  async appleAuth(dto: AppleAuthRequestDto, locale: UserLocale): Promise<AuthResponseDto> {
+    const appleUser = await this.appleAuthService.verifyIdToken(dto.identityToken, locale);
+
+    const email = dto.email || appleUser.email;
+    const givenName = dto.fullName?.givenName ?? '';
+    const familyName = dto.fullName?.familyName ?? '';
+    const name = [givenName, familyName].filter(Boolean).join(' ');
+
+    return this.authenticateAppleUser({ sub: appleUser.sub, email, name }, locale);
   }
 
-  private async authenticateGoogleUser(
-    googleUser: { email: string; sub: string; name: string; picture?: string },
+  private async authenticateAppleUser(
+    appleUser: { sub: string; email?: string; name?: string },
     locale: UserLocale,
   ): Promise<AuthResponseDto> {
-    let user = await this.userService.findByEmailOrProviderId(googleUser.email, googleUser.sub, locale);
+    const email = appleUser.email;
+
+    let user = email
+      ? await this.userService.findByEmailOrProviderId(email, appleUser.sub, locale).catch(() => null)
+      : await this.userService.findByProviderId(appleUser.sub, locale).catch(() => null);
 
     if (!user) {
+      if (!email) {
+        throw new UnauthorizedException(AUTH_MESSAGES_I18N.SOCIAL_AUTH_EMAIL_REQUIRED[locale]);
+      }
       user = await this.userService.create({
-        name: googleUser.name,
-        email: googleUser.email,
-        avatar: googleUser.picture,
-        provider: AuthProvider.GOOGLE,
-        providerId: googleUser.sub,
+        name: appleUser.name || email,
+        email,
+        provider: AuthProvider.APPLE,
+        providerId: appleUser.sub,
+        emailVerified: true,
+        status: UserStatus.ACTIVE,
       });
     } else {
       await this.userService.updateLastLogin(user.id);
     }
 
     const tokens = await this.generateTokens(user);
-    this.logger.log(`Google auth successful: ${user.email}`);
+    this.logger.log(`Apple auth successful: ${user.email}`);
 
     return new AuthResponseDto({
       ...tokens,

@@ -12,6 +12,6 @@ import { ArchivedPigeonService } from './services';
   imports: [ServicesModule, AuthModule, UserModule, PigeonModule, HistoryModule],
   controllers: [ArchivedPigeonController],
   providers: [ArchivedPigeonRepository, ArchivedPigeonService],
-  exports: [ArchivedPigeonService],
+  exports: [ArchivedPigeonService, ArchivedPigeonRepository],
 })
 export class ArchivedPigeonModule {}

@@ -1,4 +1,4 @@
-import { AuthProvider } from '@/auth/enums';
+import { AuthProvider, UserStatus } from '@/auth/enums';
 
 export interface ICreateUserParams {
   name: string;
@@ -9,4 +9,8 @@ export interface ICreateUserParams {
   passwordHash?: string;
   provider: AuthProvider;
   providerId?: string;
+  /** Override email verification state. Defaults to false. */
+  emailVerified?: boolean;
+  /** Override initial status. Defaults to PENDING_VERIFICATION. */
+  status?: UserStatus;
 }

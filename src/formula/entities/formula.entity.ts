@@ -11,6 +11,14 @@ export class Parent {
   name: string;
 }
 
+export class Child {
+  @IsUUID('4')
+  id: string;
+
+  @IsString()
+  name: string;
+}
+
 export class Egg {
   @IsUUID('4')
   id: string;
@@ -48,14 +56,19 @@ export class Formula {
   eggs: Egg[];
 
   @IsArray()
-  @IsString({ each: true })
-  children: string[];
+  @ValidateNested({ each: true })
+  @Type(() => Child)
+  children: Child[];
 
   @IsEnum(FormulaStatus)
   status: FormulaStatus;
 
   @IsString()
   yearOfFormula: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 
   @IsDate()
   createdAt: Date;

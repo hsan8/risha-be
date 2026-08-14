@@ -68,6 +68,20 @@ export class ArchivedFormulaRepository {
     await ref.remove();
   }
 
+  /** Total archived formula records across all users (admin metrics). */
+  async countAllAcrossUsers(): Promise<number> {
+    const snapshot = await this.collectionRef.once('value');
+    let total = 0;
+    snapshot.forEach((userSnap) => {
+      userSnap.forEach(() => {
+        total++;
+        return false;
+      });
+      return false;
+    });
+    return total;
+  }
+
   async findById(id: string, userId: string): Promise<ArchivedFormula | null> {
     const ref = this.getUserRef(userId).child(id);
     const snapshot = await ref.once('value');

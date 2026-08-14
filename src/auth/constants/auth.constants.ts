@@ -24,7 +24,6 @@ export const AUTH_CONSTANTS = {
   MIN_PASSWORD_LENGTH: 5,
   MAX_PASSWORD_LENGTH: 5,
 
-  // Social Auth - OAuth 2.0 Client IDs for com.anonymous.pigeonapp
   GOOGLE_CLIENT_ID: '885034111440-fopbpctktaiiii7qp08ucoshe5l718vu.apps.googleusercontent.com',
   GOOGLE_CLIENT_SECRET: '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',
   GOOGLE_CLIENT_IDS: [
@@ -32,7 +31,8 @@ export const AUTH_CONSTANTS = {
     '885034111440-fopbpctktaiiii7qp08ucoshe5l718vu.apps.googleusercontent.com', // Web client (Expo Go, auth.expo.io)
     '885034111440-3n9brjg623vfo65g2i99lidnombp568r.apps.googleusercontent.com', // Android (com.anonymous.pigeonapp, auto created)
     '885034111440-pk55t90q87vaqgrf30jmgvvf3rm99rt5.apps.googleusercontent.com', // Android (com.anonymous.pigeonapp)
-    '885034111440-tkn165f617h9m2stkh5843ra19q9rc8n.apps.googleusercontent.com', // iOS (com.anonymous.PIGEONAPP)
+    '885034111440-d3nc63th9blbhoog9vlsopbonphu2rv6.apps.googleusercontent.com', // iOS (com.risha.pigeonapp)
+    '885034111440-tkn165f617h9m2stkh5843ra19q9rc8n.apps.googleusercontent.com', // iOS (legacy com.anonymous.PIGEONAPP)
     process.env.GOOGLE_IOS_CLIENT_ID,
   ].filter(Boolean),
   APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,

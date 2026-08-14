@@ -27,4 +27,12 @@ export class UpdateFormulaRequestDto {
     message: i18n('validation.Length', { path: 'app', property: 'formula.yearOfFormula' }),
   })
   yearOfFormula?: string;
+
+  @ApiPropertyOptional({ example: 'ملاحظة محدّثة', description: 'Optional notes' })
+  @Expose()
+  @IsOptional()
+  @IsString({
+    message: i18n('validation.IsString', { path: 'app', property: 'formula.notes' }),
+  })
+  notes?: string;
 }
